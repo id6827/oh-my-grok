@@ -17,7 +17,9 @@
     "build:runtime-legacy": "tsc -p runtime/tsconfig.json",
     "inventory": "node scripts/port-inventory.mjs",
     "port:src": "node scripts/port-omc-src.mjs",
-    "test:unit": "node scripts/tests/test-runtime-foundation.mjs"
+    "test:unit": "node scripts/tests/test-runtime-foundation.mjs",
+    "test:vitest": "vitest run --exclude \"tests/perf/**\"",
+    "test:smoke": "npm run build && node scripts/tests/test-runtime-foundation.mjs && node scripts/tests/test-hooks.mjs && node scripts/tests/test-team.mjs && node scripts/tests/test-hud.mjs"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

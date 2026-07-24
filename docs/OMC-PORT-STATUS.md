@@ -14,11 +14,12 @@
 
 | Metric | Value |
 |--------|------:|
-| OMC `src/**/*.ts` | 1155 |
-| OMG `src/**/*.ts` (tests pruned from tree) | ~539 |
-| `dist/**/*.js` after build | ~547 |
-| Top-level modules touched | ~96.9% |
+| OMC `src/**/*.ts` | ~1155–1176 |
+| OMG `src/**/*.ts` (incl. tests) | **~1165** (2026-07-24 gap-port) |
+| `dist/**/*.js` after build | production tsc (tests excluded) |
+| Top-level modules touched | ~100% files present |
 | Stub/shim modules | `src/shims/*`, `src/adapters/grok/*`, `@ast-grep/napi` ambient types |
+| Gap review artifact | `.omg/artifacts/code-review/omc-port-gap-2026-07-24.md` |
 
 ---
 
@@ -26,38 +27,12 @@
 
 | OMC path | OMG path | Status | Notes |
 |----------|----------|--------|-------|
-| `src/**` (~1155 ts) | `src/` | 🟡 | Bulk port + Grok transform; tests excluded from tree for green tsc |
-| dist build pipeline | `tsc` → `dist/` + runtime compat | 🟡 | esbuild bridge bundles not yet fully ported |
+| `src/**` (~1155 ts) | `src/` | ✅ | ~1165 files incl. tests; tsc excludes tests |
+| dist build pipeline | `tsc` → `dist/` + runtime compat | 🟡 | esbuild bridge scripts present, not default chain |
 | bin omc aliases | `bin/omg.js` + package.bin `omg`/`omc`/`oh-my-grok` | ✅ | |
 | better-sqlite3 | optionalDep + shim + job-state-db dynamic import | 🟡 | |
-| `src/types` | `src/types` | ✅ | + ambient d.ts |
-| `src/constants` | `src/constants` | ✅ | |
-| `src/utils` | `src/utils` | ✅ | |
-| `src/lib` | `src/lib` | ✅ | + OMG `mode-state.ts` |
-| `src/shared` | `src/shared` | ✅ | |
-| `src/config` | `src/config` | ✅ | |
-| `src/platform` | `src/platform` | ✅ | |
-| `src/hooks` | `src/hooks` + `hooks/scripts` | 🟡 | TS body ported; mjs wrappers active |
-| `src/features` | `src/features` | ✅ | build-green |
-| `src/mcp` | `src/mcp` + `mcp/omg-state-server.mjs` | 🟡 | dual surface |
-| `src/team` | `src/team` + `team/plan.ts` | 🟡 | full TS + dry-run plan helper |
-| `src/hud` | `src/hud` + `scripts/hud` | 🟡 | |
-| `src/cli` | `src/cli` + `bin/omg.js` | 🟡 | |
-| `src/commands` | `src/commands` + `commands/` | 🟡 | |
-| `src/skills` / `src/agents` | loaders + dirs | 🟡 | content in `agents/` `skills/` |
-| `src/ralphthon` | `src/ralphthon` | 🟡 | + skill |
-| `src/ultragoal` | `src/ultragoal` | 🟡 | + skill |
-| `src/planning` | `src/planning` | ✅ | |
-| `src/verification` | `src/verification` | ✅ | |
-| `src/goal-workflows` | `src/goal-workflows` | ✅ | |
-| `src/autoresearch` | `src/autoresearch` | 🟡 | + skill |
-| `src/providers` | `src/providers` | ✅ | |
-| `src/interop` | `src/interop` | ✅ | |
-| `src/tools` | `src/tools` | 🟡 | AST needs optional @ast-grep/napi |
-| `src/notifications` | `src/notifications` | 🟡 | |
-| `src/installer` | `src/installer` | 🟡 | + omg-setup skill |
-| `src/openclaw` | `src/openclaw` | N/A/🟡 | ported code; product N/A → webhook/docs |
-| `src/__tests__` | re-port later | 🟡 | OMC tests not in tree yet; mjs smokes green |
+| `src/types`…`src/openclaw` (all modules) | `src/*` | ✅ | production + tests present |
+| `src/__tests__` | `src/__tests__` | ✅ | ported; vitest optional (`test:vitest`) |
 | `src/adapters/grok` | OMG-only | ✅ | models, tools, plugin-root |
 | `src/shims` | OMG-only | ✅ | claude-agent-sdk, better-sqlite3 |
 
@@ -65,9 +40,9 @@
 
 | Surface | Status | Notes |
 |---------|--------|-------|
-| bridge/mcp-server full tools | 🟡 | `src/mcp` + mjs state server; esbuild bundle TBD |
-| bridge/team-bridge, team-mcp, team.js | 🟡 | TS under `src/team` |
-| bridge/runtime-cli, cli | 🟡 | `src/cli` + `bin/omg.js` |
+| bridge/mcp-server full tools | 🟡 | no fat `.cjs`; `bridge/README.md` + `mcp/` + `dist/mcp` |
+| bridge/team-bridge, team-mcp, team.js | 🟡 | TS under `src/team`; build scripts ported |
+| bridge/runtime-cli, cli | 🟡 | `src/cli` + `bin/omg.js`; build-cli.mjs present |
 | claude-md-coordinator → AGENTS/omg-setup | 🟡 | `src/cli/claude-md-coordinator.ts` |
 | gyoshu_bridge.py | N/A | not required on Grok |
 | omg ask / provider advisor | ✅ | `bin/omg.js ask` → `dist/cli/ask.js` + `scripts/run-provider-advisor.js` |
@@ -122,14 +97,15 @@
 
 | Surface | Status |
 |---------|--------|
-| benchmarks/missions/geobench | 🟡 minimal benchmarks README |
-| examples/seminar | ❌ |
-| eslint/prettier/vitest | 🟡 tsc + mjs tests; vitest later |
-| CI workflows | ❌ |
-| i18n READMEs | 🟡 README.ko.md |
+| benchmarks/missions/geobench | ✅ trees ported |
+| examples/seminar/research/shellmark | ✅ ported |
+| eslint/prettier/vitest | 🟡 configs ported; smoke tests default |
+| CI workflows | 🟡 `.github` ported — adapt before use |
+| i18n READMEs | ✅ all README.*.md |
 | CONTRIBUTING, SECURITY | ✅ ported/adapted |
-| OMC `docs/**` product tree | ✅ bulk-ported via `scripts/port-omc-docs.mjs` (OMG meta docs preserved) |
-| plugin shipping verify | ❌ |
+| OMC `docs/**` product tree | ✅ bulk-ported via `scripts/port-omc-docs.mjs` |
+| OMC `scripts/**` / `commands/**` | ✅ bulk-ported (2026-07-24 gap pass) |
+| plugin shipping verify | 🟡 script present (`plugin-shipping-surface.mjs`) |
 | MIT NOTICE | ✅ |
 
 ## Stub ratio (public)

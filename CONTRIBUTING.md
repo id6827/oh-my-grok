@@ -66,24 +66,19 @@ Note: The repo has two main branches:
 2. **Understand the build chain** (from `package.json`):
    ```bash
    npm run build
-   # Runs: tsc && build-skill-bridge && build-mcp-server && build-bridge-entry && compose-docs && build:runtime-cli && build:team-server && build:cli
+   # Runs: tsc -p tsconfig.json && node scripts/build-runtime-compat.mjs
    ```
 
-   - `tsc` — TypeScript compilation to JavaScript
-   - `build-skill-bridge.mjs` — Bundles skills for plugin system
-   - `build-mcp-server.mjs` — Builds MCP server for Grok Build integration
-   - `build-bridge-entry.mjs` — Builds the plugin entry point
-   - `compose-docs` — Assembles documentation from partials
-   - `build:runtime-cli.mjs` — Bundles the CLI runtime
-   - `build:team-server.mjs` — Builds the team server
-   - `build:cli.mjs` — Bundles the CLI entry point
+   - `tsc` — TypeScript compilation `src/` → `dist/`
+   - `build-runtime-compat.mjs` — re-exports under `dist/runtime/` for legacy consumers
+   - Optional (ported from OMC, not default yet): `scripts/build-mcp-server.mjs`, `build-cli.mjs`, `build-team-server.mjs`, … when wiring full esbuild bridges
 
 3. **Build once**:
    ```bash
    npm run build
    ```
 
-All TypeScript and bundling steps are handled. The output goes to `dist/` and `bridge/`.
+Primary output is `dist/`. Plugin MCP entry is `mcp/omg-state-server.mjs` (see `bridge/README.md`). Do **not** expect multi‑MB OMC-era `bridge/*.cjs` bundles unless you run the optional esbuild scripts and generate them locally.
 
 ---
 
@@ -99,8 +94,8 @@ All three flows below use the `omg` CLI. If you don't have it installed globally
 # Create ~/.local/bin if it doesn't exist
 mkdir -p ~/.local/bin
 
-# Symlink omg to the checkout's bridge entry point
-ln -sf "$PWD/bridge/cli.cjs" ~/.local/bin/omg
+# Symlink omg to the checkout CLI
+ln -sf "$PWD/bin/omg.js" ~/.local/bin/omg
 
 # Verify (you may need ~/.local/bin on your PATH)
 omg --version

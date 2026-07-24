@@ -1,0 +1,58 @@
+# AST-grep rules for detecting raw .omg path constructions that bypass resolveSessionStatePaths.
+# Any match outside the whitelisted files is a contract violation.
+# Whitelist is enforced in check-multirepo-paths.mjs, not here.
+
+rules:
+  - id: join-omg-literal-single
+    language: TypeScript
+    rule:
+      pattern: join($_, '.omg', $$$)
+    message: "Raw join(..., '.omg', ...) detected — use resolveSessionStatePaths() or getOmcRoot() instead"
+
+  - id: join-omg-literal-double
+    language: TypeScript
+    rule:
+      pattern: join($_, ".omg", $$$)
+    message: "Raw join(..., \".omg\", ...) detected — use resolveSessionStatePaths() or getOmcRoot() instead"
+
+  - id: template-omg-forward-slash
+    language: TypeScript
+    rule:
+      pattern: "`${$_}/.omg/$$$`"
+    message: "Raw template `.../.omg/...` detected — use resolveSessionStatePaths() or getOmcRoot() instead"
+
+  - id: template-omg-backslash
+    language: TypeScript
+    rule:
+      pattern: "`${$_}\\.omg\\$$$`"
+    message: "Raw template `...\\.omg\\...` detected — use resolveSessionStatePaths() or getOmcRoot() instead"
+
+  - id: path-join-omg
+    language: TypeScript
+    rule:
+      pattern: path.join($_, '.omg', $$$)
+    message: "Raw path.join(..., '.omg', ...) detected — use resolveSessionStatePaths() or getOmcRoot() instead"
+
+  - id: join-omg-literal-single-js
+    language: JavaScript
+    rule:
+      pattern: join($_, '.omg', $$$)
+    message: "Raw join(..., '.omg', ...) detected — use resolveOmcStateRoot() instead"
+
+  - id: join-omg-literal-double-js
+    language: JavaScript
+    rule:
+      pattern: join($_, ".omg", $$$)
+    message: "Raw join(..., \".omg\", ...) detected — use resolveOmcStateRoot() instead"
+
+  - id: template-omg-forward-slash-js
+    language: JavaScript
+    rule:
+      pattern: "`${$_}/.omg/$$$`"
+    message: "Raw template `.../.omg/...` detected — use resolveOmcStateRoot() instead"
+
+  - id: path-join-omg-js
+    language: JavaScript
+    rule:
+      pattern: path.join($_, '.omg', $$$)
+    message: "Raw path.join(..., '.omg', ...) detected — use resolveOmcStateRoot() instead"
