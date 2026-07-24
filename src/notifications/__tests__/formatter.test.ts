@@ -5,7 +5,7 @@ import {
   formatAgentCall,
   formatNotification,
   parseTmuxTail,
-  formatask_user_question,
+  formatAskUserQuestion,
 } from "../formatter.js";
 import type { NotificationPayload } from "../types.js";
 
@@ -568,9 +568,9 @@ describe("tmuxTail in formatters", () => {
   });
 });
 
-describe("formatask_user_question", () => {
+describe("formatAskUserQuestion", () => {
   it("includes ask_user_question options and the free-text Other choice", () => {
-    const result = formatask_user_question({
+    const result = formatAskUserQuestion({
       event: "ask-user-question",
       sessionId: "sess-3039",
       message: "",

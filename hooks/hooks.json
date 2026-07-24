@@ -1,5 +1,5 @@
 {
-  "description": "OMG hooks v0.9 — lifecycle + skill guard + OMC-port extensions (TS via dist)",
+  "description": "OMG hooks v0.9 \u2014 lifecycle + skill guard + OMC-port extensions (TS via dist)",
   "hooks": {
     "SessionStart": [
       {
@@ -50,7 +50,7 @@
           {
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end.mjs\"",
-            "timeout": 8
+            "timeout": 30
           },
           {
             "type": "command",
@@ -183,6 +183,11 @@
       {
         "matcher": "*",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/persistent-mode.mjs\"",
+            "timeout": 10
+          },
           {
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-continuation.mjs\"",

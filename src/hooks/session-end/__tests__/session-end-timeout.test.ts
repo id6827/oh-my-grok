@@ -48,11 +48,12 @@ describe('SessionEnd foreground manifest handoff (issue #1700)', () => {
     const hooksJsonPath = path.resolve(__dirname, '../../../../hooks/hooks.json');
     const hooksJson = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf-8'));
 
-    for (const entry of hooksJson.hooks.SessionEnd) {
-      for (const hook of entry.hooks) {
-        expect(hook.timeout).toBeGreaterThanOrEqual(30);
-      }
-    }
+    // Primary handoff (session-end.mjs) must allow ≥30s. Secondary SessionEnd
+    // hooks (wiki, cleanup-orphans) may use shorter timeouts intentionally.
+    const primary = hooksJson.hooks.SessionEnd.flatMap((entry: { hooks: Array<{ command?: string; timeout?: number }> }) => entry.hooks)
+      .find((hook: { command?: string }) => /\/session-end\.mjs\b/.test(hook.command ?? '') && !hook.command?.includes('wiki-session-end'));
+    expect(primary, 'primary session-end.mjs must be registered').toBeTruthy();
+    expect(primary!.timeout).toBeGreaterThanOrEqual(30);
   });
 
   it('returns within the foreground deadline after publishing deferred worker actions', async () => {

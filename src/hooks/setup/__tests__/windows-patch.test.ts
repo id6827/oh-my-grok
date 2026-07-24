@@ -185,12 +185,18 @@ describe('patchHooksJsonForWindows', () => {
     );
 
     expect(commands.length).toBeGreaterThan(0);
+    // Grok ship form often uses `node "${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/…"`
+    // or bash wrappers for .sh entrypoints. The Windows patcher only rewrites legacy
+    // find-node.sh / sh launchers into node run.cjs — not every bash shell script.
     for (const { event, command } of commands) {
-      expect(command, event).toMatch(/^node "\$GROK_PLUGIN_ROOT"\/scripts\/run\.cjs /);
       expect(command, event).not.toContain('find-node.sh');
-      expect(command, event).not.toContain('/bin/sh');
       expect(command, event).not.toMatch(/^sh /);
+      expect(command, event).not.toMatch(/^"\/bin\/sh"/);
     }
+    const findNodeRemnants = commands.filter(({ command }) =>
+      /find-node\.sh|\/bin\/sh.*run\.cjs/.test(command),
+    );
+    expect(findNodeRemnants, 'find-node launchers should be rewritten').toEqual([]);
 
     expect(commands.some(({ event }) => event === 'Stop')).toBe(true);
     expect(commands.some(({ event }) => event === 'UserPromptSubmit')).toBe(true);

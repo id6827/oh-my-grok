@@ -10,8 +10,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   processHook,
   resetSkipHooksCache,
-  dispatchask_user_questionNotification,
-  extractask_user_questionPrompts,
+  dispatchAskUserQuestionNotification,
+  extractAskUserQuestionPrompts,
   _notify,
   type HookInput,
 } from "../bridge.js";
@@ -56,8 +56,8 @@ describe("ask_user_question notification lifecycle (issue #597)", () => {
     directory: "/tmp/test-issue-597",
   };
 
-  it("extractask_user_questionPrompts preserves option labels/descriptions for notifications", () => {
-    const prompts = extractask_user_questionPrompts(askUserInput.toolInput);
+  it("extractAskUserQuestionPrompts preserves option labels/descriptions for notifications", () => {
+    const prompts = extractAskUserQuestionPrompts(askUserInput.toolInput);
 
     expect(prompts).toEqual([
       {
@@ -140,7 +140,7 @@ describe("ask_user_question notification lifecycle (issue #597)", () => {
 
   // ---- Unit test for the helper itself ----
 
-  it("dispatchask_user_questionNotification extracts question text correctly", () => {
+  it("dispatchAskUserQuestionNotification extracts question text correctly", () => {
     // Restore the real implementation for this unit test
     dispatchSpy.mockRestore();
 
@@ -154,7 +154,7 @@ describe("ask_user_question notification lifecycle (issue #597)", () => {
     // Call the real function — the dynamic import will fail silently in test env
     // We just verify it doesn't throw
     expect(() =>
-      dispatchask_user_questionNotification("sess", "/tmp", toolInput),
+      dispatchAskUserQuestionNotification("sess", "/tmp", toolInput),
     ).not.toThrow();
   });
 });

@@ -2,7 +2,7 @@
 
 **Source pin:** OMC `4.15.7` @ `41a4c0f` — see `docs/OMC-SOURCE.md`  
 **OMG version:** `0.9.0-rc.1`  
-**Last updated:** 2026-07-24 (residual close: build:bridge + vitest:core + CI)
+**Last updated:** 2026-07-25 (parity review + three-axis green + solo/team docs; vitest residual open)
 **Legend:** ✅ ported (build-green, usable) · 🟡 partial / intentional reduce · ❌ missing · N/A documented
 
 **Module coverage** (touched = ported+partial): run `node scripts/port-inventory.mjs`  
@@ -68,13 +68,17 @@
 | setup-init, setup-maintenance | 🟡 file ported |
 | cleanup-orphans, session-summary, status | 🟡 file ported |
 | post-tool-rules-injector | 🟡 file ported |
-| named autopilot + flock / macOS lock | 🟡 | skill + mode-state-io flock helpers |
+| named autopilot + flock / macOS lock | 🟡 | **Linux full gate** for named workflows; macOS soft skip; mode-state emergency journal green on macOS (`5ee02cf`) |
+| persistent-mode Stop hook | ✅ | registered in `hooks/hooks.json` (timeout 10) |
+| SessionEnd primary timeout | ✅ | `session-end.mjs` timeout ≥30s |
+| Windows find-node → run.cjs patch | 🟡 | rewrites **find-node.sh** launchers only; bash `.sh` SessionStart wrappers remain intentional |
 
 ## D. Team / HUD
 
 | Surface | Status |
 |---------|--------|
-| live tmux multi-provider | 🟡 | dry-run default without tmux |
+| live tmux multi-provider | 🟡 | **works when tmux present** (`dry_run:false`); default dry-run without tmux |
+| autopilot `execution` solo/team | ✅ | config documented README + settings-schema |
 | heartbeat / orphan cleanup | 🟡 | TS present; cleanup script ported |
 | HUD statusline + presets | 🟡 | watch + basic; presets partial |
 | omgHud presets (minimal/focused/full) | 🟡 | in `src/hud` |

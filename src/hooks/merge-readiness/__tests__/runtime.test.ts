@@ -11,7 +11,7 @@ import {
   formatMergeReadinessQuestionMessage,
   readMergeReadinessState,
   recordMergeReadinessMCQAnswer,
-  recordMergeReadinessask_user_questionResult,
+  recordMergeReadinessAskUserQuestionResult,
   overrideMergeReadiness,
   redactMergeReadinessState,
   setMergeReadinessContent,
@@ -761,7 +761,7 @@ describe("merge-readiness runtime", () => {
       why: "Why", whatChanged: "What", tradeoffs: "Tradeoff", risksConsidered: "Risk", teamUnderstanding: "Team",
       questions: [makeQuestion("q1", "why"), makeQuestion("q2", "change"), makeQuestion("q3", "risk")],
     }, sessionId);
-    recordMergeReadinessask_user_questionResult(tempDir, { question: "[MERGE READINESS:q1] choose" }, "selected [a] or [b]", sessionId);
+    recordMergeReadinessAskUserQuestionResult(tempDir, { question: "[MERGE READINESS:q1] choose" }, "selected [a] or [b]", sessionId);
     expect(readMergeReadinessState(tempDir, sessionId)?.answers).toEqual([]);
   });
 
@@ -977,7 +977,7 @@ describe("merge-readiness runtime", () => {
       {
         name: "first-answer ask_user_question transition",
         setup: (sid: string) => seedPending(sid),
-        action: (sid: string) => recordMergeReadinessask_user_questionResult(
+        action: (sid: string) => recordMergeReadinessAskUserQuestionResult(
           tempDir,
           { question: "[MERGE READINESS:q1] choose" },
           "[a]",

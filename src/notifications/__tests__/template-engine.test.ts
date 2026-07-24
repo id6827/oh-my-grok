@@ -22,7 +22,7 @@ import {
   formatSessionEnd,
   formatSessionStop,
   formatSessionIdle,
-  formatask_user_question,
+  formatAskUserQuestion,
   formatAgentCall,
 } from "../formatter.js";
 import type { NotificationPayload, NotificationEvent } from "../types.js";
@@ -379,9 +379,9 @@ describe("default template parity with formatter.ts", () => {
     expect(fromTemplate).toBe(fromFormatter);
   });
 
-  it("ask-user-question matches formatask_user_question", () => {
+  it("ask-user-question matches formatAskUserQuestion", () => {
     const p = { ...fullPayload, event: "ask-user-question" as const };
-    const fromFormatter = formatask_user_question(p);
+    const fromFormatter = formatAskUserQuestion(p);
     const fromTemplate = interpolateTemplate(
       getDefaultTemplate("ask-user-question"),
       p,
@@ -433,7 +433,7 @@ describe("default template parity with formatter.ts", () => {
       event: "ask-user-question",
       projectName: "proj",
     });
-    const fromFormatter = formatask_user_question(p);
+    const fromFormatter = formatAskUserQuestion(p);
     const fromTemplate = interpolateTemplate(
       getDefaultTemplate("ask-user-question"),
       p,

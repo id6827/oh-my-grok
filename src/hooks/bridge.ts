@@ -2511,7 +2511,7 @@ function processPreToolUse(input: HookInput): HookOutput {
 
   // Notify when AskUserQuestion is about to execute (issue #597)
   // Fire-and-forget: notify users that input is needed BEFORE the tool blocks
-  if (input.toolName === "AskUserQuestion" && input.sessionId) {
+  if ((input.toolName === "AskUserQuestion" || input.toolName === "ask_user_question") && input.sessionId) {
     _notify.askUserQuestion(input.sessionId, directory, input.toolInput);
     // Wake OpenClaw gateway for ask-user-question (non-blocking)
     _openclaw.wake("ask-user-question", {
@@ -2731,7 +2731,7 @@ function processPreToolUse(input: HookInput): HookOutput {
 
   // Wake OpenClaw gateway for pre-tool-use (non-blocking, fires only for allowed tools).
   // AskUserQuestion already has a dedicated high-signal OpenClaw event.
-  if (input.sessionId && input.toolName !== "AskUserQuestion") {
+  if (input.sessionId && input.toolName !== "AskUserQuestion" && input.toolName !== "ask_user_question") {
     _openclaw.wake("pre-tool-use", {
       sessionId: input.sessionId,
       projectPath: directory,
@@ -2965,7 +2965,7 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
 
   // Wake OpenClaw gateway for post-tool-use (non-blocking, fires for all tools).
   // AskUserQuestion already emitted a dedicated question.requested signal.
-  if (input.sessionId && input.toolName !== "AskUserQuestion") {
+  if (input.sessionId && input.toolName !== "AskUserQuestion" && input.toolName !== "ask_user_question") {
     _openclaw.wake("post-tool-use", {
       sessionId: input.sessionId,
       projectPath: directory,
