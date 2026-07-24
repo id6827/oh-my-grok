@@ -1,0 +1,40 @@
+/**
+ * Ported from oh-my-claudecode (MIT) — see NOTICE.
+ * Transformed for oh-my-grok / Grok Build.
+ */
+export interface SessionHistorySearchOptions {
+    query: string;
+    limit?: number;
+    since?: string;
+    sessionId?: string;
+    project?: string;
+    caseSensitive?: boolean;
+    contextChars?: number;
+    workingDirectory?: string;
+}
+export interface SessionHistoryMatch {
+    sessionId: string;
+    agentId?: string;
+    timestamp?: string;
+    projectPath?: string;
+    sourcePath: string;
+    sourceType: 'project-transcript' | 'legacy-transcript' | 'omg-session-summary' | 'omg-session-replay';
+    line: number;
+    role?: string;
+    entryType?: string;
+    excerpt: string;
+}
+export interface SessionHistorySearchReport {
+    query: string;
+    scope: {
+        mode: 'current' | 'project' | 'all';
+        project?: string;
+        workingDirectory?: string;
+        since?: string;
+        caseSensitive: boolean;
+    };
+    searchedFiles: number;
+    totalMatches: number;
+    results: SessionHistoryMatch[];
+}
+//# sourceMappingURL=types.d.ts.map

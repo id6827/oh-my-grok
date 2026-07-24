@@ -1,21 +1,43 @@
 {
   "name": "oh-my-grok",
-  "version": "0.7.0",
+  "version": "0.9.0-rc.1",
   "private": true,
-  "description": "oh-my-grok plugin helpers + runtime (team, state, hud)",
+  "description": "oh-my-grok — OMC-scale multi-agent runtime for Grok Build",
   "type": "module",
   "bin": {
-    "omg": "./bin/omg.js"
+    "omg": "./bin/omg.js",
+    "omc": "./bin/omg.js",
+    "oh-my-grok": "./bin/omg.js"
   },
   "scripts": {
-    "build": "tsc -p runtime/tsconfig.json",
-    "test": "npm run build && node scripts/tests/test-hooks.mjs && node scripts/tests/test-team.mjs && node scripts/tests/test-hud.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/build-runtime-compat.mjs",
+    "test": "npm run build && node scripts/tests/test-runtime-foundation.mjs && node scripts/tests/test-hooks.mjs && node scripts/tests/test-team.mjs && node scripts/tests/test-hud.mjs",
     "validate": "node scripts/validate-parity.mjs",
-    "doctor": "node bin/omg.js doctor"
+    "doctor": "node bin/omg.js doctor",
+    "build:runtime-legacy": "tsc -p runtime/tsconfig.json",
+    "inventory": "node scripts/port-inventory.mjs",
+    "port:src": "node scripts/port-omc-src.mjs",
+    "test:unit": "node scripts/tests/test-runtime-foundation.mjs"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.19.7",
     "typescript": "^5.8.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv": "^8.20.0",
+    "chalk": "^5.6.2",
+    "commander": "^12.1.0",
+    "jsonc-parser": "^3.3.1",
+    "safe-regex": "^2.1.1",
+    "vscode-languageserver-protocol": "^3.18.2",
+    "zod": "^3.25.76"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^12.6.2"
+  }
 }
