@@ -186,13 +186,28 @@ See docs/team-state-schema.md
   }
 }
 
+async function askCmd(askArgs) {
+  try {
+    const mod = await import(
+      pathToFileURL(join(root, "dist/cli/ask.js")).href
+    );
+    await mod.askCommand(askArgs);
+  } catch (e) {
+    console.error(e.message || e);
+    process.exit(1);
+  }
+}
+
 function help() {
-  console.log(`oh-my-grok CLI v0.7+
+  console.log(`oh-my-grok CLI v0.9+
 
   version | status | hud [--watch] | setup | setup-hud
   team <N>:<agent> "task" | team status | team shutdown
+  ask <provider> <prompt> | ask <provider> -p "..."
   state list|get|set|clear
   doctor | help
+
+  providers: claude | codex | gemini | antigravity | grok | cursor
 `);
 }
 
@@ -243,6 +258,9 @@ async function main() {
       break;
     case "state":
       runNode("scripts/omg-state.mjs", args);
+      break;
+    case "ask":
+      await askCmd(args);
       break;
     case "doctor":
       await doctor();

@@ -209,8 +209,8 @@ assert(existsSync(join(root, "docs/HOOKS-PARITY.md")), "HOOKS-PARITY.md");
 
 assert(
   spawnSync(node, [join(root, "bin/omg.js"), "version"], { encoding: "utf8" })
-    .stdout.includes("0.7"),
-  "version 0.7"
+    .stdout.includes("0.9"),
+  "version 0.9"
 );
 assert(existsSync(join(root, "docs/SIMILARITY.md")), "SIMILARITY.md");
 assert(

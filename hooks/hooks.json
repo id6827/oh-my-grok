@@ -1,5 +1,5 @@
 {
-  "description": "OMG hooks v0.7 — deep lifecycle + skill-active guard",
+  "description": "OMG hooks v0.9 — lifecycle + skill guard + OMC-port extensions (TS via dist)",
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +9,36 @@
             "type": "command",
             "command": "bash \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/project-memory-session.mjs\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/wiki-session-start.mjs\"",
+            "timeout": 8
+          }
+        ]
+      },
+      {
+        "matcher": "init",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/setup-init.mjs\"",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "maintenance",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/setup-maintenance.mjs\"",
+            "timeout": 60
           }
         ]
       }
@@ -21,6 +51,16 @@
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end.mjs\"",
             "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/wiki-session-end.mjs\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/cleanup-orphans.mjs\"",
+            "timeout": 10
           }
         ]
       }
@@ -66,6 +106,16 @@
           {
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-tool-verifier.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/project-memory-posttool.mjs\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-tool-rules-injector.mjs\"",
             "timeout": 5
           }
         ]
@@ -115,6 +165,16 @@
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre-compact.mjs\"",
             "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/project-memory-precompact.mjs\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/wiki-pre-compact.mjs\"",
+            "timeout": 8
           }
         ]
       }
@@ -127,6 +187,33 @@
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-continuation.mjs\"",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/context-guard-stop.mjs\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/review-gate.mjs\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/verify-deliverables.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|run_terminal_command|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/permission-handler.mjs\"",
+            "timeout": 5
           }
         ]
       }
