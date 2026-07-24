@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0-rc.1 — 2026-07-24
+
+### OMC-scale TypeScript runtime port
+
+- **src/**: Product port of OMC `4.15.7` runtime (~539 production `.ts` after transform; `tsc` → `dist/`).
+- **Adapters/shims:** `src/adapters/grok/` (models, tools, plugin root), `src/shims/` (claude-agent-sdk, better-sqlite3, ast-grep).
+- **Hooks:** Expanded `hooks/hooks.json` + ported OMC scripts (project-memory, wiki, permission, review-gate, …) loading `dist/hooks/*`.
+- **CLI:** `omg` / `omc` / `oh-my-grok` bin aliases; `dist/runtime` compat re-exports.
+- **Docs:** `OMC-SOURCE.md`, `PORT-ARCHITECTURE.md`, `OMC-PORT-STATUS.md`; SIMILARITY checklist vs module coverage split; README.ko / CONTRIBUTING / SECURITY.
+- **Inventory:** `scripts/port-inventory.mjs`, `scripts/port-omc-src.mjs`.
+
 ## 0.7.0 — 2026-07-24
 
 ### Strict ≥90 epics

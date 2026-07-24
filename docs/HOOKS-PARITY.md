@@ -1,7 +1,7 @@
 # OMC ↔ OMG Hooks Parity
 
-OMC reference scripts under `scripts/*.mjs` (oh-my-claudecode).  
-OMG hooks under `hooks/scripts/` + `hooks/hooks.json`.
+OMC reference scripts under `scripts/*.mjs` (oh-my-claudecode **4.15.7**).  
+OMG hooks under `hooks/scripts/` + `hooks/hooks.json` + built `dist/hooks/*`.
 
 | OMC script | OMG | Notes |
 |------------|-----|-------|
@@ -14,23 +14,31 @@ OMG hooks under `hooks/scripts/` + `hooks/hooks.json`.
 | post-tool-use-failure.mjs | ✅ post-tool-failure.mjs | last-tool-failure.json |
 | pre-compact.mjs | ✅ pre-compact.mjs | Snapshot + reminder |
 | subagent-tracker.mjs | ✅ subagent-tracker.mjs | subagent-tracking.json |
-| stop / persistent-mode / context-guard-stop | ✅ stop-continuation.mjs | Mode + PRD-aware block |
-| project-memory-* | 🟡 skill-active-guard.mjs | Consistency stamp (lighter) |
-| permission-handler.mjs | ❌ | Grok permission model differs |
-| status.mjs / HUD | ✅ omg-hud.mjs + refreshHud | File + --watch |
-| wiki-* | 🟡 | Skill only |
-| setup-init/maintenance | 🟡 omg setup | |
-| cleanup-orphans / team | ✅ runtime team + omg team | dry-run if no tmux |
-| openclaw / review-gate / workflow-drift | ❌ | Deferred / N/A |
-| build-* / release / eval | ❌ | Dev tooling not ported |
+| stop / persistent-mode / context-guard-stop | ✅ stop-continuation + context-guard-stop | Mode + PRD-aware block |
+| project-memory-* | ✅ registered | Loads `dist/hooks/project-memory` |
+| permission-handler.mjs | ✅ registered | Fail-open on Grok; uses dist |
+| status.mjs / HUD | ✅ omg-hud.mjs + status.mjs | File + --watch |
+| wiki-* | ✅ registered | `dist/hooks/wiki` |
+| setup-init/maintenance | ✅ registered | matchers init/maintenance |
+| cleanup-orphans / team | ✅ cleanup-orphans + omg team | dry-run if no tmux |
+| review-gate / verify-deliverables | ✅ registered on Stop | Fail-open if no deliverables |
+| post-tool-rules-injector | ✅ registered | |
+| workflow-drift-guard | 🟡 file present | not always registered |
+| openclaw | N/A | |
+| build-* / release / eval | ❌ | Dev tooling optional |
 
-## Registered Grok events (`hooks/hooks.json`)
+## Registered Grok events (`hooks/hooks.json` v0.9)
 
-SessionStart, SessionEnd, UserPromptSubmit (keyword + injector + skill-active-guard),  
-PreToolUse, PostToolUse, PostToolUseFailure, SubagentStart, SubagentStop, PreCompact, Stop.
+SessionStart (+ project-memory + wiki + setup matchers), SessionEnd (+ wiki + cleanup),  
+UserPromptSubmit (keyword + injector + skill-active-guard),  
+PreToolUse, PostToolUse (+ project-memory + rules-injector), PostToolUseFailure,  
+SubagentStart, SubagentStop, PreCompact (+ project-memory + wiki),  
+Stop (+ context-guard + review-gate + verify-deliverables),  
+PermissionRequest (Bash/shell).
 
 ## Runtime package
 
-- Source: `runtime/src/*.ts`
-- Build: `npm run build` → `dist/runtime/`
-- Atomic writes: `atomic-write.ts` / `hooks/scripts/lib/atomic-write.mjs`
+- **Canonical source:** `src/**/*.ts` → `npm run build` → `dist/`
+- **Legacy re-export:** `dist/runtime/` for pre-port consumers
+- **Thin launcher:** `hooks/scripts/hook-bridge.mjs` → `dist/hooks/bridge.js`
+- **Atomic writes:** `src/lib/atomic-write.ts` / `hooks/scripts/lib/atomic-write.mjs`
