@@ -1,7 +1,7 @@
 # OMC ↔ OMG Parity Matrix
 
 OMC reference version: **4.15.7** (marketplace cache).  
-OMG version: **0.1.0**.
+OMG version: **0.3.0**.
 
 ## Legend
 
@@ -26,8 +26,11 @@ OMG version: **0.1.0**.
 | Team (in-session) | ✅ | 🟡 via `spawn_subagent` / worktree |
 | `omc team` tmux multi-CLI | ✅ | ❌ deferred (Layer B3) |
 | Named autopilot `--workflow` + flock | ✅ Linux | 🟡 documented; flock gate deferred |
-| Keyword magic triggers (hooks) | ✅ | 🟡 simplified detector (v0.2) |
-| Stop continuation gates | ✅ | 🟡 simplified Stop gate (v0.2) |
+| Keyword magic triggers (hooks) | ✅ | 🟡 detector v0.3 (incl. security/code review) |
+| Security review mode | ✅ keyword | ✅ `/security-review` + keyword + agent |
+| Code review mode | ✅ keyword | ✅ `/code-review` + keyword + agent |
+| Stop continuation gates | ✅ | 🟡 simplified Stop gate (v0.2+) |
+| Skill injector (active modes) | ✅ | 🟡 simplified (v0.3) |
 | HUD statusline | ✅ | 🟡 skill text; no binary HUD |
 | Skillify / learner | ✅ | ✅ prompts |
 | OpenClaw | ✅ | ❌ N/A |
@@ -69,10 +72,11 @@ All OMC agents ported with `model: inherit` and tool-name remaps:
 | Component | OMG v0.1 |
 |-----------|----------|
 | SessionStart → ensure `.omg/` | ✅ |
-| keyword-detector | 🟡 v0.2 simplified |
-| skill-injector | ❌ |
+| keyword-detector | 🟡 v0.3 (core modes + security/code review + cancel clear) |
+| skill-injector | 🟡 v0.3 simplified |
+| clear-active-modes / cancel | 🟡 v0.3 |
 | pre-tool-enforcer | ❌ |
-| stop continuation | 🟡 v0.2 simplified |
+| stop continuation | 🟡 v0.2+ simplified |
 | MCP state_write server | ❌ (file-based state in prompts) |
 | `omg` CLI binary | ❌ |
 

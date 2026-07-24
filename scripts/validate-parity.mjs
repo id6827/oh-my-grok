@@ -75,6 +75,8 @@ const EXPECTED_SKILLS = [
   "writer-memory",
   "ui-mockup", // Grok-only
   "web-research", // Grok-only
+  "security-review", // OMC keyword mode → skill
+  "code-review", // OMC keyword mode → skill
 ];
 
 function listNames(dir, kind) {

@@ -34,7 +34,19 @@ Automatically detects which mode is active and cancels it:
 /cancel
 ```
 
-Or say: "cancelomc", "stopomc"
+Or say: `cancelomg`, `stopomg` (also accepts legacy `cancelomc` / `stopomc`).
+
+### Grok Layer-B cancel path (v0.3+)
+
+The keyword detector runs `hooks/scripts/clear-active-modes.mjs` when it sees cancel keywords. That sets `active: false` on `.omg/state/*-state.json` files so the Stop gate stops looping.
+
+When running `/cancel` as a skill without MCP `state_clear`, also run:
+
+```bash
+node "${GROK_PLUGIN_ROOT:-.}/hooks/scripts/clear-active-modes.mjs" "$(pwd)"
+```
+
+Then confirm no mode remains with `active: true` under `.omg/state/`.
 
 ## Critical: Deferred Tool Handling
 

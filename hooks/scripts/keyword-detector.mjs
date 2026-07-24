@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OMG Keyword Detector (Layer B, simplified)
+ * OMG Keyword Detector (Layer B)
  * UserPromptSubmit: detect magic keywords and inject skill routing context.
  * Also seeds lightweight .omg/state/* files for mode tracking (Stop gate uses them).
  */
@@ -13,15 +13,16 @@ import {
   writeJson,
   emitAdditionalContext,
 } from "./lib/hook-io.mjs";
+import { clearActiveModes } from "./clear-active-modes.mjs";
 
 /** Priority order: first match wins for primary skill; cancel always wins. */
 const RULES = [
   {
     name: "cancel",
     skill: "cancel",
-    // cancelomg / stopomg / cancelomc compatibility
     re: /\b(cancel\s*omg|stop\s*omg|cancelomg|stopomg|cancelomc|stopomc|cancel\s*omc|stop\s*omc)\b/i,
     activate: null,
+    clearModes: true,
   },
   {
     name: "deep-interview",
@@ -60,6 +61,19 @@ const RULES = [
     activate: "ralplan",
   },
   {
+    name: "security-review",
+    skill: "security-review",
+    // OMC parity: security review / review security / 보안 리뷰
+    re: /\b(security\s+review|review\s+security)\b|(보안\s*리뷰)/i,
+    activate: null,
+  },
+  {
+    name: "code-review",
+    skill: "code-review",
+    re: /\b(code\s+review|review\s+code|review\s+this\s+pr|review\s+the\s+pr)\b/i,
+    activate: null,
+  },
+  {
     name: "ui-mockup",
     skill: "ui-mockup",
     re: /\b(ui[\s-]?mockup|mock\s*up\s+(the\s+)?ui)\b/i,
@@ -87,7 +101,6 @@ function extractPrompt(input) {
 function activateMode(ws, mode, prompt, sessionId) {
   const statePath = join(ws, ".omg", "state", `${mode}-state.json`);
   const now = new Date().toISOString();
-  // Do not clobber a rich skill-owned state file (e.g. deep-interview with interview_id).
   if (existsSync(statePath)) {
     try {
       const existing = JSON.parse(readFileSync(statePath, "utf8"));
@@ -123,13 +136,16 @@ function activateMode(ws, mode, prompt, sessionId) {
   });
 }
 
-function skillContext(skill, prompt) {
+function skillContext(skill, prompt, extra = "") {
   return [
     `[OMG keyword-detector] Detected intent for skill \`/${skill}\`.`,
     `You MUST follow the oh-my-grok skill \`/${skill}\` (load and obey its SKILL.md protocol).`,
     `Persist orchestration state under \`.omg/\` only.`,
+    extra,
     `User prompt: ${String(prompt).slice(0, 1200)}`,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function main() {
@@ -147,9 +163,25 @@ async function main() {
   }
   if (matched.length === 0) process.exit(0);
 
-  // cancel wins alone
   const primary =
     matched.find((m) => m.name === "cancel") || matched[0];
+
+  if (primary.clearModes) {
+    try {
+      const result = clearActiveModes(ws);
+      emitAdditionalContext(
+        "UserPromptSubmit",
+        [
+          skillContext("cancel", prompt),
+          `Cleared active OMG modes: ${(result.cleared || []).join(", ") || "(none)"}.`,
+          "Stop orchestration loops; do not continue ralph/autopilot/deep-interview unless the user starts a new one.",
+        ].join("\n")
+      );
+    } catch {
+      emitAdditionalContext("UserPromptSubmit", skillContext("cancel", prompt));
+    }
+    process.exit(0);
+  }
 
   if (primary.activate) {
     try {
@@ -159,7 +191,6 @@ async function main() {
     }
   }
 
-  // ralph implies ultrawork companion state (OMC parity lite)
   if (primary.name === "ralph") {
     try {
       activateMode(ws, "ultrawork", prompt, sessionId);
@@ -168,7 +199,19 @@ async function main() {
     }
   }
 
-  emitAdditionalContext("UserPromptSubmit", skillContext(primary.skill, prompt));
+  let extra = "";
+  if (primary.name === "security-review") {
+    extra =
+      "Delegate to agent security-reviewer (read-only). OWASP + secrets + authz focus.";
+  } else if (primary.name === "code-review") {
+    extra =
+      "Delegate to agent code-reviewer (read-only). Severity-tagged findings; suggest /security-review if auth/crypto touched.";
+  }
+
+  emitAdditionalContext(
+    "UserPromptSubmit",
+    skillContext(primary.skill, prompt, extra)
+  );
   process.exit(0);
 }
 

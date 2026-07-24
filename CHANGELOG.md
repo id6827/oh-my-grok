@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 — 2026-07-24
+
+### Added
+
+- `/security-review` skill + keyword (`security review`, `review security`, `보안 리뷰`) → security-reviewer agent.
+- `/code-review` skill + keyword (`code review`, `review this PR`, …) → code-reviewer agent.
+- `skill-injector.mjs` on UserPromptSubmit: re-injects protocol when modes are active under `.omg/state/`.
+- `clear-active-modes.mjs` + cancel keyword path clears active OMG state files.
+
+### Notes
+
+- Still no git remote deploy/push tooling in-scope for this release.
+- HUD binary, full OMC pre-tool-enforcer, MCP state_write remain deferred.
+
 ## 0.2.0 — 2026-07-24
 
 ### Added (Layer B — orchestration hooks)

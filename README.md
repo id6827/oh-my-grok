@@ -61,9 +61,18 @@ Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 - **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
 - **Search-on-fail** — core skills instruct `web_search` before blind retries
 
+### Review modes (OMC keyword parity)
+
+- **`/security-review`** — or say `security review` / `보안 리뷰` → security-reviewer agent
+- **`/code-review`** — or say `code review` / `review this PR` → code-reviewer agent
+
 ### Core skills (OMC parity)
 
 `deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, …
+
+### Hooks (Layer B, v0.3)
+
+`SessionStart` · `UserPromptSubmit` (keyword-detector + skill-injector) · `Stop` (continuation gate) · cancel clears `.omg/state`
 
 ## Parity layers
 
