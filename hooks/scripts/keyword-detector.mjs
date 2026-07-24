@@ -114,11 +114,59 @@ const RULES = [
   {
     name: "analyze",
     skill: "trace",
-    // avoid matching "analysis" alone in long docs — require analyze + object-ish word
     re: /\banalyze\s+(this|the|root\s+cause|failure|bug|error|regression)\b/i,
     activate: null,
     extra:
       "Analyze mode: form hypotheses, cite evidence, prefer tracer/debugger agents before large edits.",
+  },
+  {
+    name: "team",
+    skill: "team",
+    re: /\b\/team\b|\bteam\s+\d+:|\bstart\s+a\s+team\b/i,
+    activate: "team",
+  },
+  {
+    name: "plan",
+    skill: "plan",
+    re: /\b\/plan\b|\bomg-plan\b|\bconsensus\s+plan\b/i,
+    activate: null,
+  },
+  {
+    name: "ultragoal",
+    skill: "ultragoal",
+    re: /\bultragoal\b|\bultra[\s-]?goal\b/i,
+    activate: "ultragoal",
+  },
+  {
+    name: "pipeline",
+    skill: "autopilot",
+    re: /\bpipeline\s+mode\b|\brun\s+pipeline\b/i,
+    activate: "autopilot",
+    extra: "Pipeline-style sequential stages via autopilot phases.",
+  },
+  {
+    name: "remember",
+    skill: "remember",
+    re: /\b\/remember\b|\bremember\s+this\b|\bsave\s+to\s+memory\b/i,
+    activate: null,
+  },
+  {
+    name: "skillify",
+    skill: "skillify",
+    re: /\bskillify\b|\bextract\s+a\s+skill\b/i,
+    activate: null,
+  },
+  {
+    name: "learner",
+    skill: "learner",
+    re: /\b\/learner\b|\blearn\s+from\s+(this|session)\b/i,
+    activate: null,
+  },
+  {
+    name: "wiki",
+    skill: "wiki",
+    re: /\b\/wiki\b|\bomg\s+wiki\b|\bupdate\s+the\s+wiki\b/i,
+    activate: null,
   },
   {
     name: "ui-mockup",
@@ -133,6 +181,9 @@ const RULES = [
     activate: null,
   },
 ];
+
+// Exported for tests / coverage counts
+export { RULES };
 
 function extractPrompt(input) {
   return (
@@ -268,4 +319,8 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(() => process.exit(0));
+const isMain = process.argv[1] && process.argv[1].includes("keyword-detector");
+if (isMain) {
+  main().catch(() => process.exit(0));
+}
+

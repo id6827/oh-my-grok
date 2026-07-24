@@ -53,10 +53,10 @@ Restart or open a new Grok session in your target project.
 
 OMG writes to `.omg/` in the project:
 
-- `specs/` — deep-interview outputs  
-- `plans/` — ralplan / autopilot plans  
-- `state/` — resumable mode state  
-- `artifacts/` — research briefs, UI mockup packages  
+- `specs/` — deep-interview outputs
+- `plans/` — ralplan / autopilot plans
+- `state/` — resumable mode state
+- `artifacts/` — research briefs, UI mockup packages
 
 ## Troubleshooting
 

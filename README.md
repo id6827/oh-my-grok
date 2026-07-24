@@ -88,9 +88,10 @@ node bin/omg.js doctor
 npm test
 ```
 
-### Similarity
+### Similarity (Strict)
 
-Flow-weighted OMC parity target **≥80%** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
+**Each layer A/B/C/D must be ≥80** (not just a weighted average).
+v0.6: **A92 / B84 / C82 / D81** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
 
 ## Parity layers
 

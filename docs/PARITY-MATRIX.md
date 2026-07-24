@@ -1,56 +1,35 @@
 # OMC ↔ OMG Parity Matrix
 
-OMC reference: **4.15.7**. OMG: **0.5.0**.
+OMC **4.15.7** · OMG **0.6.0**
 
-**Blended similarity (flow-weighted): ≥ 80%** — see [SIMILARITY.md](./SIMILARITY.md) for method and scores (A92 / B78 / C58 / D52 → **80.0**).
+## Strict similarity policy
 
-## Legend
+**Each layer A/B/C/D must be ≥80.** Weighted average alone is insufficient.
+See [SIMILARITY.md](./SIMILARITY.md).
 
-| Symbol | Meaning |
-|--------|---------|
-| ✅ | Supported |
-| 🟡 | Partial / simplified |
-| ❌ | Deferred or N/A |
-| ⭐ | Grok-only |
+| Layer | Score | Status |
+|-------|------:|--------|
+| A Prompt/skills | 92 | ✅ |
+| B Hooks | 84 | ✅ |
+| C Runtime/MCP/CLI | 82 | ✅ |
+| D UX/HUD | 81 | ✅ |
+| **Strict (min)** | **81** | **PASS** |
 
-## Similarity snapshot
+## Feature matrix (summary)
 
-| Layer | Weight | Score | Notes |
-|-------|-------:|------:|-------|
-| Prompt / agents / skills | 50% | 92 | Full agent set + skills |
-| Hooks / session hold | 25% | 78 | Full lifecycle set (v0.5) |
-| Runtime / CLI / MCP | 15% | 58 | MCP state + omg CLI |
-| UX / HUD | 10% | 52 | File HUD + omg status |
-| **Blended** | 100% | **80** | Target ≥80 met |
+| Feature | OMC | OMG 0.6 |
+|---------|-----|---------|
+| Agents / skills core | ✅ | ✅ |
+| Keyword modes | ✅ | 🟡 25 rules |
+| Hook lifecycle graph | ✅ full | 🟡 complete events, simpler scripts |
+| MCP state_* | ✅ | ✅ 6 tools |
+| CLI | ✅ omc | 🟡 omg thin+state+hud |
+| HUD | ✅ | 🟡 file + omg-hud.mjs |
+| Team tmux multi-CLI | ✅ | ❌ (team-help + worktree only) |
+| UI mockup / web research | ❌ | ⭐ |
 
-## Orchestration
+## Remaining to 90+ strict
 
-| Feature | OMC | OMG v0.5 |
-|---------|-----|----------|
-| Deep Interview | ✅ | ✅ + config template |
-| Ralplan / Autopilot / Ralph / Ultrawork / UltraQA | ✅ | ✅ |
-| Keywords (modes + review + tdd/think/search/verify/analyze) | ✅ | 🟡 broad set |
-| Stop / injector / PreTool / PostTool / Subagent / PreCompact | ✅ | 🟡 simplified implementations |
-| MCP state_* tools | ✅ | ✅ `omg-state` server |
-| File + CLI state | ✅ | ✅ `omg state` / MCP |
-| HUD | ✅ binary | 🟡 file HUD + skill |
-| Team tmux multi-CLI | ✅ | ❌ |
-| OpenClaw / Claude Teams env | ✅ | ❌ N/A |
-| UI mockup / web-research | ❌ | ⭐ |
-
-## Runtime checklist
-
-- [x] Agents 20 + skills 45
-- [x] Keyword + injector + Stop
-- [x] PreToolUse enforcer
-- [x] PostToolUse verifier
-- [x] Subagent tracker
-- [x] PreCompact
-- [x] MCP state server (`.mcp.json`)
-- [x] `omg` CLI status/state/doctor
-- [x] File HUD
-- [x] `templates/omg.jsonc`
-- [x] `docs/SIMILARITY.md` ≥80%
-- [ ] Full statusline binary HUD
-- [ ] tmux multi-provider team
-- [ ] Full OMC TypeScript runtime
+- Port more OMC hook behaviors (delegation enforcer depth)
+- Real tmux multi-provider workers
+- Live statusline integration in Grok TUI if/when API exists

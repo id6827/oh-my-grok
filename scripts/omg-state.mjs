@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 /**
- * File-based OMG state CLI (MCP state_write/state_read substitute for v0.4).
+ * File-based OMG state CLI.
  *
- * Usage:
- *   node scripts/omg-state.mjs list [--json]
- *   node scripts/omg-state.mjs get <mode>
- *   node scripts/omg-state.mjs set <mode> --active true|false [--phase <name>]
- *   node scripts/omg-state.mjs clear [mode|--all]
- *
- * Workspace: GROK_WORKSPACE_ROOT | cwd. Only reads/writes under <ws>/.omg/state/
+ *   node scripts/omg-state.mjs list [--json] [--session <id>]
+ *   node scripts/omg-state.mjs get <mode> [--session <id>]
+ *   node scripts/omg-state.mjs set <mode> --active true|false [--phase <name>] [--session <id>]
+ *   node scripts/omg-state.mjs clear [mode|--all] [--session <id>]
  */
 import {
   existsSync,
@@ -16,25 +13,48 @@ import {
   readdirSync,
   readFileSync,
   writeFileSync,
-  unlinkSync,
 } from "node:fs";
 import { join, basename } from "node:path";
 
-const ws = process.env.GROK_WORKSPACE_ROOT || process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const stateDir = join(ws, ".omg", "state");
+const ws =
+  process.env.GROK_WORKSPACE_ROOT || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
-function ensureDir() {
-  mkdirSync(stateDir, { recursive: true });
+function parseArgs(argv) {
+  const out = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === "--session" && argv[i + 1]) {
+      out.session = argv[++i];
+    } else if (argv[i] === "--json") {
+      out.json = true;
+    } else if (argv[i] === "--active" && argv[i + 1]) {
+      out.active = argv[++i];
+    } else if (argv[i] === "--phase" && argv[i + 1]) {
+      out.phase = argv[++i];
+    } else if (argv[i] === "--all") {
+      out.all = true;
+    } else {
+      out._.push(argv[i]);
+    }
+  }
+  return out;
 }
 
-function modePath(mode) {
+function stateDir(session) {
+  const sid = session || process.env.OMG_SESSION_ID || process.env.GROK_SESSION_ID || "";
+  const d = sid
+    ? join(ws, ".omg", "state", "sessions", sid)
+    : join(ws, ".omg", "state");
+  mkdirSync(d, { recursive: true });
+  return d;
+}
+
+function modePath(mode, session) {
   const safe = String(mode).replace(/[^a-zA-Z0-9._-]/g, "");
   if (!safe) throw new Error("invalid mode name");
-  // prefer *-state.json naming
+  const dir = stateDir(session);
   const candidates = [
-    join(stateDir, `${safe}-state.json`),
-    join(stateDir, `${safe}.json`),
-    join(stateDir, safe),
+    join(dir, `${safe}-state.json`),
+    join(dir, `${safe}.json`),
   ];
   for (const p of candidates) {
     if (existsSync(p)) return p;
@@ -46,20 +66,20 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function listModes() {
-  ensureDir();
+function listModes(session) {
+  const dir = stateDir(session);
   const out = [];
-  for (const name of readdirSync(stateDir)) {
+  for (const name of readdirSync(dir)) {
     if (!name.endsWith(".json")) continue;
     if (name === "prd.json") continue;
-    const path = join(stateDir, name);
     try {
-      const data = readJson(path);
+      const data = readJson(join(dir, name));
       out.push({
         file: name,
         mode: data.mode || name.replace(/-state\.json$/, "").replace(/\.json$/, ""),
         active: data.active === true || data.state?.active === true,
         phase: data.current_phase || data.state?.current_phase || null,
+        session: session || null,
         updated_at: data.updated_at || null,
       });
     } catch {
@@ -69,24 +89,26 @@ function listModes() {
   return out;
 }
 
-function cmdList(asJson) {
-  const rows = listModes();
-  if (asJson) {
+function cmdList(opts) {
+  const rows = listModes(opts.session);
+  if (opts.json) {
     console.log(JSON.stringify(rows, null, 2));
     return;
   }
   if (!rows.length) {
-    console.log("(no state files under .omg/state/)");
+    console.log("(no state files)");
     return;
   }
   for (const r of rows) {
     const flag = r.active === true ? "ACTIVE" : r.active === false ? "idle  " : "?????";
-    console.log(`${flag}  ${r.mode.padEnd(20)}  phase=${r.phase ?? "-"}  file=${r.file}`);
+    console.log(
+      `${flag}  ${String(r.mode).padEnd(20)}  phase=${r.phase ?? "-"}  file=${r.file}`
+    );
   }
 }
 
-function cmdGet(mode) {
-  const path = modePath(mode);
+function cmdGet(mode, opts) {
+  const path = modePath(mode, opts.session);
   if (!existsSync(path)) {
     console.error(`not found: ${path}`);
     process.exit(1);
@@ -94,9 +116,8 @@ function cmdGet(mode) {
   console.log(JSON.stringify(readJson(path), null, 2));
 }
 
-function cmdSet(mode, args) {
-  ensureDir();
-  const path = modePath(mode);
+function cmdSet(mode, opts) {
+  const path = modePath(mode, opts.session);
   let data = {};
   if (existsSync(path)) {
     try {
@@ -109,16 +130,13 @@ function cmdSet(mode, args) {
   data.mode = data.mode || mode;
   data.updated_at = now;
   data.source = data.source || "omg-state-cli";
-
-  const activeIdx = args.indexOf("--active");
-  if (activeIdx !== -1 && args[activeIdx + 1] != null) {
-    const v = String(args[activeIdx + 1]).toLowerCase();
+  if (opts.active != null) {
+    const v = String(opts.active).toLowerCase();
     data.active = v === "true" || v === "1" || v === "yes";
     if (data.state && typeof data.state === "object") data.state.active = data.active;
   }
-  const phaseIdx = args.indexOf("--phase");
-  if (phaseIdx !== -1 && args[phaseIdx + 1] != null) {
-    data.current_phase = args[phaseIdx + 1];
+  if (opts.phase != null) {
+    data.current_phase = opts.phase;
     if (data.state && typeof data.state === "object") {
       data.state.current_phase = data.current_phase;
     }
@@ -132,20 +150,17 @@ function cmdSet(mode, args) {
   console.log(`wrote ${path}`);
 }
 
-function cmdClear(target) {
-  ensureDir();
-  if (!target || target === "--all") {
+function cmdClear(target, opts) {
+  if (!target || target === "--all" || opts.all) {
     let n = 0;
-    for (const name of readdirSync(stateDir)) {
-      if (!name.endsWith(".json") || name === "prd.json") continue;
-      const path = join(stateDir, name);
+    for (const r of listModes(opts.session)) {
+      const path = join(stateDir(opts.session), r.file);
       try {
         const data = readJson(path);
         data.active = false;
         if (data.state) data.state.active = false;
         data.current_phase = "cancelled";
         data.updated_at = new Date().toISOString();
-        data.cancel_source = "omg-state-cli";
         writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
         n++;
       } catch {
@@ -155,7 +170,7 @@ function cmdClear(target) {
     console.log(`deactivated ${n} state file(s)`);
     return;
   }
-  const path = modePath(target);
+  const path = modePath(target, opts.session);
   if (!existsSync(path)) {
     console.error(`not found: ${basename(path)}`);
     process.exit(1);
@@ -170,32 +185,33 @@ function cmdClear(target) {
 }
 
 function usage() {
-  console.log(`omg-state — file state under ${stateDir}
+  console.log(`omg-state — .omg/state[/sessions/<id>/]
 
 Commands:
-  list [--json]
-  get <mode>
-  set <mode> --active true|false [--phase <name>]
-  clear [mode|--all]
+  list [--json] [--session <id>]
+  get <mode> [--session <id>]
+  set <mode> --active true|false [--phase <name>] [--session <id>]
+  clear [mode|--all] [--session <id>]
 `);
 }
 
-const [cmd, ...rest] = process.argv.slice(2);
+const opts = parseArgs(process.argv.slice(2));
+const [cmd, ...rest] = opts._;
 try {
   switch (cmd) {
     case "list":
-      cmdList(rest.includes("--json"));
+      cmdList(opts);
       break;
     case "get":
       if (!rest[0]) throw new Error("mode required");
-      cmdGet(rest[0]);
+      cmdGet(rest[0], opts);
       break;
     case "set":
       if (!rest[0]) throw new Error("mode required");
-      cmdSet(rest[0], rest.slice(1));
+      cmdSet(rest[0], opts);
       break;
     case "clear":
-      cmdClear(rest[0]);
+      cmdClear(rest[0], opts);
       break;
     case "help":
     case undefined:

@@ -56,10 +56,36 @@ function isTerminal(mode) {
   return false;
 }
 
-function continuationReason(modes) {
+
+function prdProgress(ws) {
+  const paths = [
+    join(ws, ".omg", "prd.json"),
+    join(ws, ".omg", "state", "prd.json"),
+  ];
+  for (const p of paths) {
+    const prd = readJsonSafe(p);
+    if (!prd?.userStories) continue;
+    const stories = prd.userStories;
+    const done = stories.filter((s) => s.passes === true).length;
+    const next = stories.find((s) => !s.passes);
+    return {
+      total: stories.length,
+      done,
+      nextId: next?.id || null,
+      nextTitle: next?.title || null,
+    };
+  }
+  return null;
+}
+
+function continuationReason(modes, ws) {
   const names = modes.map((m) => m.mode).join(", ");
   const primary = modes[0];
   const phase = normalizePhase(primary);
+  const prd = prdProgress(ws);
+  const prdHint = prd
+    ? ` PRD ${prd.done}/${prd.total} stories pass; next=${prd.nextId || "none"} ${prd.nextTitle || ""}.`
+    : "";
 
   if (String(primary.mode).includes("deep-interview") || phase === "deep-interview") {
     return [
@@ -86,7 +112,8 @@ function continuationReason(modes) {
     return [
       "[OMG Stop gate] ralph is still active.",
       "Keep implementing and verifying until acceptance criteria pass.",
-      "Update `.omg/state/ralph-state.json`. Set active=false only when verified complete or cancelled.",
+      "Update `.omg/state/ralph-state.json` and `.omg/prd.json`.",
+      prdHint,
       `Active modes: ${names}`,
     ].join(" ");
   }
@@ -95,6 +122,7 @@ function continuationReason(modes) {
     `[OMG Stop gate] Active OMG mode(s): ${names}.`,
     "Continue the skill protocol until the mode reaches a terminal phase",
     "(completed / pending-approval / cancelled) and set active=false in `.omg/state/`.",
+    prdHint,
     "If the user asked to stop, run /cancel and clear state instead of idling.",
   ].join(" ");
 }
@@ -165,7 +193,7 @@ async function main() {
     /* ignore */
   }
 
-  emitStopBlock(continuationReason(modes));
+  emitStopBlock(continuationReason(modes, ws));
   process.exit(0);
 }
 

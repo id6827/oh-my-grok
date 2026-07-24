@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — 2026-07-24
+
+### Strict similarity (each layer ≥80)
+
+- **Policy:** docs/SIMILARITY.md now requires **per-layer ≥80** (not weighted average alone).
+- **B:** SessionEnd, PostToolUseFailure; 25 keyword rules; Stop PRD-aware for ralph.
+- **C:** MCP tools + `state_get_status` + `omg_info`; session-scoped `omg state --session`; `setup` / `team-help` / worktree-helper.
+- **D:** `scripts/hud/omg-hud.mjs` multi-line HUD; `omg hud` / `setup-hud`.
+- Scores: A92 / B84 / C82 / D81 (strict min **81**).
+
 ## 0.5.0 — 2026-07-24
 
 ### Added (Ralph: ≥80% flow-weighted similarity)

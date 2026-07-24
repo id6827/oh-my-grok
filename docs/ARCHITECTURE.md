@@ -26,9 +26,9 @@ deep-interview → ralplan → autopilot
 
 ## Grok extensions
 
-- **web-research** skill — live documentation grounding  
-- **ui-mockup** skill + **visual-designer** agent — gen → vision → code → QA  
-- Prompt-level search-on-fail across execution skills  
+- **web-research** skill — live documentation grounding
+- **ui-mockup** skill + **visual-designer** agent — gen → vision → code → QA
+- Prompt-level search-on-fail across execution skills
 
 ## Relationship to OMC
 
