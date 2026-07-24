@@ -2,7 +2,7 @@
 
 **Source pin:** OMC `4.15.7` @ `41a4c0f` — see `docs/OMC-SOURCE.md`  
 **OMG version:** `0.9.0-rc.1`  
-**Last updated:** 2026-07-24  
+**Last updated:** 2026-07-24 (residual close: build:bridge + vitest:core + CI)
 **Legend:** ✅ ported (build-green, usable) · 🟡 partial / intentional reduce · ❌ missing · N/A documented
 
 **Module coverage** (touched = ported+partial): run `node scripts/port-inventory.mjs`  
@@ -28,7 +28,7 @@
 | OMC path | OMG path | Status | Notes |
 |----------|----------|--------|-------|
 | `src/**` (~1155 ts) | `src/` | ✅ | ~1165 files incl. tests; tsc excludes tests |
-| dist build pipeline | `tsc` → `dist/` + runtime compat | 🟡 | esbuild bridge scripts present, not default chain |
+| dist build pipeline | `tsc` + optional `build:bridge` | ✅ | esbuild wired; cjs gitignored |
 | bin omc aliases | `bin/omg.js` + package.bin `omg`/`omc`/`oh-my-grok` | ✅ | |
 | better-sqlite3 | optionalDep + shim + job-state-db dynamic import | 🟡 | |
 | `src/types`…`src/openclaw` (all modules) | `src/*` | ✅ | production + tests present |
@@ -40,7 +40,7 @@
 
 | Surface | Status | Notes |
 |---------|--------|-------|
-| bridge/mcp-server full tools | 🟡 | no fat `.cjs`; `bridge/README.md` + `mcp/` + `dist/mcp` |
+| bridge/mcp-server full tools | 🟡 | **generate** via `npm run build:bridge` → gitignored `bridge/*.cjs`; plugin default remains `mcp/omg-state-server.mjs` |
 | bridge/team-bridge, team-mcp, team.js | 🟡 | TS under `src/team`; build scripts ported |
 | bridge/runtime-cli, cli | 🟡 | `src/cli` + `bin/omg.js`; build-cli.mjs present |
 | claude-md-coordinator → AGENTS/omg-setup | 🟡 | `src/cli/claude-md-coordinator.ts` |
@@ -99,8 +99,8 @@
 |---------|--------|
 | benchmarks/missions/geobench | ✅ trees ported |
 | examples/seminar/research/shellmark | ✅ ported |
-| eslint/prettier/vitest | 🟡 configs ported; smoke tests default |
-| CI workflows | 🟡 `.github` ported — adapt before use |
+| eslint/prettier/vitest | 🟡 vitest installed; `test:vitest:core` **217 green**; broader suite residual (mode-state flock/linux) |
+| CI workflows | ✅ `ci.yml` OMG smoke+core vitest+bridge job; release guarded |
 | i18n READMEs | ✅ all README.*.md |
 | CONTRIBUTING, SECURITY | ✅ ported/adapted |
 | OMC `docs/**` product tree | ✅ bulk-ported via `scripts/port-omc-docs.mjs` |
