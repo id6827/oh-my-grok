@@ -172,10 +172,45 @@ assert(existsSync(join(ws, ".omg", "state", "session-end.json")), "session-end.j
 }
 
 // CLI bits
+// stop blocks for ralph + autopilot
+for (const mode of ["ralph", "autopilot"]) {
+  writeFileSync(
+    join(ws, ".omg", "state", `${mode}-state.json`),
+    JSON.stringify({ active: true, mode, current_phase: mode })
+  );
+  assert(
+    run("hooks/scripts/stop-continuation.mjs", {
+      reason: "end_turn",
+      cwd: ws,
+      workspaceRoot: ws,
+      lastAssistantMessage: "still working",
+    }).stdout.includes("block"),
+    `stop blocks ${mode}`
+  );
+}
+
+// skill-active-guard
+assert(
+  run("hooks/scripts/skill-active-guard.mjs", {
+    prompt: "x",
+    cwd: ws,
+    workspaceRoot: ws,
+  }).stdout.includes("skill-active"),
+  "skill-active-guard"
+);
+
+// atomic write exists
+assert(
+  existsSync(join(root, "hooks/scripts/lib/atomic-write.mjs")),
+  "atomic-write.mjs"
+);
+assert(existsSync(join(root, "dist/runtime/atomic-write.js")), "dist runtime atomic");
+assert(existsSync(join(root, "docs/HOOKS-PARITY.md")), "HOOKS-PARITY.md");
+
 assert(
   spawnSync(node, [join(root, "bin/omg.js"), "version"], { encoding: "utf8" })
-    .stdout.includes("0.6"),
-  "version 0.6"
+    .stdout.includes("0.7"),
+  "version 0.7"
 );
 assert(existsSync(join(root, "docs/SIMILARITY.md")), "SIMILARITY.md");
 assert(

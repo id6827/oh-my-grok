@@ -9,6 +9,23 @@ aliases: []
 
 Spawn N coordinated agents working on a shared task list using Grok Build's implicit agent team. Grok Build 2.1.178+ removed native `TeamCreate`/`TeamDelete`; with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, each session has one implicit team and teammates are spawned directly with the Agent/Task tool using distinct `name` values. This skill still preserves OMG's legacy tmux/CLI worker orchestration where documented (`omg team` / `/omg-teams`).
 
+## Primary CLI path (OMG v0.7+)
+
+Prefer the **tmux multi-CLI** runner when the user wants external CLIs (codex/gemini/claude/cursor/grok):
+
+```bash
+omg team 2:codex "review architecture"
+omg team 1:grok "echo ok" --dry-run    # no tmux / plan only
+omg team status
+omg team shutdown
+```
+
+- Schema: `docs/team-state-schema.md`
+- State: `.omg/state/team-state.json` + `.omg/state/team-bridge/<name>/`
+- If `tmux` is missing, dry-run is forced and plan JSON is still written (tests use this path).
+
+**Fallback:** Grok-native `spawn_subagent` / in-session `/team N:executor "..."` when CLI workers are not needed.
+
 The `swarm` compatibility alias was removed in #1131.
 
 ## Usage

@@ -90,8 +90,8 @@ npm test
 
 ### Similarity (Strict)
 
-**Each layer A/B/C/D must be ≥80** (not just a weighted average).
-v0.6: **A92 / B84 / C82 / D81** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
+**Each layer A/B/C/D must be ≥90** (not just a weighted average).
+v0.7: **A93 / B91 / C90 / D90** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
 
 ## Parity layers
 

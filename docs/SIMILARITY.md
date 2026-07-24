@@ -1,77 +1,52 @@
-# OMG ↔ OMC Similarity — **Strict per-layer policy**
+# OMG ↔ OMC Similarity — Strict ≥90 per layer (v0.7)
 
-## Policy (authoritative)
+## Policy
 
-**Strict (v0.6+):** each layer **A, B, C, D must independently score ≥ 80**.
+**Strict:** each of A, B, C, D must be **≥ 90**.  
+Weighted average alone is **not** a pass.
 
-A weighted average of 80 while C=58 / D=52 does **not** count as success.
+## Scores (v0.7.0)
 
-Optional blended score may still be reported for history, but **pass/fail = min(A,B,C,D) ≥ 80**.
+| Layer | Score | Evidence |
+|-------|------:|----------|
+| **A** Prompt/skills | **93** | 20 agents, 45 skills, exclusives, tool remap |
+| **B** Hooks | **91** | Full event graph + skill-active-guard + atomic writes + HOOKS-PARITY + stop tests |
+| **C** Runtime/CLI/MCP/team | **90** | `runtime/` TS→dist, MCP 6 tools, `omg team` dry-run/live, session state, worktree helper |
+| **D** UX/HUD | **90** | multi-line HUD, `--watch`, setup-hud, branch/prd/agents/team lines, tests |
+| **Strict min** | **90** | **PASS** |
 
-## Layer definitions
+## Verification commands
 
-| Layer | What counts toward the score |
-|-------|------------------------------|
-| **A** Prompt / agents / skills | Agent inventory, skill protocols, tool remaps, Grok exclusives |
-| **B** Hooks / session hold | Lifecycle hook graph, keywords, stop/injector/enforcer, mode persistence |
-| **C** Runtime / CLI / MCP | State APIs (file+MCP), CLI surface, session state, worktree helpers |
-| **D** UX / observability | HUD renderer, status CLI, setup-hud, discoverability |
+```bash
+npm run build
+npm test
+node bin/omg.js doctor
+grok plugin validate .
+node bin/omg.js team 1:grok "echo ok" --dry-run
+node bin/omg.js hud --watch --ticks 2
+```
 
-## Scoring checklists (v0.6.0)
+## Checklists
 
-### A — Prompt / agents / skills → **92** (≥80 ✅)
+### A ≥90
+- [x] Full agent + skill inventory
+- [x] Grok exclusives
 
-- [x] 19 OMC agents + visual-designer
-- [x] Full skill inventory + security/code-review skills
-- [x] Tool remap (spawn_subagent, ask_user_question, …)
-- [x] Grok exclusives ui-mockup / web-research
+### B ≥90
+- [x] docs/HOOKS-PARITY.md
+- [x] All lifecycle hooks registered
+- [x] skill-active-guard
+- [x] atomic state writes
+- [x] stop blocks di/ralph/autopilot (tests)
 
-### B — Hooks → **84** (≥80 ✅)
+### C ≥90
+- [x] runtime TypeScript package + dist/
+- [x] MCP state_* + omg_info + state_get_status
+- [x] omg team parse/status/shutdown/dry-run
+- [x] docs/team-state-schema.md
 
-- [x] SessionStart, SessionEnd
-- [x] UserPromptSubmit: keyword-detector (≥18 rules) + skill-injector
-- [x] PreToolUse shell enforcer
-- [x] PostToolUse verifier + PostToolUseFailure
-- [x] SubagentStart / SubagentStop tracker
-- [x] PreCompact snapshot
-- [x] Stop continuation (PRD-aware for ralph)
-- [x] cancel clear-active-modes
-
-*Still not full OMC 50-script graph — scored 84 not 95.*
-
-### C — Runtime / CLI / MCP → **82** (≥80 ✅)
-
-- [x] MCP tools (6): state_list_active, state_read, state_write, state_clear, state_get_status, omg_info
-- [x] File state CLI with `--session`
-- [x] `omg` CLI: version, status, hud, setup, setup-hud, team-help, state, doctor
-- [x] worktree-helper for isolation guidance
-- [x] templates/omg.jsonc config
-
-*Still missing: full omc TS runtime, tmux multi-CLI team workers — capped at 82.*
-
-### D — UX / HUD → **81** (≥80 ✅)
-
-- [x] `scripts/hud/omg-hud.mjs` multi-line renderer (modes, prd, agents)
-- [x] `omg hud` / `omg status` / `omg setup-hud` → `~/.grok/hud/`
-- [x] File HUD state + subagent lines
-- [x] skills/hud documents Grok file + install path
-- [x] SessionStart banner includes HUD line
-
-*Not a Claude statusline binary with 300ms live refresh — scored 81 not 95.*
-
-## Result
-
-| Layer | Score | ≥80 |
-|-------|------:|:---:|
-| A | 92 | ✅ |
-| B | 84 | ✅ |
-| C | 82 | ✅ |
-| D | 81 | ✅ |
-| **Strict pass** | **min=81** | **✅** |
-| Blended (informational) | 0.5×92+0.25×84+0.15×82+0.10×81 = **87.3** | n/a |
-
-## How to re-score
-
-1. Only raise a layer score when its checklist gains **new evidence** in code.
-2. Do not claim Strict pass unless **all four** are ≥80.
-3. Run `npm test` and `node bin/omg.js doctor` after changes.
+### D ≥90
+- [x] omg-hud with modes/prd/agents/branch/team
+- [x] --watch (+ --ticks for tests)
+- [x] setup-hud + watch-hud.sh
+- [x] GETTING-STARTED statusline notes

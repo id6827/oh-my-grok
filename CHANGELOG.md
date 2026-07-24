@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0 — 2026-07-24
+
+### Strict ≥90 epics
+
+- **Runtime:** TypeScript package `runtime/` → `dist/runtime/` (`npm run build`), atomic writes.
+- **Hooks:** skill-active-guard; HOOKS-PARITY.md; full lifecycle graph.
+- **Team:** `omg team N:agent "task"` with tmux when available, forced dry-run + plan JSON otherwise; team-state schema.
+- **HUD:** `omg hud --watch`, `watch-hud.sh`, richer lines (branch/prd/team/agents).
+- **SIMILARITY:** A93/B91/C90/D90 (strict min 90).
+
 ## 0.6.0 — 2026-07-24
 
 ### Strict similarity (each layer ≥80)

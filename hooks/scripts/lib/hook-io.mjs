@@ -3,6 +3,7 @@
  */
 import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { atomicWriteJson } from "./atomic-write.mjs";
 
 export async function readStdinJson() {
   const chunks = [];
@@ -49,7 +50,7 @@ export function readJsonSafe(path) {
 
 export function writeJson(path, obj) {
   mkdirSync(join(path, ".."), { recursive: true });
-  writeFileSync(path, JSON.stringify(obj, null, 2) + "\n", "utf8");
+  atomicWriteJson(path, obj);
 }
 
 /** List active mode states under .omg/state/*-state.json */

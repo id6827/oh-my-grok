@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 /**
- * OMG CLI
- *   omg version | status | hud | setup | setup-hud | team-help | state ... | doctor | help
+ * OMG CLI — version | status | hud | setup | setup-hud | team | state | doctor | help
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
-import { readFileSync, existsSync, mkdirSync, copyFileSync, chmodSync } from "node:fs";
+import {
+  readFileSync,
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  chmodSync,
+} from "node:fs";
 import { homedir } from "node:os";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,7 +31,7 @@ function version() {
   const pkg = JSON.parse(readFileSync(join(root, "plugin.json"), "utf8"));
   console.log(`oh-my-grok ${pkg.version}`);
   console.log(`root: ${root}`);
-  console.log(`similarity: strict per-layer ≥80 (docs/SIMILARITY.md)`);
+  console.log(`similarity: strict per-layer ≥90 (docs/SIMILARITY.md)`);
 }
 
 async function status() {
@@ -66,7 +71,6 @@ function setup() {
   }
   mkdirSync(join(ws, ".omg", "state"), { recursive: true });
   console.log("ensured .omg/state");
-  console.log("next: omg setup-hud   # optional statusline install");
 }
 
 function setupHud() {
@@ -80,57 +84,129 @@ function setupHud() {
     /* win */
   }
   console.log(`installed ${dest}`);
-  console.log(`
-Run periodically or wire to your terminal statusline:
-  node ${dest}
-
-Or from a project:
-  node ${join(root, "scripts/hud/omg-hud.mjs")}
-`);
+  console.log(`Watch: node ${dest} --watch`);
+  console.log(`Or:    ${join(root, "scripts/hud/watch-hud.sh")}`);
 }
 
-function teamHelp() {
-  console.log(`OMG team guidance (Grok-native)
+async function teamCmd(teamArgs) {
+  const ws = process.env.GROK_WORKSPACE_ROOT || process.cwd();
+  // Ensure runtime built
+  const distTeam = join(root, "dist/runtime/team.js");
+  if (!existsSync(distTeam)) {
+    const b = spawnSync("npm", ["run", "build"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+    if (b.status !== 0) {
+      console.error("Build failed. Run: npm run build");
+      console.error(b.stderr || b.stdout);
+      process.exit(1);
+    }
+  }
+  const mod = await import(pathToFileURL(distTeam).href);
 
-In-session:
-  /team 3:executor "fix TypeScript errors"
-  Prefer spawn_subagent with isolation: "worktree" for parallel mutators.
+  if (!teamArgs.length || teamArgs[0] === "--help" || teamArgs[0] === "help") {
+    console.log(`omg team — tmux multi-CLI workers
 
-CLI helpers:
-  node scripts/worktree-helper.mjs plan worker-1
-  node scripts/worktree-helper.mjs list
+Usage:
+  omg team <N>:<agent> "<task>" [--dry-run] [--name <id>]
+  omg team status
+  omg team shutdown [name]
+  omg team --help
 
-tmux multi-provider (codex/gemini panes) is NOT ported from omc team.
-Use Grok subagents or external CLIs manually until that layer lands.
+Agents: codex, gemini, claude, cursor, grok, executor, antigravity
+If tmux is missing, --dry-run is forced and plan JSON is written under
+  .omg/state/team-bridge/<name>/plan.json
+
+See docs/team-state-schema.md
 `);
-  runNode("scripts/worktree-helper.mjs", ["plan", args[0] || "worker"], true);
+    process.exit(0);
+  }
+
+  if (teamArgs[0] === "status") {
+    const st = mod.readTeamState(ws);
+    if (!st) {
+      console.log("No team-state.json (no active/last team)");
+      process.exit(0);
+    }
+    console.log(JSON.stringify(st, null, 2));
+    process.exit(0);
+  }
+
+  if (teamArgs[0] === "shutdown") {
+    try {
+      const st = mod.shutdownTeam(ws, teamArgs[1]);
+      if (!st) {
+        console.error("No team to shutdown");
+        process.exit(1);
+      }
+      console.log(JSON.stringify({ shutdown: true, name: st.name, active: st.active }, null, 2));
+      process.exit(0);
+    } catch (e) {
+      console.error(e.message || e);
+      process.exit(1);
+    }
+  }
+
+  // parse: omg team 2:codex "task" [--dry-run] [--name x]
+  let dryRun = teamArgs.includes("--dry-run") || process.env.OMG_TEAM_DRY_RUN === "1";
+  let name;
+  const ni = teamArgs.indexOf("--name");
+  if (ni >= 0) name = teamArgs[ni + 1];
+  const positional = teamArgs.filter(
+    (a, i) =>
+      !a.startsWith("--") &&
+      teamArgs[i - 1] !== "--name" &&
+      a !== "--dry-run"
+  );
+  const specStr = positional[0];
+  const task = positional.slice(1).join(" ") || "";
+  if (!specStr) {
+    console.error("Missing N:agent spec");
+    process.exit(1);
+  }
+  try {
+    const { count, agent } = mod.parseAgentSpec(specStr);
+    if (!mod.hasTmux()) {
+      dryRun = true;
+      console.error("tmux not found — forcing dry-run (plan only). Install tmux for live panes.");
+    }
+    const state = mod.planTeam(
+      ws,
+      { count, agent, task: task || "(no task)" },
+      name,
+      { dryRun }
+    );
+    console.log(JSON.stringify(state, null, 2));
+    process.exit(0);
+  } catch (e) {
+    console.error(e.message || e);
+    process.exit(1);
+  }
 }
 
 function help() {
-  console.log(`oh-my-grok CLI
+  console.log(`oh-my-grok CLI v0.7+
 
-  version       Plugin version
-  status        HUD + config threshold
-  hud           Render multi-line HUD
-  setup         Copy templates/omg.jsonc → .grok/omg.jsonc
-  setup-hud     Install ~/.grok/hud/omg-hud.mjs
-  team-help     Team/worktree guidance
-  state ...     State CLI (list|get|set|clear) [--session id]
-  doctor        validate-parity + tests + plugin validate
-  help
+  version | status | hud [--watch] | setup | setup-hud
+  team <N>:<agent> "task" | team status | team shutdown
+  state list|get|set|clear
+  doctor | help
 `);
 }
 
 async function doctor() {
+  console.log("== build ==");
+  let r = spawnSync("npm", ["run", "build"], { cwd: root, stdio: "inherit" });
+  if (r.status !== 0) process.exit(r.status ?? 1);
   console.log("== validate-parity ==");
-  let r = spawnSync(process.execPath, [join(root, "scripts/validate-parity.mjs")], {
+  r = spawnSync(process.execPath, [join(root, "scripts/validate-parity.mjs")], {
     stdio: "inherit",
   });
   if (r.status !== 0) process.exit(r.status ?? 1);
   console.log("== tests ==");
-  r = spawnSync(process.execPath, [join(root, "scripts/tests/test-hooks.mjs")], {
-    stdio: "inherit",
-  });
+  r = spawnSync("npm", ["test"], { cwd: root, stdio: "inherit" });
   if (r.status !== 0) process.exit(r.status ?? 1);
   console.log("== plugin validate ==");
   r = spawnSync("grok", ["plugin", "validate", root], { stdio: "inherit" });
@@ -138,10 +214,6 @@ async function doctor() {
   else if (r.status !== 0) process.exit(r.status ?? 1);
   console.log("== status ==");
   await status();
-  console.log("== MCP tools ==");
-  console.log(
-    "state_list_active, state_read, state_write, state_clear, state_get_status, omg_info"
-  );
 }
 
 async function main() {
@@ -163,8 +235,11 @@ async function main() {
     case "setup-hud":
       setupHud();
       break;
+    case "team":
+      await teamCmd(args);
+      break;
     case "team-help":
-      teamHelp();
+      await teamCmd(["--help"]);
       break;
     case "state":
       runNode("scripts/omg-state.mjs", args);

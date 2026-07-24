@@ -49,6 +49,26 @@ Restart or open a new Grok session in your target project.
    /ui-mockup "mobile expense list with weekly chart"
    ```
 
+## CLI helpers
+
+```bash
+npm install          # typescript for runtime build
+npm run build
+node bin/omg.js doctor
+
+# Live HUD
+node bin/omg.js setup-hud
+node bin/omg.js hud --watch
+# or scripts/hud/watch-hud.sh
+
+# tmux multi-CLI team (install tmux for live panes; dry-run without)
+node bin/omg.js team 1:grok "echo ok" --dry-run
+node bin/omg.js team status
+node bin/omg.js team shutdown
+```
+
+Wire HUD into a terminal statusline by running `~/.grok/hud/omg-hud.mjs` on an interval, or use `--watch` in a side pane.
+
 ## State location
 
 OMG writes to `.omg/` in the project:

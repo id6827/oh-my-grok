@@ -1,6 +1,7 @@
 # Dependencies / build
 node_modules/
-dist/
+# Keep dist/runtime committed optional — prefer npm run build in CI
+# dist/ ignored only if regenerable; we commit dist/runtime for plugin consumers
 *.log
 .DS_Store
 

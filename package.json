@@ -1,16 +1,21 @@
 {
   "name": "oh-my-grok",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
-  "description": "Local helpers for oh-my-grok plugin (not the Grok plugin install path)",
+  "description": "oh-my-grok plugin helpers + runtime (team, state, hud)",
   "type": "module",
   "bin": {
     "omg": "./bin/omg.js"
   },
   "scripts": {
-    "test": "node scripts/tests/test-hooks.mjs",
+    "build": "tsc -p runtime/tsconfig.json",
+    "test": "npm run build && node scripts/tests/test-hooks.mjs && node scripts/tests/test-team.mjs && node scripts/tests/test-hud.mjs",
     "validate": "node scripts/validate-parity.mjs",
     "doctor": "node bin/omg.js doctor"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^5.8.2"
   },
   "license": "MIT"
 }
