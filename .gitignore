@@ -24,3 +24,6 @@ bridge/claude-md-coordinator.cjs
 !bridge/README.md
 !bridge/run-mcp-server.sh
 !bridge/gyoshu_bridge.py
+
+# Legacy OMC state (read-migrate only; never commit)
+.omc/
