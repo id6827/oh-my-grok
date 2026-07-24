@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolveCanonicalWorkflowStagePrompt } from '../../scripts/lib/workflow-stage-prompts.mjs';
 
+/** Named workflow full gate is Linux-only (/proc + system flock). */
+const isLinuxNamedWorkflowHost = process.platform === 'linux';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -192,7 +194,7 @@ afterEach(() => {
   while (created.length) rmSync(created.pop(), { recursive: true, force: true });
 });
 
-describe.each(['plugin', 'installed-template'])('workflow profile stop transition (%s)', (kind) => {
+describe.skipIf(!isLinuxNamedWorkflowHost).each(['plugin', 'installed-template'])('workflow profile stop transition (%s)', (kind) => {
   it.each([
     ['ralplan,execution', ['ralplan', 'execution']],
     ['ralplan,execution,ralph', ['ralplan', 'execution', 'ralph']],

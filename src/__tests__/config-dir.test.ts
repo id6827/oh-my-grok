@@ -11,25 +11,45 @@ import { getClaudeConfigDir } from '../utils/config-dir.js'
 import { isValidTranscriptPath } from '../lib/worktree-paths.js';
 import { findRuleFiles } from '../hooks/rules-injector/finder.js';
 
-const originalConfigDir = process.env.GROK_CONFIG_DIR;
+const originalGrokConfigDir = process.env.GROK_CONFIG_DIR;
+const originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
 
 describe('getClaudeConfigDir', () => {
   afterEach(() => {
-    if (originalConfigDir === undefined) {
+    if (originalGrokConfigDir === undefined) {
       delete process.env.GROK_CONFIG_DIR;
     } else {
-      process.env.GROK_CONFIG_DIR = originalConfigDir;
+      process.env.GROK_CONFIG_DIR = originalGrokConfigDir;
+    }
+    if (originalClaudeConfigDir === undefined) {
+      delete process.env.CLAUDE_CONFIG_DIR;
+    } else {
+      process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir;
     }
   });
 
-  it('falls back to ~/.claude when GROK_CONFIG_DIR is unset', () => {
+  it('falls back to ~/.grok when GROK_CONFIG_DIR and CLAUDE_CONFIG_DIR are unset', () => {
     delete process.env.GROK_CONFIG_DIR;
-    expect(getClaudeConfigDir()).toBe(normalize(join(homedir(), '.claude')));
+    delete process.env.CLAUDE_CONFIG_DIR;
+    expect(getClaudeConfigDir()).toBe(normalize(join(homedir(), '.grok')));
   });
 
-  it('falls back to ~/.claude when GROK_CONFIG_DIR is empty', () => {
+  it('falls back to ~/.grok when GROK_CONFIG_DIR is empty and CLAUDE_CONFIG_DIR unset', () => {
     process.env.GROK_CONFIG_DIR = '   ';
-    expect(getClaudeConfigDir()).toBe(normalize(join(homedir(), '.claude')));
+    delete process.env.CLAUDE_CONFIG_DIR;
+    expect(getClaudeConfigDir()).toBe(normalize(join(homedir(), '.grok')));
+  });
+
+  it('dual-reads CLAUDE_CONFIG_DIR when GROK_CONFIG_DIR is unset', () => {
+    delete process.env.GROK_CONFIG_DIR;
+    process.env.CLAUDE_CONFIG_DIR = join(tmpdir(), 'legacy-claude-config');
+    expect(getClaudeConfigDir()).toBe(normalize(join(tmpdir(), 'legacy-claude-config')));
+  });
+
+  it('prefers GROK_CONFIG_DIR over CLAUDE_CONFIG_DIR', () => {
+    process.env.GROK_CONFIG_DIR = join(tmpdir(), 'primary-grok-config');
+    process.env.CLAUDE_CONFIG_DIR = join(tmpdir(), 'legacy-claude-config');
+    expect(getClaudeConfigDir()).toBe(normalize(join(tmpdir(), 'primary-grok-config')));
   });
 
   it('returns an absolute custom path unchanged aside from normalization', () => {

@@ -1,10 +1,10 @@
 /**
- * Claude Code Configuration Directory Resolution
+ * Grok / Claude configuration directory resolution
  *
- * Resolves the active Claude Code configuration directory, honouring
- * GROK_CONFIG_DIR (absolute path, or ~-prefixed) with fallback to
- * ~/.claude.  Trailing separators are stripped; filesystem roots are
- * preserved.
+ * Resolves the active host configuration directory, honouring
+ * GROK_CONFIG_DIR then CLAUDE_CONFIG_DIR (absolute path, or ~-prefixed)
+ * with fallback to ~/.grok.  Trailing separators are stripped; filesystem
+ * roots are preserved.
  *
  * Multi-surface mirrors (keep in sync):
  *   scripts/lib/config-dir.mjs   — ESM hook/HUD runtime
@@ -27,18 +27,19 @@ function stripTrailingSep(p: string): string {
 }
 
 /**
- * Resolve the Claude Code configuration directory.
+ * Resolve the host configuration directory (Grok primary, Claude dual-read).
  *
- * Honours GROK_CONFIG_DIR (absolute path, or ~-prefixed) with fallback
- * to ~/.claude.  Trailing separators are stripped; filesystem roots are
- * preserved.
+ * Priority: GROK_CONFIG_DIR → CLAUDE_CONFIG_DIR → ~/.grok
+ * Trailing separators are stripped; filesystem roots are preserved.
  */
 export function getClaudeConfigDir(): string {
   const home = homedir();
-  const configured = process.env.GROK_CONFIG_DIR?.trim();
+  const configured =
+    process.env.GROK_CONFIG_DIR?.trim() ||
+    process.env.CLAUDE_CONFIG_DIR?.trim();
 
   if (!configured) {
-    return stripTrailingSep(normalize(join(home, '.claude')));
+    return stripTrailingSep(normalize(join(home, '.grok')));
   }
 
   if (configured === '~') {
@@ -53,7 +54,7 @@ export function getClaudeConfigDir(): string {
 }
 
 /**
- * Resolve the OMG global configuration/cache directory under the active Claude
+ * Resolve the OMG global configuration/cache directory under the active host
  * config dir. This keeps hook/updater/HUD caches aligned with GROK_CONFIG_DIR
  * instead of mixing in ~/.omg.
  */

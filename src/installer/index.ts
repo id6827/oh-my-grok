@@ -400,8 +400,9 @@ export function isOmcHook(command: string): boolean {
   const lowerCommand = command.toLowerCase();
   // Match "omg" as a path segment or word boundary
   // Matches: /omg/, /omg-, omg/, -omg, _omc, omc_
-  const omcPattern = /(?:^|[\/\\_-])omg(?:$|[\/\\_-])/;
-  const fullNamePattern = /oh-my-grok/;
+  // omg path segment + dual brand (OMG primary, OMC/Sisyphus legacy for migration)
+  const omcPattern = /(?:^|[\/\\_-])(?:omg|omc)(?:$|[\/\\_-])/;
+  const fullNamePattern = /oh-my-grok|oh-my-claudecode|oh-my-claude-sisyphus/;
   if (omcPattern.test(lowerCommand) || fullNamePattern.test(lowerCommand)) {
     return true;
   }

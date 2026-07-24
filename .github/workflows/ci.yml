@@ -55,6 +55,41 @@ jobs:
             echo "grok CLI not available — skip plugin validate"
           fi
 
+  workflow-profile-linux:
+    name: workflow-profile + flock (Linux full gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Confirm system flock is available
+        run: |
+          test -x /usr/bin/flock || test -x /bin/flock
+          flock --version || true
+
+      - name: workflow-profile + mode-state + installer axes
+        run: |
+          npx vitest run \
+            src/__tests__/workflow-profile-activation-script.test.ts \
+            tests/integration/workflow-profile-keyword-activation.test.ts \
+            tests/integration/workflow-profile-lock-recovery.test.ts \
+            tests/integration/workflow-profile-stop-transition.test.ts \
+            src/lib/__tests__/mode-state-io.test.ts \
+            src/lib/__tests__/sync-publication-short-write.test.ts \
+            src/__tests__/config-dir.test.ts \
+            src/__tests__/installer.test.ts \
+            src/installer/__tests__/safe-installer.test.ts
+
   bridge-build:
     name: Bridge esbuild (local artifacts, not committed)
     runs-on: ubuntu-latest

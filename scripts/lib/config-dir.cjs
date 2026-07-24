@@ -9,12 +9,15 @@ function stripTrailingSep(p) {
   return p === parse(p).root ? p : p.slice(0, -1);
 }
 
+/** Priority: GROK_CONFIG_DIR → CLAUDE_CONFIG_DIR → ~/.grok */
 function getClaudeConfigDir() {
   const home = homedir();
-  const configured = process.env.CLAUDE_CONFIG_DIR?.trim();
+  const configured =
+    process.env.GROK_CONFIG_DIR?.trim() ||
+    process.env.CLAUDE_CONFIG_DIR?.trim();
 
   if (!configured) {
-    return stripTrailingSep(normalize(join(home, '.claude')));
+    return stripTrailingSep(normalize(join(home, '.grok')));
   }
 
   if (configured === '~') {
@@ -29,7 +32,7 @@ function getClaudeConfigDir() {
 }
 
 function getOmcConfigDir() {
-  return join(getClaudeConfigDir(), '.omc');
+  return join(getClaudeConfigDir(), '.omg');
 }
 
 function getUpdateCheckCachePath() {

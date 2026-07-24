@@ -38,7 +38,7 @@ function readOwner() {
   try {
     const value = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
     const actual = Object.keys(value).sort();
-    if (actual.length !== keys.length || !actual.every((key, index) => key === keys[index]) || value.version !== 1 || !Number.isSafeInteger(value.pid) || value.pid <= 0 || typeof value.processStart !== 'string' || !/^\d+$/.test(value.processStart) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.nonce !== 'string' || !/^[0-9a-f-]{36}$/i.test(value.nonce)) return null;
+    if (actual.length !== keys.length || !actual.every((key, index) => key === keys[index]) || value.version !== 1 || !Number.isSafeInteger(value.pid) || value.pid <= 0 || typeof value.processStart !== 'string' || !/^(?:\d+|[0-9a-f]{16})$/i.test(value.processStart) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.nonce !== 'string' || !/^[0-9a-f-]{36}$/i.test(value.nonce)) return null;
     return value;
   } catch (error) { if (error && error.code === 'ENOENT') process.exit(0); return null; }
 }
@@ -50,14 +50,28 @@ if (operation === 'release') {
   if (owner.pid !== expected.pid || owner.processStart !== expected.processStart || owner.nonce !== expected.nonce) process.exit(4);
   try { fs.unlinkSync(lockPath); process.exit(0); } catch { process.exit(3); }
 }
-if (process.platform !== 'linux') process.exit(3);
-let currentStart;
-try {
-  const stat = fs.readFileSync('/proc/' + owner.pid + '/stat', 'utf8');
-  const end = stat.lastIndexOf(')');
-  const fields = end >= 0 ? stat.slice(end + 2).trim().split(/\s+/) : [];
-  currentStart = fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
-} catch (error) { currentStart = error && error.code === 'ENOENT' ? 'absent' : null; }
+let currentStart = null;
+if (process.platform === 'linux') {
+  try {
+    const stat = fs.readFileSync('/proc/' + owner.pid + '/stat', 'utf8');
+    const end = stat.lastIndexOf(')');
+    const fields = end >= 0 ? stat.slice(end + 2).trim().split(/\s+/) : [];
+    currentStart = fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
+  } catch (error) { currentStart = error && error.code === 'ENOENT' ? 'absent' : null; }
+} else if (process.platform === 'darwin' || process.platform.indexOf('freebsd') === 0) {
+  try {
+    const { spawnSync } = require('child_process');
+    const { createHash } = require('crypto');
+    const result = spawnSync('ps', ['-o', 'lstart=', '-p', String(owner.pid)], { encoding: 'utf8' });
+    if (result.status !== 0) currentStart = 'absent';
+    else {
+      const lstart = (result.stdout || '').trim();
+      currentStart = lstart ? createHash('sha256').update(lstart).digest('hex').slice(0, 16) : 'absent';
+    }
+  } catch { currentStart = null; }
+} else {
+  process.exit(3);
+}
 if (currentStart === null) process.exit(3);
 if (currentStart !== 'absent' && currentStart === owner.processStart) process.exit(2);
 try { fs.unlinkSync(lockPath); process.exit(0); } catch { process.exit(3); }
@@ -445,20 +459,33 @@ function readOwner() {
   try {
     const value = JSON.parse(fs.readFileSync(claimPath, 'utf8'));
     const actual = Object.keys(value).sort();
-    if (actual.length !== keys.length || !actual.every((key, index) => key === keys[index]) || value.version !== 1 || !Number.isSafeInteger(value.pid) || value.pid <= 0 || typeof value.processStart !== 'string' || !/^\d+$/.test(value.processStart) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.nonce !== 'string' || !/^[0-9a-f-]{36}$/i.test(value.nonce)) return null;
+    if (actual.length !== keys.length || !actual.every((key, index) => key === keys[index]) || value.version !== 1 || !Number.isSafeInteger(value.pid) || value.pid <= 0 || typeof value.processStart !== 'string' || !/^(?:\d+|[0-9a-f]{16})$/i.test(value.processStart) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.nonce !== 'string' || !/^[0-9a-f-]{36}$/i.test(value.nonce)) return null;
     return value;
   } catch (error) { return error && error.code === 'ENOENT' ? 'absent' : null; }
 }
 function exact(left, right) { return left.pid === right.pid && left.processStart === right.processStart && left.nonce === right.nonce; }
 function stale(owner) {
-  if (process.platform !== 'linux') return null;
-  try {
-    const stat = fs.readFileSync('/proc/' + owner.pid + '/stat', 'utf8');
-    const end = stat.lastIndexOf(')');
-    const fields = end >= 0 ? stat.slice(end + 2).trim().split(/\s+/) : [];
-    const start = fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
-    return start === null ? null : start !== owner.processStart;
-  } catch (error) { return error && error.code === 'ENOENT' ? true : null; }
+  if (process.platform === 'linux') {
+    try {
+      const stat = fs.readFileSync('/proc/' + owner.pid + '/stat', 'utf8');
+      const end = stat.lastIndexOf(')');
+      const fields = end >= 0 ? stat.slice(end + 2).trim().split(/\s+/) : [];
+      const start = fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
+      return start === null ? null : start !== owner.processStart;
+    } catch (error) { return error && error.code === 'ENOENT' ? true : null; }
+  }
+  if (process.platform === 'darwin' || process.platform.indexOf('freebsd') === 0) {
+    try {
+      const { spawnSync } = require('child_process');
+      const { createHash } = require('crypto');
+      const result = spawnSync('ps', ['-o', 'lstart=', '-p', String(owner.pid)], { encoding: 'utf8' });
+      if (result.status !== 0) return true;
+      const lstart = (result.stdout || '').trim();
+      if (!lstart) return true;
+      return createHash('sha256').update(lstart).digest('hex').slice(0, 16) !== owner.processStart;
+    } catch { return null; }
+  }
+  return null;
 }
 let expected;
 try { expected = JSON.parse(expectedRaw); } catch { process.exit(3); }
@@ -577,7 +604,7 @@ function sameFile(path, expected) {
 function reconcileEmergencyPublicationTemps(filePath, authorizeState) {
     const directory = dirname(filePath);
     const base = filePath.slice(directory.length + 1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`^${base}\\.emergency-(journal\\.json|recovery\\.claim|quarantine\\.[0-9a-f-]{36}\\.payload)\\.(\\d+)\\.(\\d+)\\.([0-9a-f-]{36})\\.tmp$`, 'i');
+    const pattern = new RegExp(`^${base}\\.emergency-(journal\\.json|recovery\\.claim|quarantine\\.[0-9a-f-]{36}\\.payload)\\.(\\d+)\\.([0-9a-f]+)\\.([0-9a-f-]{36})\\.tmp$`, 'i');
     let names;
     try {
         names = readdirSync(directory);
@@ -701,7 +728,7 @@ function recoveryGenerationsAuthorized(filePath, journal, authorizeState) {
 function hasUnattributableRecoveryClaimArtifact(filePath, recoveryClaim) {
     const directory = dirname(filePath);
     const base = filePath.slice(directory.length + 1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const tempPattern = new RegExp(`^${base}\\.emergency-recovery\\.claim\\.\\d+\\.\\d+\\.[0-9a-f-]{36}\\.tmp$`, 'i');
+    const tempPattern = new RegExp(`^${base}\\.emergency-recovery\\.claim\\.\\d+\\.[0-9a-f]+\\.[0-9a-f-]{36}\\.tmp$`, 'i');
     try {
         if (readdirSync(directory).some((name) => tempPattern.test(name)))
             return true;

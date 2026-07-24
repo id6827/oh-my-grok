@@ -5,6 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+/** Named workflow full gate is Linux-only (/proc + system flock). */
+const isLinuxNamedWorkflowHost =
+  process.platform === 'linux';
+
+
 const root = process.cwd();
 const hooks = [
   join(root, 'scripts', 'keyword-detector.mjs'),
@@ -63,7 +68,7 @@ afterEach(() => {
   while (created.length) rmSync(created.pop()!, { recursive: true, force: true });
 });
 
-describe.each(hooks)('keyword autopilot activation fence (%s)', hook => {
+describe.skipIf(!isLinuxNamedWorkflowHost).each(hooks)('keyword autopilot activation fence (%s)', hook => {
   it('preserves an active named descriptor byte-for-byte when legacy autopilot activates', async () => {
     const f = fixture();
     const before = readFileSync(f.statePath, 'utf8');

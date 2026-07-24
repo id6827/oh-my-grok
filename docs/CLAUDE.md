@@ -1,7 +1,7 @@
 <!-- Compatibility alias for OMC-era paths; prefer docs/GROK.md -->
 
 <!-- OMG:START -->
-<!-- OMG:VERSION:4.15.7 -->
+<!-- OMG:VERSION:0.9.0-rc.1 -->
 
 # oh-my-grok - Intelligent Multi-Agent Orchestration
 

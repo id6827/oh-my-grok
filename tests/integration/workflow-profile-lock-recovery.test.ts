@@ -6,6 +6,11 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+/** Named workflow full gate is Linux-only (/proc + system flock). */
+const isLinuxNamedWorkflowHost =
+  process.platform === 'linux';
+
+
 const root = process.cwd();
 const created: string[] = [];
 const modules = [
@@ -43,7 +48,7 @@ afterEach(() => {
   delete process.env.OMC_TEST_FLOCK_AVAILABLE;
 });
 
-describe.each(modules)('recoverable workflow mutation lock (%s)', (modulePath) => {
+describe.skipIf(!isLinuxNamedWorkflowHost).each(modules)('recoverable workflow mutation lock (%s)', (modulePath) => {
   async function api() {
     return import(`${pathToFileURL(modulePath).href}?test=${randomUUID()}`) as Promise<{
       acquireStateFileLockSync(path: string, attempts?: number): { fd: number; lockPath: string; owner: ReturnType<typeof owner> } | null;
@@ -142,7 +147,7 @@ describe.each(modules)('recoverable workflow mutation lock (%s)', (modulePath) =
   });
 });
 
-describe.each(modules)('guarded emergency recovery claim (%s)', (modulePath) => {
+describe.skipIf(!isLinuxNamedWorkflowHost).each(modules)('guarded emergency recovery claim (%s)', (modulePath) => {
   async function api() {
     return import(`${pathToFileURL(modulePath).href}?recovery=${randomUUID()}`) as Promise<{
       recoverEmergencyStateFile(path: string): boolean;

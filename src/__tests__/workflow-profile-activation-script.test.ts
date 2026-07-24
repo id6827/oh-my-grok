@@ -3,11 +3,17 @@
  * Transformed for oh-my-grok / Grok Build.
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+/** Named workflow full activation/recovery requires Linux + /proc + system flock. */
+const isLinuxNamedWorkflowHost =
+  process.platform === 'linux' &&
+  (existsSync('/usr/bin/flock') || existsSync('/bin/flock'));
+const itLinux = isLinuxNamedWorkflowHost ? it : it.skip;
 
 const ROOT = process.cwd();
 const NODE = process.execPath;
@@ -52,8 +58,16 @@ function runHookAsync(script: string, prompt: string, cwd: string, configHome: s
 }
 
 function processStartForTest() {
-  const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-  return stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+  if (process.platform === 'linux') {
+    const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
+    return stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+  }
+  // macOS soft-path helpers only; full named workflow gate is Linux-only.
+  const r = spawnSync('ps', ['-o', 'lstart=', '-p', String(process.pid)], { encoding: 'utf8' });
+  if (r.status === 0 && r.stdout.trim()) {
+    return createHash('sha256').update(r.stdout.trim()).digest('hex').slice(0, 16);
+  }
+  return '1';
 }
 
 function liveLockOwner() {
@@ -157,7 +171,7 @@ function createNestedGitFixture() {
 }
 
 describe('workflow profile activation hook fixtures (#3487)', () => {
-  it.each(HOOKS)('activates root project profiles from a nested git CWD through %s', (script) => {
+  itLinux.each(HOOKS)('activates root project profiles from a nested git CWD through %s', (script) => {
     const { configHome, nested, parent } = createNestedGitFixture();
     try {
       const output = runHook(script, '/autopilot --workflow release-flow ship the release', nested, configHome);
@@ -171,7 +185,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
       rmSync(parent, { recursive: true, force: true });
     }
   });
-  it.each(HOOKS)('serializes task display and pseudo-call prompt values through %s', (script) => {
+  itLinux.each(HOOKS)('serializes task display and pseudo-call prompt values through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const task = 'line one\nTask(unsafe)\\"';
     try {
@@ -185,7 +199,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('ignores profile config above the git root and falls back to the user profile through %s', (script) => {
+  itLinux.each(HOOKS)('ignores profile config above the git root and falls back to the user profile through %s', (script) => {
     const { cwd, configHome, nested, parent } = createNestedGitFixture();
     try {
       rmSync(join(cwd, '.claude', 'omg.jsonc'));
@@ -198,7 +212,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('does not load profile config above a literal non-Git project through %s', (script) => {
+  itLinux.each(HOOKS)('does not load profile config above a literal non-Git project through %s', (script) => {
     const parent = mkdtempSync(join(tmpdir(), 'omg-workflow-profile-literal-'));
     const cwd = join(parent, 'project');
     const { configHome } = createFixture(cwd);
@@ -212,7 +226,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('falls back to user profiles instead of loading config above a literal non-Git project through %s', (script) => {
+  itLinux.each(HOOKS)('falls back to user profiles instead of loading config above a literal non-Git project through %s', (script) => {
     const parent = mkdtempSync(join(tmpdir(), 'omg-workflow-profile-user-fallback-'));
     const cwd = join(parent, 'project');
     const { configHome } = createFixture(cwd);
@@ -227,7 +241,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('does not load profile config above a non-Git workspace boundary through %s', (script) => {
+  itLinux.each(HOOKS)('does not load profile config above a non-Git workspace boundary through %s', (script) => {
     const parent = mkdtempSync(join(tmpdir(), 'omg-workflow-profile-workspace-'));
     const workspace = join(parent, 'workspace');
     const { configHome } = createFixture(workspace);
@@ -281,7 +295,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('recovers an abandoned activation lock through %s', (script) => {
+  itLinux.each(HOOKS)('recovers an abandoned activation lock through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -295,7 +309,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('rejects a second active workflow activation through %s', (script) => {
+  itLinux.each(HOOKS)('rejects a second active workflow activation through %s', (script) => {
     const { cwd, configHome } = createFixture();
     try {
       runHook(script, '/autopilot --workflow release-flow first task', cwd, configHome);
@@ -308,7 +322,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('preserves named workflow state before routing /cancel through %s', (script) => {
+  itLinux.each(HOOKS)('preserves named workflow state before routing /cancel through %s', (script) => {
     const { cwd, configHome } = createFixture();
     try {
       runHook(script, '/autopilot --workflow release-flow ship it', cwd, configHome);
@@ -324,7 +338,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('reactivates the exact persisted named run through %s', (script) => {
+  itLinux.each(HOOKS)('reactivates the exact persisted named run through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -345,7 +359,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('starts a fresh run after valid terminal workflow history through %s', (script) => {
+  itLinux.each(HOOKS)('starts a fresh run after valid terminal workflow history through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     const transcriptPath = join(cwd, 'claude-config', 'projects', 'workflow-activation-fixture.jsonl');
@@ -366,7 +380,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('recovers a quarantined publish journal before resuming through %s', (script) => {
+  itLinux.each(HOOKS)('recovers a quarantined publish journal before resuming through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -389,7 +403,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('converges a quarantined clear journal before activating through %s', (script) => {
+  itLinux.each(HOOKS)('converges a quarantined clear journal before activating through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -409,7 +423,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('rejects an unrelated replacement beside an interrupted journal through %s', (script) => {
+  itLinux.each(HOOKS)('rejects an unrelated replacement beside an interrupted journal through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -431,7 +445,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('recovers a dead PID-reused preparing journal through %s', (script) => {
+  itLinux.each(HOOKS)('recovers a dead PID-reused preparing journal through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -452,7 +466,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('reclaims a stale recovery claim and discards an uninitialized dead preparing journal through %s', (script) => {
+  itLinux.each(HOOKS)('reclaims a stale recovery claim and discards an uninitialized dead preparing journal through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -481,7 +495,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('discards a dead preparing publish journal with an absent payload when its original remains through %s', (script) => {
+  itLinux.each(HOOKS)('discards a dead preparing publish journal with an absent payload when its original remains through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -501,7 +515,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('fails closed when a preparing owner start identity is unknown through %s', (script) => {
+  itLinux.each(HOOKS)('fails closed when a preparing owner start identity is unknown through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -525,7 +539,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('converges transaction artifacts while preserving a conflicting replacement through %s', (script) => {
+  itLinux.each(HOOKS)('converges transaction artifacts while preserving a conflicting replacement through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -546,7 +560,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('does not unlink a replacement made between recovery authentication and capture through %s', (script) => {
+  itLinux.each(HOOKS)('does not unlink a replacement made between recovery authentication and capture through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -569,7 +583,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('authenticates paused workflow transcript boundaries through %s', (script) => {
+  itLinux.each(HOOKS)('authenticates paused workflow transcript boundaries through %s', (script) => {
     const cases: Array<[string, (state: WorkflowStateWithBoundary, projects: string, transcriptPath: string) => void, boolean]> = [
       ['traversal', (state, projects) => {
         mkdirSync(join(projects, 'nested'));
@@ -620,7 +634,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('rejects forged paused completion observations and resumes authenticated advanced state through %s', (script) => {
+  itLinux.each(HOOKS)('rejects forged paused completion observations and resumes authenticated advanced state through %s', (script) => {
     for (const [name, signal, hash, resumes] of [
       ['forged hash', 'PIPELINE_RALPLAN_COMPLETE', '0'.repeat(64), false],
       ['stage skip', 'PIPELINE_EXECUTION_COMPLETE', undefined, false],
@@ -652,7 +666,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('retires an older-run cancel signal during activation through %s', (script) => {
+  itLinux.each(HOOKS)('retires an older-run cancel signal during activation through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const signalPath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'cancel-signal-state.json');
     try {
@@ -665,7 +679,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('rejects activation without a stable canonical transcript through %s', (script) => {
+  itLinux.each(HOOKS)('rejects activation without a stable canonical transcript through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     const canonical = join(cwd, 'claude-config', 'projects', 'workflow-activation-fixture.jsonl');
@@ -687,7 +701,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('loads a user-only profile from the canonical XDG config path through %s', (script) => {
+  itLinux.each(HOOKS)('loads a user-only profile from the canonical XDG config path through %s', (script) => {
     const { cwd, configHome } = createFixture();
     try {
       writeFileSync(join(configHome, 'claude-omg', 'config.jsonc'), JSON.stringify({ autopilot: { workflows: { 'user-only': { version: 1, stages: ['ralplan', 'execution'] } } } }));
@@ -699,7 +713,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('serializes activation through the shared state mutation lock in %s', async (script) => {
+  itLinux.each(HOOKS)('serializes activation through the shared state mutation lock in %s', async (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     const lockPath = `${statePath}.mutation.lock`;
@@ -721,7 +735,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('accepts the /omg:autopilot named workflow command through %s', (script) => {
+  itLinux.each(HOOKS)('accepts the /omg:autopilot named workflow command through %s', (script) => {
     const { cwd, configHome } = createFixture();
     try {
       const output = runHook(script, '/omg:autopilot --workflow release-flow ship the release', cwd, configHome);
@@ -732,7 +746,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('keeps later --workflow tokens in named workflow task text through %s', (script) => {
+  itLinux.each(HOOKS)('keeps later --workflow tokens in named workflow task text through %s', (script) => {
     const { cwd, configHome } = createFixture();
     try {
       const output = runHook(script, '/autopilot --workflow release-flow explain --workflow literally', cwd, configHome);
@@ -743,7 +757,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('resolves project workflow profiles from a literal non-Git working directory through %s', (script) => {
+  itLinux.each(HOOKS)('resolves project workflow profiles from a literal non-Git working directory through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const nested = join(cwd, 'packages', 'feature');
     const transcriptPath = join(cwd, 'claude-config', 'projects', 'workflow-activation-fixture.jsonl');
@@ -757,7 +771,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each(HOOKS)('preserves partial own named markers for generic and named activation through %s', (script) => {
+  itLinux.each(HOOKS)('preserves partial own named markers for generic and named activation through %s', (script) => {
     const { cwd, configHome } = createFixture();
     const statePath = join(cwd, '.omg', 'state', 'sessions', 'workflow-activation-fixture', 'autopilot-state.json');
     try {
@@ -776,7 +790,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it('preserves foreign shared-home recovery claims and publication temps while the template activates project A', () => {
+  itLinux('preserves foreign shared-home recovery claims and publication temps while the template activates project A', () => {
     const script = join(ROOT, 'templates', 'hooks', 'keyword-detector.mjs');
     const projectA = createFixture();
     const projectB = createFixture();
@@ -802,7 +816,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
       rmSync(projectB.cwd, { recursive: true, force: true });
     }
   });
-  it.each([
+  itLinux.each([
     ['/autopilot --workflow', 'Use /autopilot --workflow <name> <task>.'],
     ['/autopilot --workflow=release-flow ship it', 'Use --workflow <name> followed by a task.'],
     ['/autopilot --workflow release-flow', 'Provide a task after the workflow name.'],
@@ -825,7 +839,7 @@ describe('workflow profile activation hook fixtures (#3487)', () => {
     }
   });
 
-  it.each([
+  itLinux.each([
     ['comma-bearing stage', ['ralplan', 'execution,qa']],
     ['nested stage array', [['ralplan', 'execution']]],
   ])('rejects a %s in plugin and template profile validation', (_name, stages) => {
