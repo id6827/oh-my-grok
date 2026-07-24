@@ -1,0 +1,105 @@
+# oh-my-grok (OMG)
+
+**Multi-agent orchestration for [Grok Build](https://x.ai) / Grok CLI.**
+
+Ported from [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) with Grok-native upgrades: **real-time web/X search**, **Image Gen UI mockups**, and **Vision UI QA**.
+
+> Don't learn the harness. Just use OMG.
+
+## Install
+
+```bash
+# From GitHub (after publish)
+grok plugin install <owner>/oh-my-grok --trust
+grok plugin enable oh-my-grok
+
+# From a local checkout
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
+```
+
+Verify discovery:
+
+```bash
+grok plugin details oh-my-grok
+grok inspect
+```
+
+In a Grok session, try:
+
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
+```
+
+## Recommended pipeline
+
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
+
+Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
+
+## What you get
+
+| Surface | Count | Notes |
+|---------|------:|-------|
+| Agents | 20 | OMC 19 + `visual-designer` |
+| Skills | 43 | OMC 41 (omc→omg rename) + `ui-mockup` + `web-research` |
+| Hooks | SessionStart | Ensures `.omg/` tree |
+
+### Grok exclusives
+
+- **`/web-research`** — live docs, releases, issues, X signal → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
+- **Search-on-fail** — core skills instruct `web_search` before blind retries
+
+### Core skills (OMC parity)
+
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, …
+
+## Parity layers
+
+| Layer | Status in v0.1 |
+|-------|----------------|
+| **A. Behavioral / prompts** | Agents + skills ported |
+| **B. Runtime** (keyword detector, Stop gates, HUD, tmux team, full MCP) | Minimal SessionStart only; more in later versions |
+
+See [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md).
+
+## Project layout
+
+```text
+agents/           # subagent definitions
+skills/*/SKILL.md # slash skills
+hooks/            # hooks.json + scripts
+docs/             # architecture, parity, migration
+scripts/          # port + validate + smoke
+plugin.json       # Grok plugin manifest
+```
+
+## Development
+
+```bash
+node scripts/validate-parity.mjs
+./scripts/smoke-skills.sh
+grok plugin validate .
+# re-port helpers after refreshing OMC cache:
+# node scripts/port-from-omc.mjs
+```
+
+## License
+
+MIT. Includes original copyright for oh-my-claudecode (Yeachan Heo and contributors) plus oh-my-grok contributors. See [LICENSE](LICENSE).
+
+## Credits
+
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — orchestration design, agents, and skill protocols
+- xAI Grok Build — plugin/skills/hooks runtime
