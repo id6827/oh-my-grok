@@ -1,5 +1,5 @@
 {
-  "description": "OMG session lifecycle hooks",
+  "description": "OMG orchestration hooks (Layer B: SessionStart, keyword detector, Stop continuation)",
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +9,30 @@
             "type": "command",
             "command": "bash \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh\"",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/keyword-detector.mjs\"",
+            "timeout": 8
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-continuation.mjs\"",
+            "timeout": 15
           }
         ]
       }

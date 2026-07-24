@@ -26,8 +26,8 @@ OMG version: **0.1.0**.
 | Team (in-session) | ✅ | 🟡 via `spawn_subagent` / worktree |
 | `omc team` tmux multi-CLI | ✅ | ❌ deferred (Layer B3) |
 | Named autopilot `--workflow` + flock | ✅ Linux | 🟡 documented; flock gate deferred |
-| Keyword magic triggers (hooks) | ✅ | 🟡 SessionStart only |
-| Stop continuation gates | ✅ | ❌ deferred |
+| Keyword magic triggers (hooks) | ✅ | 🟡 simplified detector (v0.2) |
+| Stop continuation gates | ✅ | 🟡 simplified Stop gate (v0.2) |
 | HUD statusline | ✅ | 🟡 skill text; no binary HUD |
 | Skillify / learner | ✅ | ✅ prompts |
 | OpenClaw | ✅ | ❌ N/A |
@@ -69,10 +69,10 @@ All OMC agents ported with `model: inherit` and tool-name remaps:
 | Component | OMG v0.1 |
 |-----------|----------|
 | SessionStart → ensure `.omg/` | ✅ |
-| keyword-detector | ❌ |
+| keyword-detector | 🟡 v0.2 simplified |
 | skill-injector | ❌ |
 | pre-tool-enforcer | ❌ |
-| stop continuation | ❌ |
+| stop continuation | 🟡 v0.2 simplified |
 | MCP state_write server | ❌ (file-based state in prompts) |
 | `omg` CLI binary | ❌ |
 
