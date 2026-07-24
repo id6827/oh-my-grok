@@ -2,6 +2,10 @@
 
 Path: `.omg/state/team-state.json`
 
+Used by **`omg team`** and by **`/autopilot` when `autopilot.execution` is `"team"`**
+(see [settings-schema.md](./settings-schema.md#autopilotexecution--autopilotteam) and
+[README — solo vs team](../README.md#autopilot-execution-solo-vs-team)).
+
 ```json
 {
   "active": true,

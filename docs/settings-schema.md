@@ -70,6 +70,59 @@ user `~/.config/grok-omg/config.jsonc` (project takes precedence).
 - `cancel` is never disableable, even if listed: it is the emergency stop for active modes.
 - To disable all keyword routing at once instead, set `OMC_SKIP_HOOKS=keyword-detector`.
 
+## `autopilot.execution` / `autopilot.team`
+
+Controls **how `/autopilot` runs the implementation stage** — not whether agents or
+skills are used (they always are).
+
+| Value | Default | Implementation stage | Observation |
+|-------|---------|----------------------|-------------|
+| `"solo"` | **yes** (when omitted) | In-session `spawn_subagent` + skill routing | Same Grok session; no tmux |
+| `"team"` | no | `omg team` / CLI workers in **tmux** | `tmux attach`, `omg team status`, HUD `team:…` |
+
+```jsonc
+// Project: .grok/omg.jsonc  |  User: ~/.config/grok-omg/config.jsonc
+{
+  "autopilot": {
+    // "solo" | "team"  — omit for solo
+    "execution": "solo"
+  }
+}
+```
+
+```jsonc
+{
+  "autopilot": {
+    "execution": "team",
+    "team": {
+      // Worker CLIs for implementation (not reviewers). First available type is used
+      // when launching a worker pool; list preferred providers for your machine.
+      "agentTypes": ["grok"] // or ["cursor"], ["codex"], ["grok", "cursor"], …
+    }
+  }
+}
+```
+
+### Fields
+
+| Field | Type | Required | Default | Meaning |
+|-------|------|----------|---------|---------|
+| `autopilot.execution` | `"solo" \| "team"` | No | `"solo"` | Implementation runtime |
+| `autopilot.team.agentTypes` | `string[]` | When `execution` is `"team"` | host-dependent | CLI worker kinds: `grok`, `cursor`, `codex`, `claude`, `gemini`, `antigravity`, `executor` |
+
+### Behavior notes
+
+- **Solo:** planning / QA / validation can still spawn specialist agents in-session; you will not see `omg-omg-team-*` tmux sessions for that path.
+- **Team:** needs a working **tmux** (or dry-run only). Workers appear under `.omg/state/team-state.json` and `.omg/state/team-bridge/<name>/`.
+- Reviewer roles (architect, critic, security-reviewer, code-reviewer) stay on native OMG agents unless you deliberately run a separate `omg team` for that work.
+- Project config overrides user config for these keys.
+
+### Related docs
+
+- [README — Autopilot execution](../README.md#autopilot-execution-solo-vs-team)
+- [team-state-schema.md](./team-state-schema.md)
+- Skill: `skills/autopilot/SKILL.md` (execution examples)
+
 ## `autopilot.workflows`
 
 Define reusable, named fixed-stage profiles for `/autopilot`. A profile is selected

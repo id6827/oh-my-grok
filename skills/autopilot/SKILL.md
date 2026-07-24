@@ -187,13 +187,33 @@ Optional settings in `.claude/omg.jsonc` (project) or `~/.config/claude-omg/conf
 }
 ```
 
+### Execution mode: `solo` (default) vs `team`
+
+Both modes use agents and skills. Config lives in `.grok/omg.jsonc` or
+`~/.config/grok-omg/config.jsonc` (project overrides user). See
+`docs/settings-schema.md` and README “Autopilot execution”.
+
+| Mode | Config | Implementation | User observation |
+|------|--------|----------------|------------------|
+| **solo** | omit or `"execution": "solo"` | `spawn_subagent` in this session | Same chat; **no** tmux |
+| **team** | `"execution": "team"` | `omg team` / tmux CLI workers | `tmux attach`, `omg team status`, HUD `team:…` |
+
+```jsonc
+// Stay in-session (recommended default for most Grok users)
+{
+  "autopilot": {
+    "execution": "solo"
+  }
+}
+```
+
 To run autopilot implementation through the tmux CLI team runtime and prefer Cursor executor workers:
 
 ```jsonc
 {
   "autopilot": {
     "execution": "team",
-    "team": { "agentTypes": ["cursor"] }
+    "team": { "agentTypes": ["cursor"] } // or ["grok"], ["codex"], …
   }
 }
 ```
@@ -210,10 +230,21 @@ or the Grok Build slash compatibility surface:
 /omg-teams 1:cursor "<implementation task>"
 ```
 
+**Where to look for team workers (not a missing feature):**
+
+```sh
+omg team status
+tmux ls                    # omg-omg-team-*
+tmux attach -t <session>
+omg hud
+cat .omg/state/team-state.json
+```
+
 Limitations:
 - Cursor workers are executor-style only: implementation, file edits, build/test fixes, and other plan execution tasks.
 - Keep reviewer, critic, security-review, validation verdict, and final approval roles on native Claude/OMG reviewer agents unless explicit safe support is added later.
 - Cursor requires the `cursor-agent` CLI to be installed and authenticated. If `cursor-agent` is unavailable, report that setup requirement instead of silently falling back to Claude-only execution.
+- Team mode needs **tmux**; without it, `omg team` forces dry-run and only writes plan JSON under `.omg/state/team-bridge/`.
 
 ## Resume
 

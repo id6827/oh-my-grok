@@ -255,6 +255,26 @@ OMG supports two levels of configuration files.
 
 > ⚠️ **Warning:** The configuration file format is JSONC (JSON with comments support). It is not a TypeScript config file (`omg.config.ts`).
 
+### Autopilot: solo vs team (pick your style)
+
+`/autopilot` always uses agents and skills. Only the **implementation stage** switches:
+
+| `autopilot.execution` | Behavior | Watch work via |
+|----------------------|----------|----------------|
+| `"solo"` (default) | In-session subagents | This chat / HUD `agents:N` |
+| `"team"` | tmux CLI workers (`omg team`) | `tmux attach`, `omg team status`, HUD `team:…` |
+
+```jsonc
+// .grok/omg.jsonc
+{
+  "autopilot": {
+    "execution": "team",           // or "solo"
+    "team": { "agentTypes": ["grok"] }
+  }
+}
+```
+
+Full table, CLI examples, and guidance: [README — Autopilot execution](../README.md#autopilot-execution-solo-vs-team) · [settings-schema](./settings-schema.md#autopilotexecution--autopilotteam).
 ### Configuration priority
 
 When settings exist from multiple sources, they are merged in the following order (lower entries take precedence):

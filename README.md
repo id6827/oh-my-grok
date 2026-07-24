@@ -47,6 +47,74 @@ In a Grok session, try:
 
 Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 
+## Autopilot execution: `solo` vs `team`
+
+`/autopilot` always orchestrates **agents + skills**. How the **implementation stage** runs depends on config — pick what matches your taste.
+
+| Mode | Config | How work runs | What you see |
+|------|--------|---------------|--------------|
+| **`solo`** (default) | omit `execution`, or `"solo"` | In-session `spawn_subagent` + skill routing | Same Grok chat; **no** tmux panes |
+| **`team`** | `"execution": "team"` | Implementation via `omg team` CLI workers | **tmux** sessions (`omg-omg-team-…`); HUD `team:…` |
+
+### Configure (project or user)
+
+**Project** (recommended for one repo): `.grok/omg.jsonc`  
+**User** (all projects): `~/.config/grok-omg/config.jsonc`  
+Project wins over user. Full keys: [docs/settings-schema.md](docs/settings-schema.md).
+
+```jsonc
+// .grok/omg.jsonc — default mental model: stay in this Grok session
+{
+  "autopilot": {
+    "execution": "solo"
+  }
+}
+```
+
+```jsonc
+// .grok/omg.jsonc — OMC-like multi-CLI workers in tmux
+{
+  "autopilot": {
+    "execution": "team",
+    "team": {
+      // one or more: grok | cursor | codex | claude | gemini | antigravity | executor
+      "agentTypes": ["grok"]
+    }
+  }
+}
+```
+
+### Watch team workers (when `execution: "team"`)
+
+Grok’s chat UI does **not** auto-open OMC-style side panes. That is expected: process teams are **tmux-backed**.
+
+```bash
+node bin/omg.js team status          # or: omg team status
+tmux ls                              # look for omg-omg-team-*
+tmux attach -t <tmux_session>        # live worker pane (detach: Ctrl-b then d)
+node bin/omg.js hud                  # one-line: team:name(Nxagent)
+cat .omg/state/team-state.json
+```
+
+Manual team without full autopilot:
+
+```bash
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
+```
+
+### Which should you use?
+
+| Prefer **solo** when… | Prefer **team** when… |
+|----------------------|------------------------|
+| Day-to-day coding in one Grok window | You want visible CLI workers in **tmux** |
+| You don’t want to install/use tmux | Mixing **cursor / codex / gemini** workers |
+| Fast feedback in the same transcript | Long parallel implementers isolated from the orchestrator |
+| macOS laptop, minimal setup | CI/server or multi-provider execution |
+
+**Opinion / default:** keep **`solo`** unless you already live in tmux or need multi-CLI isolation. Solo is the lower-friction Grok-native path; team is the power path when you want process-level workers and OMC-like pane visibility via `tmux attach`.
+
 ## What you get
 
 | Surface | Count | Notes |
