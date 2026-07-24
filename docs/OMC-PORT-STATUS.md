@@ -128,6 +128,7 @@
 | CI workflows | ❌ |
 | i18n READMEs | 🟡 README.ko.md |
 | CONTRIBUTING, SECURITY | ✅ ported/adapted |
+| OMC `docs/**` product tree | ✅ bulk-ported via `scripts/port-omc-docs.mjs` (OMG meta docs preserved) |
 | plugin shipping verify | ❌ |
 | MIT NOTICE | ✅ |
 
