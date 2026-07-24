@@ -12,6 +12,7 @@ import {
   listActiveModes,
   emitAdditionalContext,
 } from "./lib/hook-io.mjs";
+import { refreshHud } from "./lib/hud.mjs";
 
 const MODE_HINTS = {
   "deep-interview": [
@@ -70,6 +71,12 @@ async function main() {
     ...modes.map((m) => `- ${m.mode} (${m.file}): ${hintForMode(m.mode)}`),
     "Honor these constraints for this turn.",
   ];
+
+  try {
+    refreshHud(ws, { last_hook: "skill-injector" });
+  } catch {
+    /* ignore */
+  }
 
   emitAdditionalContext("UserPromptSubmit", parts.join("\n"));
   process.exit(0);

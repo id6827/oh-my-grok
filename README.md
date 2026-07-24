@@ -70,18 +70,27 @@ Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 
 `deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, …
 
-### Hooks (Layer B, v0.4)
+### Hooks (Layer B, v0.5)
 
-`SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` (shell safety) · `PreCompact` · `Stop` (continuation) · cancel clears `.omg/state`
+`SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · cancel clears `.omg/state`
+
+### MCP state tools
+
+Plugin `.mcp.json` exposes **omg-state**: `state_list_active`, `state_read`, `state_write`, `state_clear`.
 
 ### Local CLI helpers
 
 ```bash
 node bin/omg.js version
+node bin/omg.js status      # file HUD + threshold
 node bin/omg.js state list
 node bin/omg.js doctor
-npm test   # hook/state unit tests
+npm test
 ```
+
+### Similarity
+
+Flow-weighted OMC parity target **≥80%** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
 
 ## Parity layers
 

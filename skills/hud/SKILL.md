@@ -10,6 +10,24 @@ scope: ~/.grok/**  # DOCUMENTATION ONLY - Allowed write scope
 
 Configure the OMG HUD (Heads-Up Display) for the statusline.
 
+## Grok file-based HUD (v0.5 — always available)
+
+Even without a Claude-style statusline binary, OMG maintains:
+
+| Path | Purpose |
+|------|---------|
+| `.omg/state/hud-status.txt` | One-line status (active modes) |
+| `.omg/state/hud-state.json` | Structured modes + timestamps |
+
+Hooks refresh these files (SessionStart, keywords, injector, PostToolUse, Subagent*, Stop).
+
+```bash
+node bin/omg.js status    # print HUD + config threshold
+cat .omg/state/hud-status.txt
+```
+
+Use this path when the full `~/.grok/hud/omg-hud.mjs` statusline is not installed.
+
 Note: All `~/.grok/...` paths in this guide respect `GROK_CONFIG_DIR` when that environment variable is set.
 
 ## Quick Commands

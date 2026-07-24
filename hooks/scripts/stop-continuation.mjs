@@ -15,6 +15,7 @@ import {
   emitStopBlock,
   readJsonSafe,
 } from "./lib/hook-io.mjs";
+import { refreshHud } from "./lib/hud.mjs";
 import { join } from "node:path";
 
 const MAX_BLOCKS_PER_TURN = 4;
@@ -156,6 +157,12 @@ async function main() {
       // Agent may be stuck; allow stop
       process.exit(0);
     }
+  }
+
+  try {
+    refreshHud(ws, { last_hook: "Stop", stop_blocked: true });
+  } catch {
+    /* ignore */
   }
 
   emitStopBlock(continuationReason(modes));

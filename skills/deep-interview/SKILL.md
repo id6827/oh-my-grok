@@ -70,12 +70,13 @@ If this skill is loaded through a qualified plugin path or `skill("/deep-intervi
 Complete this phase before Phase 1, before brownfield exploration, before `state_write`, before Round 0, and before any ambiguity scoring. Do not continue if the resolved threshold and source are unknown.
 
 1. **Read threshold settings in precedence order**:
-   - User settings: `[$GROK_CONFIG_DIR|~/.claude]/settings.json`
-   - Project settings: `./.grok/config.toml` (overrides user settings)
+   - Project: `.grok/omg.jsonc` (template: `templates/omg.jsonc`)
+   - User: `~/.grok/omg.jsonc` or `~/.config/grok-omg/config.jsonc`
+   - Helper: `node bin/omg.js status` prints the resolved threshold
 2. **Resolve threshold and source**:
-   - Read `omg.deepInterview.ambiguityThreshold` from both files when present.
-   - Use the project value when valid; otherwise use the user value when valid; otherwise use the default `0.2`.
-   - Set these run variables exactly: `<resolvedThreshold>`, `<resolvedThresholdPercent>`, and `<resolvedThresholdSource>` (for example `./.grok/config.toml`, `[$GROK_CONFIG_DIR|~/.claude]/settings.json`, or `default`).
+   - Read `deepInterview.ambiguityThreshold` (0.0–1.0) when present.
+   - Use the project value when valid; otherwise user; otherwise default `0.2`.
+   - Set these run variables exactly: `<resolvedThreshold>`, `<resolvedThresholdPercent>`, and `<resolvedThresholdSource>` (for example `.grok/omg.jsonc` or `default`).
 3. **Emit the required first line to the user before any other interview announcement**:
 
 ```

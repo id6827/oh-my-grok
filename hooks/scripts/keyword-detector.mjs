@@ -14,6 +14,7 @@ import {
   emitAdditionalContext,
 } from "./lib/hook-io.mjs";
 import { clearActiveModes } from "./clear-active-modes.mjs";
+import { refreshHud } from "./lib/hud.mjs";
 
 /** Priority order: first match wins for primary skill; cancel always wins. */
 const RULES = [
@@ -103,6 +104,21 @@ const RULES = [
     activate: null,
     extra:
       "Deepsearch: prioritize codebase explore/grep before asking the user; cite file:line evidence.",
+  },
+  {
+    name: "verify",
+    skill: "verify",
+    re: /\b(verify\s+(this|the|completion|change)|run\s+verify)\b/i,
+    activate: null,
+  },
+  {
+    name: "analyze",
+    skill: "trace",
+    // avoid matching "analysis" alone in long docs — require analyze + object-ish word
+    re: /\banalyze\s+(this|the|root\s+cause|failure|bug|error|regression)\b/i,
+    activate: null,
+    extra:
+      "Analyze mode: form hypotheses, cite evidence, prefer tracer/debugger agents before large edits.",
   },
   {
     name: "ui-mockup",
@@ -237,6 +253,12 @@ async function main() {
   } else if (primary.name === "code-review") {
     extra =
       "Delegate to agent code-reviewer (read-only). Severity-tagged findings; suggest /security-review if auth/crypto touched.";
+  }
+
+  try {
+    refreshHud(ws, { last_keyword: primary.name });
+  } catch {
+    /* ignore */
   }
 
   emitAdditionalContext(

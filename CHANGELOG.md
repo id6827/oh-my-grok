@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 — 2026-07-24
+
+### Added (Ralph: ≥80% flow-weighted similarity)
+
+- **MCP state server** `mcp/omg-state-server.mjs` + `.mcp.json` (`state_list_active`, `state_read`, `state_write`, `state_clear`).
+- **PostToolUse** `post-tool-verifier.mjs` + **SubagentStart/Stop** `subagent-tracker.mjs`.
+- **File HUD** `hooks/scripts/lib/hud.mjs` → `.omg/state/hud-status.txt`; `omg status`.
+- **Config** `templates/omg.jsonc` + `hooks/scripts/lib/config.mjs` (deepInterview threshold).
+- Keywords: `verify`, `analyze …`; slash **commands/** aliases for core skills.
+- **docs/SIMILARITY.md** methodology; blended score **80.0** (A92/B78/C58/D52).
+
 ## 0.4.0 — 2026-07-24
 
 ### Added (Autopilot parity boost from OMC similarity analysis)

@@ -1,0 +1,22 @@
+{
+  // Copy to project: .grok/omg.jsonc  (or ~/.grok/omg.jsonc for user defaults)
+  "deepInterview": {
+    // Ambiguity stop threshold (0.0–1.0). Default 0.2 = 20%.
+    "ambiguityThreshold": 0.2,
+    "maxRounds": 20,
+    "softWarningRounds": 10,
+    "minRoundsBeforeExit": 3,
+    "enableChallengeAgents": true
+  },
+  "autopilot": {
+    "maxQaCycles": 5,
+    "maxValidationRounds": 3,
+    "skipQa": false,
+    "skipValidation": false,
+    "execution": "solo"
+  },
+  "hooks": {
+    "stopContinuation": true,
+    "keywordDetector": true
+  }
+}
