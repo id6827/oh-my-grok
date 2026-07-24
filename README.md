@@ -93,14 +93,16 @@ npm test
 **Each layer A/B/C/D must be ≥90** (not just a weighted average).
 v0.7: **A93 / B91 / C90 / D90** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
 
-## Parity layers
+## Parity layers (v0.7)
 
-| Layer | Status in v0.1 |
-|-------|----------------|
-| **A. Behavioral / prompts** | Agents + skills ported |
-| **B. Runtime** (keyword detector, Stop gates, HUD, tmux team, full MCP) | Minimal SessionStart only; more in later versions |
+| Layer | Score (Strict ≥90) |
+|-------|-------------------:|
+| A Prompt/skills | 93 |
+| B Hooks | 91 |
+| C Runtime/team/MCP | 90 |
+| D HUD | 90 |
 
-See [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md).
+See [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md), [docs/SIMILARITY.md](docs/SIMILARITY.md).
 
 ## Project layout
 
