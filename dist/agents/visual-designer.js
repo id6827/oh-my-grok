@@ -1,0 +1,30 @@
+import { loadAgentPrompt } from "./utils.js";
+export const VISUAL_DESIGNER_PROMPT_METADATA = {
+    category: "specialist",
+    cost: "CHEAP",
+    promptAlias: "visual-designer",
+    triggers: [
+        {
+            domain: "UI mockup",
+            trigger: "Design mockups, visual QA, image-gen UI drafts",
+        },
+    ],
+    useWhen: [
+        "UI mockup generation with Image Gen",
+        "Vision QA against screenshots",
+        "Visual design systems for frontend",
+    ],
+    avoidWhen: [
+        "Pure implementation without design",
+        "Backend-only work",
+    ],
+};
+export const visualDesignerAgent = {
+    name: "visual-designer",
+    description: "Grok-specialized UI/visual agent. Analyzes design mockups with Vision, extracts layout/color/typography, guides frontend implementation plus Vision QA.",
+    prompt: loadAgentPrompt("visual-designer"),
+    model: "sonnet",
+    defaultModel: "sonnet",
+    metadata: VISUAL_DESIGNER_PROMPT_METADATA,
+};
+//# sourceMappingURL=visual-designer.js.map

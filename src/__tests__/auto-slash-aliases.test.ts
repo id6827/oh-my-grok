@@ -209,7 +209,7 @@ Deep interview body`
     expect(result.replacementText).toContain('## Skill Pipeline');
     expect(result.replacementText).toContain('Pipeline: `deep-interview → plan → autopilot`');
     expect(result.replacementText).toContain('Next skill arguments: `--consensus --direct`');
-    expect(result.replacementText).toContain('Skill("oh-my-grok:plan")');
+    expect(result.replacementText).toContain('skill("/plan")');
     expect(result.replacementText).toContain('`.omg/specs/deep-interview-{slug}.md`');
   });
 
@@ -317,7 +317,7 @@ Deep interview body`
 
     expect(result.success).toBe(true);
     expect(result.replacementText).toContain('## Autoresearch Setup Mode');
-    expect(result.replacementText).toContain('Skill("oh-my-grok:autoresearch")');
+    expect(result.replacementText).toContain('skill("/autoresearch")');
     expect(result.replacementText).toContain('Mission seed from invocation: `improve startup performance`');
     expect(result.replacementText).not.toContain('## Skill Pipeline');
   });
@@ -346,7 +346,7 @@ Deep interview body`
 
     expect(result.success).toBe(true);
     expect(result.replacementText)
-      .toContain('Skill("oh-my-grok:autoresearch")');
+      .toContain('skill("/autoresearch")');
   });
 
   it('routes /ccg advisor asks through the plugin bridge inside an active Claude session when GROK_PLUGIN_ROOT is set', async () => {

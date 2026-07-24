@@ -69,7 +69,7 @@ describe('Tier-0 contract docs consistency', () => {
 
   it('keeps issue #3316 failure-mode guardrails in the installed CLAUDE.md template', () => {
     expect(claudeDoc).toContain('<failure_mode_guards>');
-    expect(claudeDoc).toContain('use AskUserQuestion instead of ending with a prose question');
+    expect(claudeDoc).toContain('use ask_user_question instead of ending with a prose question');
     expect(claudeDoc).toContain('git status --short --branch');
     expect(claudeDoc).toContain('`.omg/state/` or `.omg/handoffs/`');
     expect(claudeDoc).toContain('TODO-style placeholder notes');

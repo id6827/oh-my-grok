@@ -3,7 +3,7 @@
  * Standalone MCP Server for OMG Tools
  *
  * This server exposes LSP, AST, and Python REPL tools via stdio transport
- * for discovery by Claude Code's MCP management system.
+ * for discovery by Grok Build (and any MCP host) via stdio.
  *
  * Usage: node dist/mcp/standalone-server.js
  */
@@ -16,7 +16,7 @@ import { buildListToolsResponse, getEnabledTools } from './tool-registry.js';
 import { disconnectAll as disconnectAllLsp } from '../tools/lsp/index.js';
 // Create the MCP server
 const server = new Server({
-    name: 't',
+    name: 'omg-tools',
     version: '1.0.0',
 }, {
     capabilities: {

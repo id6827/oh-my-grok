@@ -63,7 +63,7 @@ export function renderSkillPipelineGuidance(skillName, pipeline) {
     ]);
     const nextInvocation = pipeline.nextSkill
         ? [
-            `Skill("oh-my-grok:${pipeline.nextSkill}")`,
+            `skill("/${pipeline.nextSkill}")`,
             pipeline.nextSkillArgs ? `with arguments \`${pipeline.nextSkillArgs}\`` : undefined,
             'using the handoff context from this stage',
         ].filter(Boolean).join(' ')

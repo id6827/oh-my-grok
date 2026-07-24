@@ -29,4 +29,5 @@ export { testEngineerAgent } from './definitions.js';
 export { securityReviewerAgent, codeReviewerAgent, gitMasterAgent, codeSimplifierAgent } from './definitions.js';
 // Core exports (getAgentDefinitions and omcSystemPrompt)
 export { getAgentDefinitions, omcSystemPrompt } from './definitions.js';
+export { visualDesignerAgent, VISUAL_DESIGNER_PROMPT_METADATA } from './visual-designer.js';
 //# sourceMappingURL=index.js.map

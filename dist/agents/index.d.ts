@@ -22,4 +22,5 @@ export { debuggerAgent, verifierAgent } from './definitions.js';
 export { testEngineerAgent } from './definitions.js';
 export { securityReviewerAgent, codeReviewerAgent, gitMasterAgent, codeSimplifierAgent } from './definitions.js';
 export { getAgentDefinitions, omcSystemPrompt } from './definitions.js';
+export { visualDesignerAgent, VISUAL_DESIGNER_PROMPT_METADATA } from './visual-designer.js';
 //# sourceMappingURL=index.d.ts.map

@@ -132,3 +132,13 @@ npm run build && npm test
 - Default server id: `omg-tools` via `mcp/run-tools-server.mjs`.
 - Probe: `npm run mcp:probe` (expects ~54 tools when bridge built).
 - Thin `mcp/omg-state-server.mjs` remains as manual fallback (state tools only).
+
+
+### Residual close (Ralph 2026-07-25)
+
+- Docs aligned: README/CONTRIBUTING/bridge → **omg-tools** default
+- Path stubs: `docs/CLAUDE.md`, `.claude-plugin/plugin.json`
+- Agents: **visual-designer** registered (20)
+- Tests: AskUserQuestion→ask_user_question, Skill("oh-my-grok:x")→skill("/x") batch
+- tsx installed; mcp server meta name omg-tools
+- Full vitest still not 100% (workflow-profile/Linux flock clusters remain)

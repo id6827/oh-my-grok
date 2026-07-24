@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const ROOT = process.cwd();
 const SCRIPT = join(ROOT, 'scripts', 'workflow-drift-guard.mjs');
 const TEMPLATE = join(ROOT, 'templates', 'hooks', 'workflow-drift-guard.mjs');
-const QUESTION_REASON_MARKERS = ['AskUserQuestion', 'allowOther'];
+const QUESTION_REASON_MARKERS = ['ask_user_question', 'allowOther'];
 const AMBIENT_PARENT_LANE_SENTINEL = 'OMC_WORKFLOW_DRIFT_GUARD_AMBIENT_LANE';
 
 interface GuardResult {
@@ -258,7 +258,7 @@ describe('workflow-drift-guard Stop hook', () => {
 
   it('uses no history or invocation state', () => {
     const input = guardInput('PostgreSQL and SQLite are viable options. Which should I choose?', {
-      prior_tool_calls: [{ name: 'AskUserQuestion', input: { question: 'Database?', options: ['PostgreSQL', 'SQLite'] } }],
+      prior_tool_calls: [{ name: 'ask_user_question', input: { question: 'Database?', options: ['PostgreSQL', 'SQLite'] } }],
     });
     expectBlock(runGuard(input));
   });

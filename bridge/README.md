@@ -28,7 +28,16 @@ npm run build:all      # both
 | CLI | `bin/omg.js` |
 | Team | `omg team` via `bin/omg.js` + `src/team` |
 
-Full tools MCP is **host-agnostic** (standard MCP stdio). Grok Build loads it via `plugin.json` → `.mcp.json`. First start may run `npm run build:bridge` if `bridge/mcp-server.cjs` is missing.
+Full tools MCP is **host-agnostic** (standard MCP stdio). Grok Build loads it via `plugin.json` → `.mcp.json` (and/or project `.grok/config.toml`).
+
+**No auto-build on MCP connect** (handshake timeout). Prepare once:
+
+```bash
+npm run build            # dist/standalone fallback
+npm run build:bridge     # preferred bridge/mcp-server.cjs
+```
+
+Launcher order: `bridge/mcp-server.cjs` → `dist/mcp/standalone-server.js` → error.
 
 ## Policy
 

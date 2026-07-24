@@ -4,8 +4,8 @@
  * Issue #999: Structured deliberation protocol (RALPLAN-DR)
  *
  * Verifies that the plan skill's consensus mode (ralplan) mandates:
- * 1. Structured AskUserQuestion for approval (not plain text)
- * 2. Explicit Skill("oh-my-grok:ralph") invocation on approval
+ * 1. Structured ask_user_question for approval (not plain text)
+ * 2. Explicit skill("/ralph") invocation on approval
  * 3. Prohibition of direct implementation from the planning agent
  * 4. User feedback step after Planner but before Architect/Critic (#600)
  * 5. RALPLAN-DR short mode and deliberate mode requirements (#999)
@@ -41,13 +41,13 @@ describe('Issue #595: Consensus mode execution handoff', () => {
   });
 
   describe('plan skill - consensus mode', () => {
-    it('should mandate AskUserQuestion for the approval step', () => {
+    it('should mandate ask_user_question for the approval step', () => {
       const skill = getBuiltinSkill('omg-plan');
       expect(skill).toBeDefined();
 
       const consensusSection = extractSection(skill!.template, 'Consensus Mode');
       expect(consensusSection).toBeDefined();
-      expect(consensusSection).toContain('AskUserQuestion');
+      expect(consensusSection).toContain('ask_user_question');
     });
 
     it('should mandate Skill invocation for ralph on user approval', () => {
@@ -56,7 +56,7 @@ describe('Issue #595: Consensus mode execution handoff', () => {
 
       const consensusSection = extractSection(skill!.template, 'Consensus Mode');
       expect(consensusSection).toBeDefined();
-      expect(consensusSection).toContain('Skill("oh-my-grok:ralph")');
+      expect(consensusSection).toContain('skill("/ralph")');
     });
 
     it('should use MUST language for execution handoff', () => {
@@ -65,7 +65,7 @@ describe('Issue #595: Consensus mode execution handoff', () => {
 
       const consensusSection = extractSection(skill!.template, 'Consensus Mode');
       expect(consensusSection).toBeDefined();
-      expect(consensusSection).toMatch(/\*\*MUST\*\*.*invoke.*Skill/i);
+      expect(consensusSection).toMatch(/\*\*MUST\*\*.*invoke.*[Ss]kill/i);
     });
 
     it('should prohibit direct implementation from the planning agent', () => {
@@ -114,7 +114,7 @@ describe('Issue #595: Consensus mode execution handoff', () => {
 
       const escalation = extractTagContent(skill!.template, 'Escalation_And_Stop_Conditions');
       expect(escalation).toBeDefined();
-      expect(escalation).toContain('Skill("oh-my-grok:ralph")');
+      expect(escalation).toContain('skill("/ralph")');
       // Old vague language should be gone
       expect(escalation).not.toContain('transition to execution mode (ralph or executor)');
     });
@@ -183,15 +183,15 @@ describe('Issue #595: Consensus mode execution handoff', () => {
       expect(architectIdx).toBeGreaterThan(feedbackIdx);
     });
 
-    it('should mandate AskUserQuestion for the user feedback step', () => {
+    it('should mandate ask_user_question for the user feedback step', () => {
       const skill = getBuiltinSkill('omg-plan');
       expect(skill).toBeDefined();
 
       const consensusSection = extractSection(skill!.template, 'Consensus Mode');
       expect(consensusSection).toBeDefined();
 
-      // The user feedback step must use MUST + AskUserQuestion
-      expect(consensusSection).toMatch(/User feedback.*MUST.*AskUserQuestion/s);
+      // The user feedback step must use MUST + ask_user_question
+      expect(consensusSection).toMatch(/User feedback.*MUST.*ask_user_question/s);
     });
 
     it('should offer Proceed/Request changes/Skip review options in user feedback step', () => {
@@ -262,7 +262,7 @@ describe('Issue #2945: planning modules require explicit execution consent', () 
     expect(escalation).toBeDefined();
     expect(escalation).toContain('without explicitly naming an execution path');
     expect(escalation).toContain('pending approval');
-    expect(escalation).toContain('Do NOT invoke `Skill("oh-my-grok:ralph")`');
+    expect(escalation).toContain('Do NOT invoke `skill("/ralph")`');
     expect(escalation).not.toMatch(/skip planning[\s\S]{0,120}MUST[\s\S]{0,80}Skill\("oh-my-grok:ralph"\)/i);
   });
 

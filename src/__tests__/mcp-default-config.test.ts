@@ -14,7 +14,10 @@ describe('default MCP config', () => {
     };
 
     expect(parsed.mcpServers).toBeTruthy();
-    expect(parsed.mcpServers?.t).toBeTruthy();
+    // Grok default server id is omg-tools (full tools launcher); legacy OMC used "t"
+    expect(
+      parsed.mcpServers?.["omg-tools"] || parsed.mcpServers?.t
+    ).toBeTruthy();
     expect(parsed.mcpServers?.team).toBeUndefined();
   });
 });

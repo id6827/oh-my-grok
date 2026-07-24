@@ -75,7 +75,7 @@ const sdkTools = enabledTools.map(t =>
  * Tools in disabled groups (via OMC_DISABLE_TOOLS) are excluded at startup.
  */
 export const omcToolsServer = createSdkMcpServer({
-  name: "t",
+  name: "omg-tools",
   version: "1.0.0",
   tools: sdkTools
 });

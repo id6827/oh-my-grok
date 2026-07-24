@@ -74,9 +74,17 @@ Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 
 `SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · cancel clears `.omg/state`
 
-### MCP state tools
+### MCP tools (`omg-tools`)
 
-Plugin `.mcp.json` exposes **omg-state**: `state_list_active`, `state_read`, `state_write`, `state_clear`.
+Plugin `.mcp.json` default server id **`omg-tools`** → `mcp/run-tools-server.mjs` → full tools (~54: LSP, AST, wiki, notepad, `state_*`, …).
+
+```bash
+npm run build && npm run build:bridge   # preferred CJS bundle
+npm run mcp:probe                       # expect ~54 tools
+```
+
+Fallback if bridge missing: `dist/mcp/standalone-server.js` (after `npm run build`).  
+Thin state-only server: `mcp/omg-state-server.mjs` (manual/debug, not default).
 
 ### Local CLI helpers
 

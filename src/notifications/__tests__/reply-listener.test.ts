@@ -65,7 +65,7 @@ describe("reply-listener", () => {
     });
   });
 
-  describe("AskUserQuestion reply injection", () => {
+  describe("ask_user_question reply injection", () => {
     it("targets the Other/free-text field before submitting mobile reply text", () => {
       const steps = buildReplyInjectionSteps(
         "Use SQLite for tests",
@@ -83,7 +83,7 @@ describe("reply-listener", () => {
       ]);
     });
 
-    it("keeps normal reply injection semantics for non AskUserQuestion messages", () => {
+    it("keeps normal reply injection semantics for non ask_user_question messages", () => {
       const steps = buildReplyInjectionSteps(
         "continue",
         "slack",

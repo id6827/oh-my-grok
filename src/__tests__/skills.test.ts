@@ -260,7 +260,7 @@ describe('Builtin Skills', () => {
       expect(skill?.template).toContain('`psm.sh`');
     });
 
-    it('stages mcp-setup AskUserQuestion menus so each prompt stays within the current option limit', () => {
+    it('stages mcp-setup ask_user_question menus so each prompt stays within the current option limit', () => {
       const skill = getBuiltinSkill('mcp-setup');
       expect(skill).toBeDefined();
 
@@ -268,7 +268,7 @@ describe('Builtin Skills', () => {
       expect(template).toContain('no more than 3 options per question');
 
       const blocks = template
-        .split(/AskUserQuestion(?: with [^:\n]+)?[:]?/g)
+        .split(/ask_user_question(?: with [^:\n]+)?[:]?/g)
         .slice(1)
         .map((block) => block.split(/## Step|### Step|### For |## Custom MCP Server/)[0]);
 
@@ -354,7 +354,7 @@ describe('Builtin Skills', () => {
       expect(skill?.template).toContain('personal-config/shared-config/external/project-scoped');
       expect(skill?.template).toContain('Cross-boundary MOVE candidates MUST have `Default? = no`');
       // Verify pipeline handoff is fully wired (B1 fix)
-      expect(skill?.template).toContain('Skill("oh-my-grok:autopilot")');
+      expect(skill?.template).toContain('skill("/autopilot")');
       expect(skill?.template).toContain('consensus plan as Phase 0+1 output');
       // Verify Phase 5 workflow pre-flight guards issue/worktree-driven project guidance (#2926)
       expect(skill?.template).toContain('Workflow Pre-Flight');
@@ -390,8 +390,8 @@ describe('Builtin Skills', () => {
       expect(skill?.template).toContain('unless the user explicitly approves that next step');
       expect(skill?.template).not.toContain('Pipeline: `deep-interview → plan → autopilot`');
       expect(skill?.template).not.toContain('Next skill: `plan`');
-      expect(skill?.template).not.toContain('3. Invoke Skill("oh-my-grok:plan")');
-      expect(skill?.template).toContain('Only after the user selects this option, invoke `Skill("oh-my-grok:plan")`');
+      expect(skill?.template).not.toContain('3. Invoke skill("/plan")');
+      expect(skill?.template).toContain('Only after the user selects this option, invoke `skill("/plan")`');
       expect(skill?.template).toContain('do not automatically invoke autopilot or any other execution skill');
       expect(skill?.template).toContain('`.omg/specs/deep-interview-{slug}.md`');
       expect(skill?.template).toContain('Why now: {one_sentence_targeting_rationale}');
@@ -400,7 +400,7 @@ describe('Builtin Skills', () => {
       expect(skill?.template).toContain('Every round explicitly names the weakest dimension and why it is the next target');
       expect(skill?.argumentHint).toContain('--autoresearch');
       expect(skill?.template).toContain('zero-learning-curve setup lane for the stateful `autoresearch` skill');
-      expect(skill?.template).toContain('Skill("oh-my-grok:autoresearch")');
+      expect(skill?.template).toContain('skill("/autoresearch")');
     });
 
     it('documents deep-interview Round 0 topology locking and multi-component scoring (issue #2919)', () => {
@@ -542,7 +542,7 @@ describe('Builtin Skills', () => {
     it('ships a config-aware deep-interview SKILL.md for native skill-loader paths (issues #2723, #3030)', () => {
       const raw = readFileSync(join(originalCwd, 'skills', 'deep-interview', 'SKILL.md'), 'utf-8');
       expect(raw).toContain('Native Plugin Invocation Guard (Issue #3030)');
-      expect(raw).toContain('`/oh-my-grok:deep-interview` or `Skill("oh-my-grok:deep-interview")`');
+      expect(raw).toContain('`/oh-my-grok:deep-interview` or `skill("/deep-interview")`');
       expect(raw).toContain('The user-facing preferred invocation is `/deep-interview`');
       expect(raw).toContain('do not recommend or advertise `/oh-my-grok:deep-interview`');
       expect(raw).toContain('Phase 0 below remains blocking');
@@ -562,8 +562,8 @@ describe('Builtin Skills', () => {
       expect(raw).toContain('Normalize oversized initial context before state init');
       expect(raw).toContain('prompt-safe initial-context summary');
       expect(raw).toContain('Wait until the summary exists before ambiguity scoring');
-      expect(raw).toContain('Do not ask the next `AskUserQuestion`, score ambiguity, or hand off to execution from an over-budget raw transcript.');
-      expect(raw).toContain('Preserve the AskUserQuestion path for OMG-native interaction');
+      expect(raw).toContain('Do not ask the next `ask_user_question`, score ambiguity, or hand off to execution from an over-budget raw transcript.');
+      expect(raw).toContain('Preserve the ask_user_question path for OMG-native interaction');
       expect(raw).toContain('Consult accumulated local planning knowledge');
       expect(raw).toContain('glob `.omg/specs/deep-*.md` and `.omg/plans/*.md`');
       expect(raw).toContain('before designing Round 1 questions');
@@ -694,7 +694,7 @@ describe('Builtin Skills', () => {
       expect(raw).not.toContain('ambiguity ≤ 20%');
     });
 
-    it('renders deep-interview summary-gate hardening while preserving AskUserQuestion transport', () => {
+    it('renders deep-interview summary-gate hardening while preserving ask_user_question transport', () => {
       const skill = getBuiltinSkill('deep-interview');
       expect(skill).toBeDefined();
       const t = skill!.template;
@@ -702,8 +702,8 @@ describe('Builtin Skills', () => {
       expect(t).toContain('Normalize oversized initial context before state init');
       expect(t).toContain('prompt-safe initial-context summary');
       expect(t).toContain('Wait until the summary exists before ambiguity scoring');
-      expect(t).toContain('Do not ask the next `AskUserQuestion`, score ambiguity, or hand off to execution from an over-budget raw transcript.');
-      expect(t).toContain('Preserve the AskUserQuestion path for OMG-native interaction');
+      expect(t).toContain('Do not ask the next `ask_user_question`, score ambiguity, or hand off to execution from an over-budget raw transcript.');
+      expect(t).toContain('Preserve the ask_user_question path for OMG-native interaction');
       expect(t).toContain('Initial Context Summarized: {yes|no}');
       expect(t).not.toContain('omx question');
     });
@@ -729,7 +729,7 @@ describe('Builtin Skills', () => {
         expect(deepInterviewSkill?.template)
           .toContain('zero-learning-curve setup lane for the stateful `autoresearch` skill');
         expect(deepInterviewSkill?.template)
-          .toContain('Skill("oh-my-grok:autoresearch")');
+          .toContain('skill("/autoresearch")');
         expect(askSkill?.template)
           .toContain('node "$GROK_PLUGIN_ROOT"/bridge/cli.cjs ask {{ARGUMENTS}}');
       } finally {
@@ -767,8 +767,8 @@ describe('Builtin Skills', () => {
       expect(skill?.template).toContain('This stage is approval-gated');
       expect(skill?.template).toContain('unless the user explicitly approves that next step');
       expect(skill?.template).not.toContain('Next skill: `autopilot`');
-      expect(skill?.template).not.toContain('Skill("oh-my-grok:autopilot")');
-      expect(skill?.template).not.toContain('3. Invoke Skill("oh-my-grok:autopilot")');
+      expect(skill?.template).not.toContain('skill("/autopilot")');
+      expect(skill?.template).not.toContain('3. Invoke skill("/autopilot")');
       expect(skill?.template).toContain('`.omg/plans/ralplan-*.md`');
     });
 

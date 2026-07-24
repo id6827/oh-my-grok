@@ -11,7 +11,7 @@ import {
   formatMergeReadinessQuestionMessage,
   readMergeReadinessState,
   recordMergeReadinessMCQAnswer,
-  recordMergeReadinessAskUserQuestionResult,
+  recordMergeReadinessask_user_questionResult,
   overrideMergeReadiness,
   redactMergeReadinessState,
   setMergeReadinessContent,
@@ -755,13 +755,13 @@ describe("merge-readiness runtime", () => {
     expect(await checkMergeReadiness(sessionId, tempDir, false)).toBeNull();
   });
 
-  it("rejects ambiguous AskUserQuestion output instead of guessing an answer", () => {
+  it("rejects ambiguous ask_user_question output instead of guessing an answer", () => {
     createInitialMergeReadinessState(tempDir, "/merge-readiness --quick docs gate", sessionId);
     setMergeReadinessContent(tempDir, {
       why: "Why", whatChanged: "What", tradeoffs: "Tradeoff", risksConsidered: "Risk", teamUnderstanding: "Team",
       questions: [makeQuestion("q1", "why"), makeQuestion("q2", "change"), makeQuestion("q3", "risk")],
     }, sessionId);
-    recordMergeReadinessAskUserQuestionResult(tempDir, { question: "[MERGE READINESS:q1] choose" }, "selected [a] or [b]", sessionId);
+    recordMergeReadinessask_user_questionResult(tempDir, { question: "[MERGE READINESS:q1] choose" }, "selected [a] or [b]", sessionId);
     expect(readMergeReadinessState(tempDir, sessionId)?.answers).toEqual([]);
   });
 
@@ -975,9 +975,9 @@ describe("merge-readiness runtime", () => {
         action: (sid: string) => overrideMergeReadiness(tempDir, "Attempt blocked override.", sid),
       },
       {
-        name: "first-answer AskUserQuestion transition",
+        name: "first-answer ask_user_question transition",
         setup: (sid: string) => seedPending(sid),
-        action: (sid: string) => recordMergeReadinessAskUserQuestionResult(
+        action: (sid: string) => recordMergeReadinessask_user_questionResult(
           tempDir,
           { question: "[MERGE READINESS:q1] choose" },
           "[a]",

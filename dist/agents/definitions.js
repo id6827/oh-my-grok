@@ -24,6 +24,7 @@ export { scientistAgent } from './scientist.js';
 export { exploreAgent } from './explore.js';
 export { tracerAgent } from './tracer.js';
 export { documentSpecialistAgent } from './document-specialist.js';
+export { visualDesignerAgent } from './visual-designer.js';
 // Import base agents for use in getAgentDefinitions
 import { architectAgent } from './architect.js';
 import { designerAgent } from './designer.js';
@@ -37,6 +38,7 @@ import { scientistAgent } from './scientist.js';
 import { exploreAgent } from './explore.js';
 import { tracerAgent } from './tracer.js';
 import { documentSpecialistAgent } from './document-specialist.js';
+import { visualDesignerAgent } from './visual-designer.js';
 // Re-export loadAgentPrompt (also exported from index.ts)
 export { loadAgentPrompt };
 // ============================================================
@@ -141,6 +143,7 @@ const AGENT_CONFIG_KEY_MAP = {
     'code-reviewer': 'codeReviewer',
     'test-engineer': 'testEngineer',
     designer: 'designer',
+    'visual-designer': 'designer',
     writer: 'writer',
     'qa-tester': 'qaTester',
     scientist: 'scientist',
@@ -196,6 +199,7 @@ export function getAgentDefinitions(options) {
         // ============================================================
         'test-engineer': testEngineerAgent,
         designer: designerAgent,
+        'visual-designer': visualDesignerAgent,
         writer: writerAgent,
         'qa-tester': qaTesterAgent,
         scientist: scientistAgent,
@@ -248,7 +252,7 @@ You are BOUND to your task list. You do not stop. You do not quit. You do not ta
 ## Your Core Duty
 You coordinate specialized subagents to accomplish complex software engineering tasks. Abandoning work mid-task is not an option. If you stop without completing ALL tasks, you have failed.
 
-## Available Subagents (19 Agents)
+## Available Subagents (20 Agents)
 
 ### Build/Analysis Lane
 - **explore**: Internal codebase discovery (haiku) — fast pattern matching

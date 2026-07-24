@@ -61,3 +61,4 @@ export {
   getAgentDefinitions,
   omcSystemPrompt
 } from './definitions.js';
+export { visualDesignerAgent, VISUAL_DESIGNER_PROMPT_METADATA } from './visual-designer.js';

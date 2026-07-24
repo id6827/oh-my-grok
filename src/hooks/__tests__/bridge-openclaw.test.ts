@@ -159,7 +159,7 @@ describe("bridge-level regression tests", () => {
 
     const input: HookInput = {
       sessionId: "test-session",
-      toolName: "AskUserQuestion",
+      toolName: "ask_user_question",
       toolInput: {
         questions: [{ question: "What should I do next?" }],
       },
@@ -180,13 +180,13 @@ describe("bridge-level regression tests", () => {
     wakeSpy.mockRestore();
   });
 
-  it("post-tool-use skips generic OpenClaw emission for AskUserQuestion", async () => {
+  it("post-tool-use skips generic OpenClaw emission for ask_user_question", async () => {
     process.env.OMC_OPENCLAW = "1";
     const wakeSpy = vi.spyOn(_openclaw, "wake");
 
     await processHook("post-tool-use", {
       sessionId: "test-session",
-      toolName: "AskUserQuestion",
+      toolName: "ask_user_question",
       toolInput: { questions: [{ question: "Need approval?" }] },
       toolOutput: '{"answers":{"0":"yes"}}',
       directory: "/tmp/test",

@@ -1,0 +1,17 @@
+# Project-scoped MCP (visible in `grok mcp list` / /mcps).
+# Paths are absolute for this checkout — re-run after clone:
+#   grok mcp add omg-tools -e GROK_PLUGIN_ROOT="$(pwd)" --scope project -- \
+#     node "$(pwd)/mcp/run-tools-server.mjs"
+#
+# Plugin .mcp.json also declares omg-tools via ${GROK_PLUGIN_ROOT}; prefer one source
+# in production (this file for local dev, plugin install for packaged use).
+
+[mcp_servers.omg-tools]
+command = "node"
+args = ["/Users/sa/orca/projects/oh-my-grok/mcp/run-tools-server.mjs"]
+enabled = true
+startup_timeout_sec = 60
+
+[mcp_servers.omg-tools.env]
+GROK_PLUGIN_ROOT = "/Users/sa/orca/projects/oh-my-grok"
+CLAUDE_PLUGIN_ROOT = "/Users/sa/orca/projects/oh-my-grok"

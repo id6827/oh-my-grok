@@ -2088,7 +2088,7 @@ async function processPostToolUse(input) {
     const directory = resolveToWorktreeRoot(input.directory);
     const messages = [];
     // Ensure mode state activation also works when execution starts via Skill tool
-    // (e.g., ralplan consensus handoff into Skill("oh-my-grok:ralph")).
+    // (e.g., ralplan consensus handoff into skill("/ralph")).
     const toolName = (input.toolName || "").toLowerCase();
     if (toolName === "skill") {
         const skillName = getInvokedSkillName(input.toolInput);

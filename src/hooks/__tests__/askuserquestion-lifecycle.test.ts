@@ -1,7 +1,7 @@
 /**
  * Regression test for issue #597
  *
- * AskUserQuestion webhook notifications must fire at PreToolUse (before
+ * ask_user_question webhook notifications must fire at PreToolUse (before
  * the tool blocks waiting for user input), NOT at PostToolUse (after
  * the user has already answered).
  */
@@ -10,13 +10,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   processHook,
   resetSkipHooksCache,
-  dispatchAskUserQuestionNotification,
-  extractAskUserQuestionPrompts,
+  dispatchask_user_questionNotification,
+  extractask_user_questionPrompts,
   _notify,
   type HookInput,
 } from "../bridge.js";
 
-describe("AskUserQuestion notification lifecycle (issue #597)", () => {
+describe("ask_user_question notification lifecycle (issue #597)", () => {
   const originalEnv = process.env;
   let dispatchSpy: ReturnType<typeof vi.spyOn>;
 
@@ -39,7 +39,7 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
 
   const askUserInput: HookInput = {
     sessionId: "test-session-597",
-    toolName: "AskUserQuestion",
+    toolName: "ask_user_question",
     toolInput: {
       questions: [
         {
@@ -56,8 +56,8 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
     directory: "/tmp/test-issue-597",
   };
 
-  it("extractAskUserQuestionPrompts preserves option labels/descriptions for notifications", () => {
-    const prompts = extractAskUserQuestionPrompts(askUserInput.toolInput);
+  it("extractask_user_questionPrompts preserves option labels/descriptions for notifications", () => {
+    const prompts = extractask_user_questionPrompts(askUserInput.toolInput);
 
     expect(prompts).toEqual([
       {
@@ -105,7 +105,7 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
 
   it("pre-tool-use should skip notification when sessionId is missing", async () => {
     const noSessionInput: HookInput = {
-      toolName: "AskUserQuestion",
+      toolName: "ask_user_question",
       toolInput: {
         questions: [
           {
@@ -126,7 +126,7 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
     expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
-  it("non-AskUserQuestion tools should not trigger notification", async () => {
+  it("non-ask_user_question tools should not trigger notification", async () => {
     const bashInput: HookInput = {
       sessionId: "test-session-597",
       toolName: "Bash",
@@ -140,7 +140,7 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
 
   // ---- Unit test for the helper itself ----
 
-  it("dispatchAskUserQuestionNotification extracts question text correctly", () => {
+  it("dispatchask_user_questionNotification extracts question text correctly", () => {
     // Restore the real implementation for this unit test
     dispatchSpy.mockRestore();
 
@@ -154,7 +154,7 @@ describe("AskUserQuestion notification lifecycle (issue #597)", () => {
     // Call the real function — the dynamic import will fail silently in test env
     // We just verify it doesn't throw
     expect(() =>
-      dispatchAskUserQuestionNotification("sess", "/tmp", toolInput),
+      dispatchask_user_questionNotification("sess", "/tmp", toolInput),
     ).not.toThrow();
   });
 });

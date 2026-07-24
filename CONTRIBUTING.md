@@ -82,7 +82,7 @@ Note: The repo has two main branches:
    npm run build
    ```
 
-Primary product output is `dist/` + `mcp/omg-state-server.mjs`. Generate `bridge/*.cjs` only when needed; they are **gitignore** (see `bridge/README.md`). CI: `.github/workflows/ci.yml` runs smoke + core vitest + optional bridge build.
+Primary product output is `dist/` plus MCP launcher `mcp/run-tools-server.mjs` (default server id **`omg-tools`**). Preferred bundle: `bridge/mcp-server.cjs` via `npm run build:bridge` (**gitignore**). Without bridge, launcher uses `dist/mcp/standalone-server.js` after `npm run build`. CI: `.github/workflows/ci.yml` runs smoke + core vitest + bridge build + plugin-shipping verify.
 
 ---
 
@@ -116,15 +116,15 @@ omg --plugin-dir "$PWD" setup --plugin-dir-mode
 
 Then launch Grok Build normally — it will use your local checkout.
 
-**Disable the `.mcp.json` server conflict**: The repo ships `.mcp.json` with an MCP server named `"t"` (the OMG bridge). When using `--plugin-dir`, the plugin also registers its own `"t"` server, causing a name collision. To resolve this, add to your `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`):
+**MCP server id**: default is **`omg-tools`** (full tools). Register for the TUI with:
 
-```json
-{
-  "disabledMcpjsonServers": ["t"]
-}
+```bash
+grok mcp add omg-tools -e GROK_PLUGIN_ROOT="$(pwd)" --scope project -- \
+  node "$(pwd)/mcp/run-tools-server.mjs"
+grok mcp doctor omg-tools
 ```
 
-This tells Grok Build to ignore the repo's `.mcp.json` entry and use the plugin's version instead.
+If a host also loads plugin `.mcp.json` and you hit a duplicate, disable one source (project config **or** plugin) — do not leave two absolute/relative copies pointing at different trees.
 
 **Inside Grok Build**:
 ```bash
