@@ -617,7 +617,11 @@ describe('doctor-conflicts: CLAUDE.md companion file detection (issue #1101)', (
     const status = checkClaudeMdStatus();
     expect(status!.companionFile).toBe(missingPath);
     expect(status!.files).toHaveLength(1);
-    expect(runConflictCheck().hasConflicts).toBe(false);
+    expect(status!.exactLegacyPaths).toEqual([]);
+    // Host MCP/env outside mocked CLAUDE dir can set hasConflicts; CLAUDE.md path itself is not a conflict.
+    const report = runConflictCheck();
+    expect(report.claudeMdStatus?.exactLegacyPaths ?? []).toEqual([]);
+    expect(report.claudeMdStatus?.manualReviewPaths ?? []).toEqual([]);
   });
 
   it.each(corpus.variants)('classifies exact legacy %s in main and CRLF companion files without claiming guide ownership', async variant => {
