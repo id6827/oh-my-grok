@@ -3,10 +3,10 @@
 /**
  * State Root Resolver (CJS)
  *
- * Single authoritative entry point for resolving the .omc root directory in
+ * Single authoritative entry point for resolving the .omg root directory in
  * CJS hook scripts, respecting the OMC_STATE_DIR environment variable.
  *
- * See scripts/lib/state-root.mjs for full documentation.
+ * Keep in sync with scripts/lib/state-root.mjs (GROK_PLUGIN_ROOT, .omg fallback).
  */
 
 'use strict';
@@ -16,13 +16,13 @@ const { existsSync } = require('fs');
 const { createHash } = require('crypto');
 
 /**
- * Resolve the .omc root directory, respecting OMC_STATE_DIR.
+ * Resolve the .omg root directory, respecting OMC_STATE_DIR.
  *
  * @param {string} directory - Worktree root directory
- * @returns {Promise<string>} Absolute path to the .omc root
+ * @returns {Promise<string>} Absolute path to the .omg root
  */
 async function resolveOmcStateRoot(directory) {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  const pluginRoot = process.env.GROK_PLUGIN_ROOT || process.env.CLAUDE_PLUGIN_ROOT;
   if (pluginRoot) {
     try {
       const { pathToFileURL } = require('url');
@@ -42,7 +42,7 @@ async function resolveOmcStateRoot(directory) {
     const dirName = basename(directory).replace(/[^a-zA-Z0-9_-]/g, '_');
     return join(customDir, `${dirName}-${hash}`);
   }
-  return join(directory, '.omc');
+  return join(directory, '.omg');
 }
 
 /**
@@ -55,7 +55,7 @@ async function resolveOmcStateRoot(directory) {
  * @returns {Promise<{readPath: string, writePath: string}>} Unbranded path pair
  */
 async function resolveSessionStatePathsForHook(directory, stateName, sessionId) {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  const pluginRoot = process.env.GROK_PLUGIN_ROOT || process.env.CLAUDE_PLUGIN_ROOT;
   if (pluginRoot) {
     try {
       const { pathToFileURL } = require('url');

@@ -904,6 +904,7 @@ describe('launchCommand — env var propagation', () => {
 
 describe('prepareOmcLaunchConfigDir / launchCommand OMG companion loading', () => {
   const originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
+  const originalGrokConfigDir = process.env.GROK_CONFIG_DIR;
   const originalHome = process.env.HOME;
   let tempRoot: string | null = null;
 
@@ -912,6 +913,8 @@ describe('prepareOmcLaunchConfigDir / launchCommand OMG companion loading', () =
   beforeEach(() => {
     vi.resetAllMocks();
     delete process.env.CLAUDECODE;
+    // Dual-read prefers GROK_CONFIG_DIR — clear ambient host dir so CLAUDE_CONFIG_DIR tests win
+    delete process.env.GROK_CONFIG_DIR;
     tempRoot = mkdtempSync(join(tmpdir(), 'omg-launch-profile-'));
     process.env.HOME = join(tempRoot, 'home');
     (execFileSync as ReturnType<typeof vi.fn>).mockReturnValue(Buffer.from(''));
@@ -934,6 +937,11 @@ describe('prepareOmcLaunchConfigDir / launchCommand OMG companion loading', () =
       delete process.env.CLAUDE_CONFIG_DIR;
     } else {
       process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir;
+    }
+    if (originalGrokConfigDir === undefined) {
+      delete process.env.GROK_CONFIG_DIR;
+    } else {
+      process.env.GROK_CONFIG_DIR = originalGrokConfigDir;
     }
     if (originalClaudecode === undefined) {
       delete process.env.CLAUDECODE;
@@ -1396,19 +1404,35 @@ describe('TMUX_ENV_FORWARD allowlist', () => {
 // runClaude outside-tmux — env forwarding into tmux command
 // ---------------------------------------------------------------------------
 describe('runClaude outside-tmux — env forwarding', () => {
-  const savedConfigDir = process.env.CLAUDE_CONFIG_DIR;
+  const savedClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
+  const savedGrokConfigDir = process.env.GROK_CONFIG_DIR;
+  const savedPluginRoot = process.env.OMC_PLUGIN_ROOT;
 
   beforeEach(() => {
     vi.resetAllMocks();
     (execFileSync as ReturnType<typeof vi.fn>).mockReturnValue(Buffer.from(''));
     (resolveLaunchPolicy as ReturnType<typeof vi.fn>).mockReturnValue('outside-tmux');
+    // Isolate ambient host dual-read env so allowlist injection tests are deterministic
+    delete process.env.GROK_CONFIG_DIR;
+    delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.OMC_PLUGIN_ROOT;
   });
 
   afterEach(() => {
-    if (savedConfigDir !== undefined) {
-      process.env.CLAUDE_CONFIG_DIR = savedConfigDir;
+    if (savedClaudeConfigDir !== undefined) {
+      process.env.CLAUDE_CONFIG_DIR = savedClaudeConfigDir;
     } else {
       delete process.env.CLAUDE_CONFIG_DIR;
+    }
+    if (savedGrokConfigDir !== undefined) {
+      process.env.GROK_CONFIG_DIR = savedGrokConfigDir;
+    } else {
+      delete process.env.GROK_CONFIG_DIR;
+    }
+    if (savedPluginRoot !== undefined) {
+      process.env.OMC_PLUGIN_ROOT = savedPluginRoot;
+    } else {
+      delete process.env.OMC_PLUGIN_ROOT;
     }
   });
 
@@ -1438,6 +1462,7 @@ describe('runClaude outside-tmux — env forwarding', () => {
 
   it('does not inject exports when no forwarded vars are set', () => {
     delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.GROK_CONFIG_DIR;
     delete process.env.OMC_NOTIFY;
     delete process.env.OMC_OPENCLAW;
     delete process.env.OMC_TELEGRAM;

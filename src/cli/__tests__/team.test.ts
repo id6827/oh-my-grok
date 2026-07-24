@@ -97,6 +97,8 @@ describe('team cli', () => {
     delete process.env.OMC_JOBS_DIR;
     delete process.env.OMC_RUNTIME_CLI_PATH;
     rmSync(jobsDir, { recursive: true, force: true });
+    // Restore console.log / other spies so later tests don't inherit a swallow mock
+    vi.restoreAllMocks();
   });
 
   it('startTeamJob starts runtime-cli and persists running job', async () => {
