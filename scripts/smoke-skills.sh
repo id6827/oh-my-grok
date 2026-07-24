@@ -6,6 +6,9 @@ cd "$ROOT"
 echo "== validate-parity =="
 node scripts/validate-parity.mjs
 
+echo "== hook unit tests =="
+node scripts/tests/test-hooks.mjs
+
 echo "== grok plugin validate =="
 grok plugin validate .
 

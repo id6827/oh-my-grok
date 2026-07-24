@@ -70,9 +70,18 @@ Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 
 `deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, …
 
-### Hooks (Layer B, v0.3)
+### Hooks (Layer B, v0.4)
 
-`SessionStart` · `UserPromptSubmit` (keyword-detector + skill-injector) · `Stop` (continuation gate) · cancel clears `.omg/state`
+`SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` (shell safety) · `PreCompact` · `Stop` (continuation) · cancel clears `.omg/state`
+
+### Local CLI helpers
+
+```bash
+node bin/omg.js version
+node bin/omg.js state list
+node bin/omg.js doctor
+npm test   # hook/state unit tests
+```
 
 ## Parity layers
 

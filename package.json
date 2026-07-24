@@ -1,0 +1,16 @@
+{
+  "name": "oh-my-grok",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Local helpers for oh-my-grok plugin (not the Grok plugin install path)",
+  "type": "module",
+  "bin": {
+    "omg": "./bin/omg.js"
+  },
+  "scripts": {
+    "test": "node scripts/tests/test-hooks.mjs",
+    "validate": "node scripts/validate-parity.mjs",
+    "doctor": "node bin/omg.js doctor"
+  },
+  "license": "MIT"
+}

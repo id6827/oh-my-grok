@@ -1,20 +1,30 @@
 # OMC ↔ OMG Parity Matrix
 
 OMC reference version: **4.15.7** (marketplace cache).  
-OMG version: **0.3.0**.
+OMG version: **0.4.0**.
 
 ## Legend
 
 | Symbol | Meaning |
 |--------|---------|
-| ✅ | Supported at prompt/agent level (Layer A) |
+| ✅ | Supported |
 | 🟡 | Partial / simplified |
-| ❌ | Not in v0.1 (deferred Layer B or N/A) |
+| ❌ | Deferred or N/A on Grok |
 | ⭐ | Grok-only (beyond OMC) |
+
+## Similarity snapshot (indicative)
+
+| Layer | ~Similarity | Notes |
+|-------|------------:|-------|
+| Prompt / agents / skills | 85–90% | Full agent set + skill inventory |
+| Hooks / mode hold | **55–65%** | v0.4: keywords, injector, Stop, PreToolUse, PreCompact, state CLI |
+| Runtime / CLI / MCP / team tmux | 20–30% | Thin `omg` CLI + file state; no full TS runtime |
+| UX / HUD | 30–45% | Harness-dependent |
+| **Blended (flow-weighted)** | **~70%** | Up from ~65% at v0.3 |
 
 ## Orchestration modes
 
-| Feature | OMC | OMG v0.1 |
+| Feature | OMC | OMG v0.4 |
 |---------|-----|----------|
 | Deep Interview | ✅ | ✅ + ⭐ web hints |
 | Ralplan / plan consensus | ✅ | ✅ |
@@ -22,69 +32,72 @@ OMG version: **0.3.0**.
 | Ralph | ✅ | ✅ |
 | Ultrawork | ✅ | ✅ |
 | UltraQA | ✅ | ✅ |
-| Ultragoal | ✅ | 🟡 prompt port; runtime evidence lighter |
-| Team (in-session) | ✅ | 🟡 via `spawn_subagent` / worktree |
-| `omc team` tmux multi-CLI | ✅ | ❌ deferred (Layer B3) |
-| Named autopilot `--workflow` + flock | ✅ Linux | 🟡 documented; flock gate deferred |
-| Keyword magic triggers (hooks) | ✅ | 🟡 detector v0.3 (incl. security/code review) |
-| Security review mode | ✅ keyword | ✅ `/security-review` + keyword + agent |
-| Code review mode | ✅ keyword | ✅ `/code-review` + keyword + agent |
-| Stop continuation gates | ✅ | 🟡 simplified Stop gate (v0.2+) |
-| Skill injector (active modes) | ✅ | 🟡 simplified (v0.3) |
-| HUD statusline | ✅ | 🟡 skill text; no binary HUD |
+| Ultragoal | ✅ | 🟡 prompt port |
+| Team (in-session) | ✅ | 🟡 `spawn_subagent` / worktree |
+| `omc team` tmux multi-CLI | ✅ | ❌ deferred |
+| Named autopilot `--workflow` + flock | ✅ Linux | 🟡 docs only |
+| Keyword magic triggers | ✅ | 🟡 expanded (review, tdd, ultrathink, deepsearch, deslop, …) |
+| Security review | ✅ keyword | ✅ skill + keyword + agent |
+| Code review | ✅ keyword | ✅ skill + keyword + agent |
+| Stop continuation | ✅ | 🟡 simplified |
+| Skill injector | ✅ | 🟡 simplified |
+| PreToolUse enforcer | ✅ | 🟡 catastrophic-shell deny |
+| PreCompact awareness | ✅ | 🟡 snapshot + reminder |
+| HUD statusline | ✅ | 🟡 skill text only |
 | Skillify / learner | ✅ | ✅ prompts |
 | OpenClaw | ✅ | ❌ N/A |
 | Claude Agent Teams env | ✅ | ❌ → Grok subagents |
 | UI mockup + Vision QA | ❌ | ⭐ `/ui-mockup` |
 | Real-time web/X research | limited | ⭐ `/web-research` |
+| State CLI | MCP tools | 🟡 `omg state` / `scripts/omg-state.mjs` |
 
 ## Agents (19 + 1)
 
-All OMC agents ported with `model: inherit` and tool-name remaps:
-
-`analyst`, `architect`, `code-reviewer`, `code-simplifier`, `critic`, `debugger`, `designer`, `document-specialist`, `executor`, `explore`, `git-master`, `planner`, `qa-tester`, `scientist`, `security-reviewer`, `test-engineer`, `tracer`, `verifier`, `writer`
-
-⭐ `visual-designer` — Image/Vision specialist
+All OMC agents + ⭐ `visual-designer`.
 
 ## Skills
 
 | OMC | OMG |
 |-----|-----|
-| `omc-doctor` | `omg-doctor` |
-| `omc-reference` | `omg-reference` |
-| `omc-setup` | `omg-setup` |
-| `omc-teams` | `omg-teams` |
-| others (same slug) | same slug |
+| `omc-*` | `omg-*` |
+| keyword security/code review | `/security-review`, `/code-review` skills |
 | — | ⭐ `ui-mockup`, `web-research` |
 
 ## State paths
 
 | OMC | OMG |
 |-----|-----|
-| `.omc/specs/` | `.omg/specs/` |
-| `.omc/plans/` | `.omg/plans/` |
-| `.omc/state/` | `.omg/state/` |
-| `.omc/artifacts/` | `.omg/artifacts/` |
-| `.claude/omc.jsonc` | `.grok/omg.jsonc` (documented) |
+| `.omc/**` | `.omg/**` |
 
 ## Runtime (Layer B)
 
-| Component | OMG v0.1 |
+| Component | OMG v0.4 |
 |-----------|----------|
-| SessionStart → ensure `.omg/` | ✅ |
-| keyword-detector | 🟡 v0.3 (core modes + security/code review + cancel clear) |
-| skill-injector | 🟡 v0.3 simplified |
-| clear-active-modes / cancel | 🟡 v0.3 |
-| pre-tool-enforcer | ❌ |
-| stop continuation | 🟡 v0.2+ simplified |
-| MCP state_write server | ❌ (file-based state in prompts) |
-| `omg` CLI binary | ❌ |
+| SessionStart | ✅ |
+| keyword-detector | 🟡 expanded |
+| skill-injector | 🟡 |
+| clear-active-modes / cancel | 🟡 |
+| pre-tool-enforcer | 🟡 shell danger deny |
+| PreCompact | 🟡 |
+| stop continuation | 🟡 |
+| File state CLI | 🟡 `omg state` |
+| Thin `omg` bin | 🟡 version/state/doctor |
+| MCP state_write server | ❌ |
+| Full HUD / omc TS runtime | ❌ |
+| tmux multi-CLI team | ❌ |
 
-## Acceptance for claiming “prompt parity”
+## Acceptance checklist
 
 - [x] 19 OMC agents + visual-designer
-- [x] Core pipeline skills present and path-remapped
-- [x] Full skill inventory (43) with renames
-- [x] Grok exclusives documented
-- [ ] Interactive TUI smoke on user machine
-- [ ] Layer B keyword/Stop hooks
+- [x] Core + extended skill inventory
+- [x] Grok exclusives
+- [x] Layer B keyword + Stop + injector
+- [x] Security/code-review skills
+- [x] pre-tool-enforcer (simplified)
+- [x] PreCompact hook
+- [x] `omg` / `omg-state` CLI helpers
+- [x] Automated hook unit tests (`npm test`)
+- [ ] Full HUD parity
+- [ ] MCP state server
+- [ ] tmux `omg team` multi-provider
+- [ ] GitHub marketplace publish (out of band)

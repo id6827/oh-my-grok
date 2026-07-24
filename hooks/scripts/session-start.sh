@@ -14,7 +14,7 @@ mkdir -p \
 
 # Hooks may print additional context for the agent on stdout.
 cat <<EOF
-OMG ready (v0.3). State: .omg/ | hooks: keyword + skill-injector + Stop | skills: /deep-interview /ralplan /autopilot /security-review /code-review /ui-mockup /web-research | keywords: ralph, ulw, autopilot, deep-interview, ralplan, security review, code review, cancelomg
+OMG ready (v0.4). State: .omg/ | hooks: keyword+injector+PreToolUse+PreCompact+Stop | CLI: omg state|doctor | skills: /deep-interview /autopilot /ralph /security-review /code-review /ui-mockup /web-research
 EOF
 
 exit 0

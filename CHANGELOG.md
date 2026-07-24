@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.0 — 2026-07-24
+
+### Added (Autopilot parity boost from OMC similarity analysis)
+
+- **`scripts/omg-state.mjs`** — list/get/set/clear file state under `.omg/state/` (MCP substitute).
+- **`bin/omg.js`** — thin CLI: `version`, `state`, `doctor` (+ `package.json` bin).
+- **`pre-tool-enforcer.mjs`** — PreToolUse deny for catastrophic shell patterns.
+- **`pre-compact.mjs`** — PreCompact snapshot + active-mode reminder.
+- Keyword expansions: `tdd`, `ultrathink`, `deepsearch`, `ai-slop` / deslop.
+- **`scripts/tests/test-hooks.mjs`** — unit tests for hooks/state (`npm test`).
+- PARITY-MATRIX refreshed; indicative hooks similarity ~55–65%, blended ~70%.
+
+### Non-goals this release
+
+- Git remote deploy/push, full OMC runtime, HUD binary, tmux multi-CLI team.
+
 ## 0.3.0 — 2026-07-24
 
 ### Added

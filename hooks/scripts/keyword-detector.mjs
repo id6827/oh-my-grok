@@ -74,6 +74,37 @@ const RULES = [
     activate: null,
   },
   {
+    name: "ai-slop-cleaner",
+    skill: "ai-slop-cleaner",
+    re: /\b(ai[\s-]?slop|deslop|slop\s*clean)\b/i,
+    activate: null,
+  },
+  {
+    name: "tdd",
+    skill: "ultraqa",
+    // route TDD intent to ultraqa cycling with TDD reminder
+    re: /\b(tdd\b|test[\s-]?driven)\b/i,
+    activate: "ultraqa",
+    extra:
+      "TDD mode: write failing tests first, then implement until green (use /ultraqa + test-engineer patterns).",
+  },
+  {
+    name: "ultrathink",
+    skill: "plan",
+    re: /\bultrathink\b/i,
+    activate: null,
+    extra:
+      "Ultrathink: slow down — deeper reasoning before edits; prefer architect/critic perspectives.",
+  },
+  {
+    name: "deepsearch",
+    skill: "trace",
+    re: /\b(deep\s*search|deepsearch)\b/i,
+    activate: null,
+    extra:
+      "Deepsearch: prioritize codebase explore/grep before asking the user; cite file:line evidence.",
+  },
+  {
     name: "ui-mockup",
     skill: "ui-mockup",
     re: /\b(ui[\s-]?mockup|mock\s*up\s+(the\s+)?ui)\b/i,
@@ -199,7 +230,7 @@ async function main() {
     }
   }
 
-  let extra = "";
+  let extra = primary.extra || "";
   if (primary.name === "security-review") {
     extra =
       "Delegate to agent security-reviewer (read-only). OWASP + secrets + authz focus.";
