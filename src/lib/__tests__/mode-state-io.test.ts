@@ -7,6 +7,20 @@ import { tmpdir } from 'os';
 
 import { emergencyMutateStateFileIf, recoverEmergencyStateFile, writeModeState, readModeState, clearModeStateFile } from '../mode-state-io.js';
 import { clearWorktreeCache, getProjectIdentifier } from '../worktree-paths.js';
+import { spawnSync } from 'child_process';
+
+/** Cross-platform process-start token matching production identity strategy. */
+function testProcessStart(pid = process.pid): string {
+  if (process.platform === 'linux') {
+    const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+    return stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+  }
+  const r = spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8' });
+  if (r.status === 0 && r.stdout.trim()) {
+    return createHash('sha256').update(r.stdout.trim()).digest('hex').slice(0, 16);
+  }
+  return '1';
+}
 
 let tempDir: string;
 
@@ -124,8 +138,7 @@ describe('mode-state-io', () => {
       process.env.OMC_TEST_FLOCK_AVAILABLE = '0';
       const statePath = join(tempDir, '.omg', 'state', 'autopilot-state.json');
       mkdirSync(dirname(statePath), { recursive: true });
-      const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-      const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       const owner = { version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() };
       writeFileSync(`${statePath}.mutation.lock`, JSON.stringify(owner));
 
@@ -365,8 +378,7 @@ describe('mode-state-io', () => {
       writeFileSync(statePath, JSON.stringify(state));
       writeFileSync(legacyPath, JSON.stringify(state));
       writeFileSync(artifactPath, JSON.stringify({ count: 2 }));
-      const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-      const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       writeFileSync(`${statePath}.mutation.lock`, JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() }));
       const snapshots = [statePath, legacyPath, artifactPath].map((path) => readFileSync(path));
 
@@ -378,8 +390,7 @@ describe('mode-state-io', () => {
       const sessionId = 'in-flight-activation';
       const statePath = join(tempDir, '.omg', 'state', 'sessions', sessionId, 'autopilot-state.json');
       mkdirSync(dirname(statePath), { recursive: true });
-      const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-      const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       const lockPath = `${statePath}.mutation.lock`;
       writeFileSync(lockPath, JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() }));
       const childScript = String.raw`
@@ -797,7 +808,7 @@ describe('mode-state-io', () => {
       const path = join(tempDir, '.omg', 'state', 'autopilot-live-owner.json');
       const raw = JSON.stringify({ active: true, run: 'live-owner' });
       const transactionId = randomUUID();
-      const processStart = readFileSync(`/proc/${process.pid}/stat`, 'utf8').slice(readFileSync(`/proc/${process.pid}/stat`, 'utf8').lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       const quarantinePath = `${path}.emergency-quarantine.${transactionId}`;
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, raw);
@@ -825,7 +836,7 @@ describe('mode-state-io', () => {
       const transformed = JSON.stringify({ active: false, run: 'pid-reused' });
       const transactionId = randomUUID();
       const quarantinePath = `${path}.emergency-quarantine.${transactionId}`;
-      const actualStart = readFileSync(`/proc/${process.pid}/stat`, 'utf8').slice(readFileSync(`/proc/${process.pid}/stat`, 'utf8').lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const actualStart = testProcessStart();
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, raw);
       writeFileSync(`${quarantinePath}.payload`, transformed);
@@ -845,7 +856,7 @@ describe('mode-state-io', () => {
       const raw = JSON.stringify({ active: true, run: 'unknown-owner' });
       const transactionId = randomUUID();
       const quarantinePath = `${path}.emergency-quarantine.${transactionId}`;
-      const processStart = readFileSync(`/proc/${process.pid}/stat`, 'utf8').slice(readFileSync(`/proc/${process.pid}/stat`, 'utf8').lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, raw);
       writeFileSync(`${path}.emergency-journal.json`, JSON.stringify({
@@ -1026,7 +1037,7 @@ describe('mode-state-io', () => {
         // @ts-expect-error shipped JavaScript helper intentionally has no TypeScript declaration
         (await import('../../../templates/hooks/lib/atomic-write.mjs')).recoverEmergencyStateFile as typeof recoverEmergencyStateFile,
       ];
-      const processStart = readFileSync(`/proc/${process.pid}/stat`, 'utf8').slice(readFileSync(`/proc/${process.pid}/stat`, 'utf8').lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      const processStart = testProcessStart();
       for (const [index, recover] of helpers.entries()) {
         const path = join(tempDir, '.omg', 'state', `autopilot-live-publication-${index}.json`);
         const temp = `${path}.emergency-journal.json.${process.pid}.${processStart}.${randomUUID()}.tmp`;

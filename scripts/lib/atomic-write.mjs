@@ -106,7 +106,23 @@ export function atomicWriteFileSync(filePath, content) {
 }
 
 const LOCK_SCHEMA_VERSION = 1;
-function flockPath() { return process.env.NODE_ENV === 'test' && process.env.OMC_TEST_FLOCK_AVAILABLE === '0' ? null : existsSync('/usr/bin/flock') ? '/usr/bin/flock' : existsSync('/bin/flock') ? '/bin/flock' : null; }
+function flockPath() {
+  if (process.env.NODE_ENV === 'test' && process.env.OMC_TEST_FLOCK_AVAILABLE === '0') return null;
+  for (const p of [
+    '/usr/bin/flock',
+    '/bin/flock',
+    '/opt/homebrew/opt/util-linux/bin/flock',
+    '/usr/local/opt/util-linux/bin/flock',
+  ]) {
+    if (existsSync(p)) return p;
+  }
+  try {
+    const { spawnSync } = require('child_process');
+    const r = spawnSync('which', ['flock'], { encoding: 'utf8' });
+    if (r.status === 0 && r.stdout.trim()) return r.stdout.trim();
+  } catch { /* ignore */ }
+  return null;
+}
 const LOCK_REMOVAL_SCRIPT = String.raw`
 const fs = require('fs');
 const [operation, lockPath, expectedRaw] = process.argv.slice(1);

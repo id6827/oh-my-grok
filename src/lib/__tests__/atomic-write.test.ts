@@ -212,8 +212,12 @@ describe('atomicWriteJson', () => {
     process.env.NODE_ENV = 'test';
     process.env.OMC_TEST_FLOCK_AVAILABLE = '0';
     const filePath = join(directory, 'state.json');
-    const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-    const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+    // Linux uses /proc starttime; other platforms use a stable synthetic token
+    let processStart = '1';
+    if (process.platform === 'linux') {
+      const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
+      processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+    }
     writeFileSync(`${filePath}.mutation.lock`, JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() }));
 
     expect(withStateFileLockSync(filePath, () => 'written')).toEqual({ acquired: true, value: 'written' });

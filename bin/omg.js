@@ -220,13 +220,24 @@ async function doctor() {
     stdio: "inherit",
   });
   if (r.status !== 0) process.exit(r.status ?? 1);
-  console.log("== tests ==");
-  r = spawnSync("npm", ["test"], { cwd: root, stdio: "inherit" });
+  console.log("== plugin-shipping verify ==");
+  r = spawnSync(
+    process.execPath,
+    [join(root, "scripts/plugin-shipping-surface.mjs"), "verify"],
+    { cwd: root, stdio: "inherit" }
+  );
+  if (r.status !== 0) process.exit(r.status ?? 1);
+  console.log("== tests (smoke) ==");
+  r = spawnSync("npm", ["run", "test:smoke"], { cwd: root, stdio: "inherit" });
   if (r.status !== 0) process.exit(r.status ?? 1);
   console.log("== plugin validate ==");
   r = spawnSync("grok", ["plugin", "validate", root], { stdio: "inherit" });
   if (r.error) console.log("(grok CLI missing — skipped)");
   else if (r.status !== 0) process.exit(r.status ?? 1);
+  console.log("== tmux ==");
+  const t = spawnSync("tmux", ["-V"], { encoding: "utf8" });
+  if (t.status === 0) console.log(`ok: ${String(t.stdout || t.stderr).trim()}`);
+  else console.log("tmux not found — omg team will force dry-run");
   console.log("== status ==");
   await status();
 }

@@ -730,7 +730,7 @@ function compactBudgetedText(text, maxChars) {
 }
 function looksLikeOmcGuidance(content) {
     return (content.includes("<guidance_schema_contract>") &&
-        /oh-my-(claudecode|codex)/i.test(content) &&
+        /oh-my-(claudecode|codex|grok)/i.test(content) &&
         OMC_STARTUP_COMPACTABLE_SECTIONS.some((section) => content.includes(`<${section}>`) && content.includes(`</${section}>`)));
 }
 export function compactOmcStartupGuidance(content) {

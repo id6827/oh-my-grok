@@ -23,7 +23,22 @@ import { atomicWriteJsonSync } from './atomic-write.js';
 
 type MutationLockOwner = { version: 1; pid: number; processStart: string; createdAt: string; nonce: string };
 type MutationLock = { fd: number; path: string; owner: MutationLockOwner } | { unlocked: true };
-function flockPath(): string | null { return process.env.NODE_ENV === 'test' && process.env.OMC_TEST_FLOCK_AVAILABLE === '0' ? null : existsSync('/usr/bin/flock') ? '/usr/bin/flock' : existsSync('/bin/flock') ? '/bin/flock' : null; }
+function flockPath(): string | null {
+  if (process.env.NODE_ENV === 'test' && process.env.OMC_TEST_FLOCK_AVAILABLE === '0') return null;
+  const candidates = [
+    '/usr/bin/flock',
+    '/bin/flock',
+    '/opt/homebrew/opt/util-linux/bin/flock',
+    '/usr/local/opt/util-linux/bin/flock',
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  // PATH lookup (e.g. brew util-linux after PATH export)
+  const which = spawnSync('which', ['flock'], { encoding: 'utf8' });
+  if (which.status === 0 && which.stdout.trim()) return which.stdout.trim();
+  return null;
+}
 const LOCK_REMOVAL_SCRIPT = String.raw`
 const fs = require('fs');
 const [operation, lockPath, expectedRaw] = process.argv.slice(1);
@@ -59,17 +74,40 @@ try { fs.unlinkSync(lockPath); process.exit(0); } catch { process.exit(3); }
 
 function processStartIdentity(pid: number): string | 'absent' | null {
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
-  if (process.platform !== 'linux') return pid === process.pid ? String(Math.max(1, Math.floor(Date.now() - process.uptime() * 1000))) : null;
-  if (process.env.NODE_ENV === 'test' && process.env.OMC_TEST_EMERGENCY_PROCESS_START_UNKNOWN_PID === String(pid)) return null;
-  try {
-    const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
-    const end = stat.lastIndexOf(')');
-    if (end < 0) return null;
-    const fields = stat.slice(end + 2).trim().split(/\s+/);
-    return fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'absent' : null;
+  if (process.env.NODE_ENV === 'test' && process.env.OMC_TEST_EMERGENCY_PROCESS_START_UNKNOWN_PID === String(pid)) {
+    return null;
   }
+  // Linux: starttime field from /proc/<pid>/stat
+  if (process.platform === 'linux') {
+    try {
+      const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+      const end = stat.lastIndexOf(')');
+      if (end < 0) return null;
+      const fields = stat.slice(end + 2).trim().split(/\s+/);
+      return fields[19] && /^\d+$/.test(fields[19]) ? fields[19] : null;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'absent' : null;
+    }
+  }
+  // macOS / BSD: stable-ish identity from ps lstart (hashed for compact storage)
+  if (process.platform === 'darwin' || process.platform.startsWith('freebsd')) {
+    try {
+      const result = spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], {
+        encoding: 'utf8',
+      });
+      if (result.status !== 0) return 'absent';
+      const lstart = (result.stdout || '').trim();
+      if (!lstart) return 'absent';
+      return createHash('sha256').update(lstart).digest('hex').slice(0, 16);
+    } catch {
+      return null;
+    }
+  }
+  // Other platforms: only identify the current process
+  if (pid === process.pid) {
+    return String(Math.max(1, Math.floor(Date.now() - process.uptime() * 1000)));
+  }
+  return null;
 }
 
 function writeAllSync(fd: number, content: string, label: string): void {

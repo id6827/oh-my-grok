@@ -67,6 +67,45 @@ const mod = await import(pathToFileURL(join(root, "dist/runtime/team.js")).href)
   assert(h.status === 0 && /tmux/i.test(h.stdout), "omg team --help");
 }
 
+// Live tmux path when available (not forced dry-run)
+{
+  const hasTmux = mod.hasTmux();
+  if (hasTmux) {
+    const liveWs = join(ws, "live");
+    mkdirSync(liveWs, { recursive: true });
+    const env = {
+      ...process.env,
+      GROK_WORKSPACE_ROOT: liveWs,
+      PATH: process.env.PATH || "",
+    };
+    delete env.OMG_TEAM_DRY_RUN;
+    const r = spawnSync(
+      node,
+      [
+        join(root, "bin/omg.js"),
+        "team",
+        "1:grok",
+        "echo OMG live tmux smoke",
+        "--name",
+        "live-ci-smoke",
+      ],
+      { encoding: "utf8", env }
+    );
+    assert(r.status === 0, "omg team live exit 0");
+    assert(/"dry_run": false/.test(r.stdout), "live dry_run false");
+    assert(/live-ci-smoke/.test(r.stdout), "live team name");
+    const shut = spawnSync(
+      node,
+      [join(root, "bin/omg.js"), "team", "shutdown", "live-ci-smoke"],
+      { encoding: "utf8", env }
+    );
+    assert(shut.status === 0, "live team shutdown exit 0");
+    console.log("ok: live tmux team create+shutdown");
+  } else {
+    console.log("skip: live tmux (tmux not on PATH)");
+  }
+}
+
 try {
   rmSync(ws, { recursive: true, force: true });
 } catch {

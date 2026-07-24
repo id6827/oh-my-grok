@@ -99,8 +99,10 @@
 |---------|--------|
 | benchmarks/missions/geobench | ✅ trees ported |
 | examples/seminar/research/shellmark | ✅ ported |
-| eslint/prettier/vitest | 🟡 vitest installed; `test:vitest:core` **217 green**; broader suite residual (mode-state flock/linux) |
-| CI workflows | ✅ `ci.yml` OMG smoke+core vitest+bridge job; release guarded |
+| eslint/prettier/vitest | 🟡 core **217 green**; residual cluster ~**9** fails (mode-state emergency/flock edge + short-write mock); macOS: install `util-linux` for flock |
+| CI workflows | ✅ `ci.yml` OMG smoke+core vitest+bridge+`plugin:shipping:verify`; release guarded |
+| plugin shipping verify | ✅ `npm run plugin:shipping:verify` + doctor step; root `plugin.json`; coordinator optional |
+| tmux live team | ✅ tmux installed; `dry_run: false` create/shutdown smoke + test-team live path |
 | i18n READMEs | ✅ all README.*.md |
 | CONTRIBUTING, SECURITY | ✅ ported/adapted |
 | OMC `docs/**` product tree | ✅ bulk-ported via `scripts/port-omc-docs.mjs` |

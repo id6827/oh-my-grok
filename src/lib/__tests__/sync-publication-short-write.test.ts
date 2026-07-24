@@ -79,6 +79,10 @@ describe('synchronous publication short writes', () => {
 
     expect(atomicWrite.withStateFileLockSync(statePath, () => 'held')).toEqual({ acquired: true, value: 'held' });
     expect(() => readFileSync(`${statePath}.mutation.lock`, 'utf8')).toThrow(/ENOENT/);
-    expect(fsControl.calls).toBeGreaterThan(Buffer.byteLength(content, 'utf8') / 2);
+    // Short-write mock (maxBytes=2) should need multiple writeSync calls.
+    // Use >= ceil(len/maxBytes) so exact chunk counts don't flake.
+    expect(fsControl.calls).toBeGreaterThanOrEqual(
+      Math.ceil(Buffer.byteLength(content, 'utf8') / 2)
+    );
   });
 });

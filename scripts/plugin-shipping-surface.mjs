@@ -162,7 +162,10 @@ function collectPackagePublicEntrypoints(packageJson) {
 }
 
 function collectDeclaredGeneratedPayloads(root, packageJson, { directoryCommit = null, presentAtRoot = false } = {}) {
-  if (!Array.isArray(packageJson.files)) fail('package.json files must be an array');
+  // OMG may omit package.json files (private plugin); treat as empty generated payload set
+  if (!Array.isArray(packageJson.files)) {
+    return { paths: new Set(), standaloneBundles: new Set() };
+  }
   const paths = new Set();
   const standaloneBundles = new Set();
   const collectDirectory = repoPath => {
@@ -205,13 +208,21 @@ function pluginRootPaths(value, label) {
   return paths;
 }
 
+function resolvePluginManifestPath(root) {
+  // OMG Grok plugin: root plugin.json; OMC Claude: .claude-plugin/plugin.json
+  if (existsSync(join(root, 'plugin.json'))) return 'plugin.json';
+  if (existsSync(join(root, '.claude-plugin', 'plugin.json'))) return '.claude-plugin/plugin.json';
+  fail('plugin manifest missing: expected plugin.json or .claude-plugin/plugin.json');
+}
+
 function collectManifestEntrypoints(root) {
-  const paths = new Set(['.claude-plugin/plugin.json']);
-  const pluginJson = readJson(root, '.claude-plugin/plugin.json');
+  const manifestPath = resolvePluginManifestPath(root);
+  const paths = new Set([manifestPath]);
+  const pluginJson = readJson(root, manifestPath);
   if (existsSync(join(root, '.claude-plugin', 'marketplace.json'))) paths.add('.claude-plugin/marketplace.json');
 
   if (typeof pluginJson.mcpServers === 'string') {
-    const mcpPath = normalizeRepoPath(pluginJson.mcpServers, '.claude-plugin/plugin.json mcpServers');
+    const mcpPath = normalizeRepoPath(pluginJson.mcpServers, `${manifestPath} mcpServers`);
     paths.add(mcpPath);
     const mcpJson = readJson(root, mcpPath);
     for (const [name, server] of Object.entries(mcpJson.mcpServers ?? {})) {
@@ -459,12 +470,27 @@ function collectRuntimeClosure(root, initialPaths, standaloneBundles) {
   return requiredPaths;
 }
 
+function resolveCoordinatorSource(root) {
+  for (const candidate of ['docs/GROK.md', 'docs/AGENTS.md', 'docs/CLAUDE.md', 'AGENTS.md']) {
+    if (existsSync(join(root, candidate))) return candidate;
+  }
+  return null;
+}
+
 function validateCoordinatorHandshake(root, requiredPaths, packageJson, pluginJson) {
   const coordinator = 'bridge/claude-md-coordinator.cjs';
-  if (!requiredPaths.has(coordinator)) fail(`required generated runtime file is missing: ${coordinator}`);
+  // Grok plugin installs do not require the Claude-md coordinator bundle.
+  // When absent, skip handshake (optional extra build: npm run build:bridge:extra).
+  if (!existsSync(join(root, coordinator))) {
+    console.log('plugin shipping surface: coordinator optional (bridge/claude-md-coordinator.cjs not built) — skipped');
+    return;
+  }
+  if (!requiredPaths.has(coordinator)) requiredPaths.add(coordinator);
   const coordinatorFile = containedRegularFile(root, coordinator, 'coordinator artifact');
-  const sourceFile = containedRegularFile(root, 'docs/CLAUDE.md', 'canonical coordinator source');
-  requiredPaths.add('docs/CLAUDE.md');
+  const sourcePath = resolveCoordinatorSource(root);
+  if (!sourcePath) fail('canonical coordinator source missing (docs/GROK.md|AGENTS.md|CLAUDE.md)');
+  const sourceFile = containedRegularFile(root, sourcePath, 'canonical coordinator source');
+  requiredPaths.add(sourcePath);
 
   const result = spawnSync(process.execPath, [coordinatorFile.absolutePath, '--handshake'], {
     cwd: root,
@@ -482,7 +508,7 @@ function validateCoordinatorHandshake(root, requiredPaths, packageJson, pluginJs
   }
   const sourceSha256 = createHash('sha256').update(readFileSync(sourceFile.absolutePath)).digest('hex');
   if (handshake.sourceSha256 !== sourceSha256) {
-    fail(`coordinator source digest mismatch: ${coordinator} handshake does not match docs/CLAUDE.md`);
+    fail(`coordinator source digest mismatch: ${coordinator} handshake does not match ${sourcePath}`);
   }
   const versions = [packageJson.version, pluginJson.version].filter(value => typeof value === 'string');
   if (existsSync(join(root, '.claude-plugin', 'marketplace.json'))) {

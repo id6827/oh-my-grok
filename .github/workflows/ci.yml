@@ -41,6 +41,9 @@ jobs:
       - name: Parity validate
         run: npm run validate
 
+      - name: Plugin shipping surface
+        run: npm run plugin:shipping:verify
+
       - name: Core vitest (utils/config/session-id)
         run: npm run test:vitest:core
 

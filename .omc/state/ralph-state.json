@@ -1,0 +1,12 @@
+{
+  "active": true,
+  "iteration": 1,
+  "max_iterations": 100,
+  "started_at": "2026-07-24T15:01:47.726Z",
+  "prompt": "run ralph on parser state issue",
+  "project_path": "/Users/sa/orca/projects/oh-my-grok",
+  "reinforcement_count": 0,
+  "awaiting_confirmation": true,
+  "awaiting_confirmation_set_at": "2026-07-24T15:01:47.726Z",
+  "last_checked_at": "2026-07-24T15:01:47.726Z"
+}
