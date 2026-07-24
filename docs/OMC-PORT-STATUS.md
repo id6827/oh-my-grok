@@ -40,7 +40,7 @@
 
 | Surface | Status | Notes |
 |---------|--------|-------|
-| bridge/mcp-server full tools | 🟡 | **generate** via `npm run build:bridge` → gitignored `bridge/*.cjs`; plugin default remains `mcp/omg-state-server.mjs` |
+| bridge/mcp-server full tools | ✅ | **Grok default:** `.mcp.json` → `mcp/run-tools-server.mjs` → `bridge/mcp-server.cjs` (~54 tools, MCP stdio; verified listTools+callTool) |
 | bridge/team-bridge, team-mcp, team.js | 🟡 | TS under `src/team`; build scripts ported |
 | bridge/runtime-cli, cli | 🟡 | `src/cli` + `bin/omg.js`; build-cli.mjs present |
 | claude-md-coordinator → AGENTS/omg-setup | 🟡 | `src/cli/claude-md-coordinator.ts` |
@@ -125,3 +125,10 @@
 node scripts/port-inventory.mjs
 npm run build && npm test
 ```
+
+### MCP on Grok (2026-07-25)
+
+- Protocol: standard MCP stdio (**not Claude-specific**).
+- Default server id: `omg-tools` via `mcp/run-tools-server.mjs`.
+- Probe: `npm run mcp:probe` (expects ~54 tools when bridge built).
+- Thin `mcp/omg-state-server.mjs` remains as manual fallback (state tools only).

@@ -22,10 +22,13 @@ npm run build:all      # both
 
 | Surface | Path |
 |---------|------|
-| **Plugin MCP (default)** | `mcp/omg-state-server.mjs` via `.mcp.json` |
-| MCP wrapper | `bridge/run-mcp-server.sh` → prefers `mcp/omg-state-server.mjs`, then `dist/mcp/standalone-server.js`, then local `mcp-server.cjs` if built |
-| CLI | `bin/omg.js` (not `bridge/cli.cjs` for Grok plugin install) |
+| **Plugin MCP (default)** | `.mcp.json` → `mcp/run-tools-server.mjs` → full tools (~54: LSP/AST/state/wiki/…) |
+| Thin state-only fallback | `mcp/omg-state-server.mjs` (debug; not default) |
+| MCP wrapper | `bridge/run-mcp-server.sh` → same launcher chain |
+| CLI | `bin/omg.js` |
 | Team | `omg team` via `bin/omg.js` + `src/team` |
+
+Full tools MCP is **host-agnostic** (standard MCP stdio). Grok Build loads it via `plugin.json` → `.mcp.json`. First start may run `npm run build:bridge` if `bridge/mcp-server.cjs` is missing.
 
 ## Policy
 

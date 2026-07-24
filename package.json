@@ -27,7 +27,9 @@
     "test:all": "npm run test:smoke && npm run test:vitest",
     "lint": "echo \"eslint optional; run npx eslint src when configured\"",
     "plugin:shipping:verify": "node scripts/plugin-shipping-surface.mjs verify",
-    "plugin:shipping:stage": "node scripts/plugin-shipping-surface.mjs stage"
+    "plugin:shipping:stage": "node scripts/plugin-shipping-surface.mjs stage",
+    "mcp:tools": "node mcp/run-tools-server.mjs",
+    "mcp:probe": "node --input-type=module -e \"import{Client}from'@modelcontextprotocol/sdk/client/index.js';import{StdioClientTransport}from'@modelcontextprotocol/sdk/client/stdio.js';import{join}from'path';const r=process.cwd();const t=new StdioClientTransport({command:process.execPath,args:[join(r,'mcp/run-tools-server.mjs')],env:{...process.env,GROK_PLUGIN_ROOT:r}});const c=new Client({name:'probe',version:'0'},{capabilities:{}});await c.connect(t);const {tools}=await c.listTools();console.log(tools.length,'tools');await c.close();\""
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

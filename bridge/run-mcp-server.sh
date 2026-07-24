@@ -1,7 +1,5 @@
 #!/bin/bash
-# MCP Server wrapper for oh-my-grok.
-# Prefer slim state MCP; optional built standalone when present.
-
+# Launch full OMG tools MCP (or thin state fallback).
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -10,16 +8,22 @@ if [ -n "$GLOBAL_NPM_ROOT" ]; then
   export NODE_PATH="${GLOBAL_NPM_ROOT}:${NODE_PATH:-}"
 fi
 
-# Prefer OMG state MCP (always present); fall back to built standalone server
-if [ -f "$ROOT/mcp/omg-state-server.mjs" ]; then
-  exec node "$ROOT/mcp/omg-state-server.mjs" "$@"
+export GROK_PLUGIN_ROOT="${GROK_PLUGIN_ROOT:-$ROOT}"
+export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$GROK_PLUGIN_ROOT}"
+
+# Preferred: launcher (builds bridge if needed, stdio MCP)
+if [ -f "$ROOT/mcp/run-tools-server.mjs" ]; then
+  exec node "$ROOT/mcp/run-tools-server.mjs" "$@"
+fi
+if [ -f "$ROOT/bridge/mcp-server.cjs" ]; then
+  exec node "$ROOT/bridge/mcp-server.cjs" "$@"
 fi
 if [ -f "$ROOT/dist/mcp/standalone-server.js" ]; then
   exec node "$ROOT/dist/mcp/standalone-server.js" "$@"
 fi
-if [ -f "$SCRIPT_DIR/mcp-server.cjs" ]; then
-  exec node "$SCRIPT_DIR/mcp-server.cjs" "$@"
+if [ -f "$ROOT/mcp/omg-state-server.mjs" ]; then
+  exec node "$ROOT/mcp/omg-state-server.mjs" "$@"
 fi
 
-echo "No MCP entry found. Run: npm run build  (or ensure mcp/omg-state-server.mjs exists)" >&2
+echo "No MCP entry found. Run: npm run build && npm run build:bridge" >&2
 exit 1
