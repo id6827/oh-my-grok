@@ -2,7 +2,7 @@
 
 **Source pin:** OMC `4.15.7` @ `41a4c0f` — see `docs/OMC-SOURCE.md`  
 **OMG version:** `0.9.0-rc.1`  
-**Last updated:** 2026-07-25 (parity review + three-axis green + solo/team docs; vitest residual open)
+**Last updated:** 2026-07-25 (parity review + three-axis green + solo/team docs; full vitest residual **119 fail** after dual-read/brand cluster close — product gate remains core+smoke)
 **Legend:** ✅ ported (build-green, usable) · 🟡 partial / intentional reduce · ❌ missing · N/A documented
 
 **Module coverage** (touched = ported+partial): run `node scripts/port-inventory.mjs`  
@@ -62,7 +62,7 @@
 | project-memory-* | 🟡 file ported |
 | wiki-session-* | 🟡 file ported |
 | context-guard-stop, context-safety | 🟡 file ported |
-| persistent-mode | 🟡 file ported |
+| persistent-mode | ✅ | product Stop: `hooks/scripts/persistent-mode.mjs`; legacy `scripts/persistent-mode.cjs` dual-surface kept |
 | review-gate, risk-assess, verify-deliverables | 🟡 file ported |
 | workflow-drift-guard | 🟡 file ported |
 | setup-init, setup-maintenance | 🟡 file ported |

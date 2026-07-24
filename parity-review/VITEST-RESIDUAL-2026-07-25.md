@@ -7,10 +7,13 @@
 | Parity review baseline | ~721 fail / ~10783 pass | REPORT-2026-07-25 |
 | After residual `d159cf7` | **248 fail / 11000 pass** | JSON reporter |
 | After doctor corpus `5dd46b0` | **178 fail / 11065 pass** | `/tmp/vitest-after-doctor.log` |
+| After cluster close `f4d28b1` | **119 fail / 11124 pass** | `/tmp/vitest-after-clusters.log` |
 | Core gate | **217/217 green** | `npm run test:vitest:core` |
 | Three-axis | **green on macOS** | `5ee02cf` |
 
-**Cluster close (this session, post-doctor remeasure):**
+**Delta from parity baseline:** roughly **−600 failures**.
+
+### Cluster close (post-doctor → f4d28b1)
 
 | Cluster | Fix | Est. fails closed |
 |---------|-----|------------------:|
@@ -20,7 +23,20 @@
 | `cli/launch` dual-read | GROK+CLAUDE forward; default ~/.grok | 8 |
 | `cli/team` spy pollution | `vi.restoreAllMocks` in afterEach (+ hint fix) | 15 |
 
-Targeted re-run after these fixes: **345/345** green on the five files above. Full suite remeasure pending.
+Targeted re-run of those five files: **345/345** green. Full remeasure: **119 fail / 47 fail-files**.
+
+### Top remaining (post-`f4d28b1`)
+
+| ~Fails | File | Likely cause |
+|-------:|------|----------------|
+| 8 | `run-cjs-graceful-fallback.test.ts` | Worker/timeout/cjs path contracts |
+| 8 | `session-start-template.test.ts` | restore messaging / AGENTS context |
+| 7 | `plugin-shipping-surface.test.ts` | generated staging / digests |
+| 7 | `psm-tmux-naming.test.ts` | tmux-safe name / env |
+| 7 | `setup-claude-md-script.test.ts` | coordinator / plugin root |
+| 6 | `runtime-owner-client.test.ts` | owner epoch / reclaim |
+| 5 | `setup-contracts-regression.test.ts` | hooks / packaging contracts |
+| … | mode-registry session-isolation | `/proc` Linux-only on macOS |
 
 ## Intentional 🟡 (do not “fix” by deleting tests)
 
@@ -33,9 +49,10 @@ Targeted re-run after these fixes: **345/345** green on the five files above. Fu
 | bridge/*.cjs not always committed | multi-MB build artifact | `npm run build:bridge` or dist fallback |
 | better-sqlite3 optional | optionalDep + shim | advanced wiki/db features |
 | scripts/persistent-mode.cjs vs hooks mjs | product Stop uses `hooks/scripts/persistent-mode.mjs` | cjs kept for legacy tests / dual surface |
+| session-isolation `/proc` lock owner | Linux processStart identity | macOS uses `ps lstart` hash in production paths |
 
 ## Next actions
 
-1. Full `npx vitest run --exclude tests/perf/**` remeasure after this commit  
-2. Attack next largest remaining clusters from remeasure  
+1. Attack next largest remaining clusters (run-cjs, session-start-template, plugin-shipping, setup-claude-md)  
+2. Soft-skip or platform-guard pure `/proc` tests on non-linux where intentional  
 3. Keep smoke + vitest:core green always  
