@@ -541,7 +541,8 @@ export function getProjectIdentifier(worktreeRoot?: string): string {
  * @returns Absolute path to the omg root directory
  */
 export function getOmcRoot(worktreeRoot?: string): string {
-  const customDir = process.env.OMG_STATE_DIR;
+  // Prefer OMG_*; accept OMC_* legacy env for ported tests and dual-host shells
+  const customDir = process.env.OMG_STATE_DIR || process.env.OMC_STATE_DIR;
   if (customDir) {
     // Centralized state lives at $OMG_STATE_DIR/{projectId} — outside the
     // working tree — so the #3349 stray-`.omg`-in-submodule problem does not
@@ -1052,7 +1053,10 @@ export function resolveToWorktreeRoot(directory?: string): string {
   // merging into the parent superproject's. Non-submodule repos and linked
   // worktrees are unaffected: with no superproject the two resolvers are equal.
   // See PR #3350 Codex review (hook normalization / submodule identity).
-  const resolveRoot = process.env.OMG_STATE_DIR ? getGitTopLevel : getWorktreeRoot;
+  const resolveRoot =
+    process.env.OMG_STATE_DIR || process.env.OMC_STATE_DIR
+      ? getGitTopLevel
+      : getWorktreeRoot;
   if (directory) {
     const resolved = resolve(directory);
     const root = resolveRoot(resolved);

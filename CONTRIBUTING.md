@@ -65,20 +65,24 @@ Note: The repo has two main branches:
 
 2. **Understand the build chain** (from `package.json`):
    ```bash
-   npm run build
-   # Runs: tsc -p tsconfig.json && node scripts/build-runtime-compat.mjs
+   npm run build            # tsc → dist/ + runtime compat
+   npm run build:bridge     # esbuild → bridge/*.cjs (gitignored, local/CI only)
+   npm run build:all        # both
+   npm run test:smoke       # hooks/team/hud foundation
+   npm run test:vitest:core # pure unit slice (utils/config/session-id)
+   npm run validate
    ```
 
    - `tsc` — TypeScript compilation `src/` → `dist/`
-   - `build-runtime-compat.mjs` — re-exports under `dist/runtime/` for legacy consumers
-   - Optional (ported from OMC, not default yet): `scripts/build-mcp-server.mjs`, `build-cli.mjs`, `build-team-server.mjs`, … when wiring full esbuild bridges
+   - `build-runtime-compat.mjs` — re-exports under `dist/runtime/`
+   - `build:bridge` — esbuild bundles for optional full MCP/CLI CJS (not committed)
 
 3. **Build once**:
    ```bash
    npm run build
    ```
 
-Primary output is `dist/`. Plugin MCP entry is `mcp/omg-state-server.mjs` (see `bridge/README.md`). Do **not** expect multi‑MB OMC-era `bridge/*.cjs` bundles unless you run the optional esbuild scripts and generate them locally.
+Primary product output is `dist/` + `mcp/omg-state-server.mjs`. Generate `bridge/*.cjs` only when needed; they are **gitignore** (see `bridge/README.md`). CI: `.github/workflows/ci.yml` runs smoke + core vitest + optional bridge build.
 
 ---
 

@@ -18,7 +18,7 @@
  * Skill docs (Wave C) must document this asymmetry verbatim.
  */
 function readEnv() {
-    const value = process.env.OMG_SESSION_ID;
+    const value = process.env.OMG_SESSION_ID || process.env.OMC_SESSION_ID;
     return value && value.trim() ? value.trim() : undefined;
 }
 function readPayload(payload) {

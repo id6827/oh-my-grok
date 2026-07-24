@@ -26,7 +26,7 @@ export interface ResolveSessionIdInput {
 }
 
 function readEnv(): string | undefined {
-  const value = process.env.OMG_SESSION_ID;
+  const value = process.env.OMG_SESSION_ID || process.env.OMC_SESSION_ID;
   return value && value.trim() ? value.trim() : undefined;
 }
 

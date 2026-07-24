@@ -16,3 +16,11 @@ node_modules/
 *.swp
 .env
 .env.*
+
+# Generated bridge bundles (local/CI only — do not commit multi-MB cjs)
+bridge/*.cjs
+bridge/team.js
+bridge/claude-md-coordinator.cjs
+!bridge/README.md
+!bridge/run-mcp-server.sh
+!bridge/gyoshu_bridge.py
