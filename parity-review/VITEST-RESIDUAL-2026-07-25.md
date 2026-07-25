@@ -4,52 +4,41 @@
 
 | Metric | Value | Source |
 |--------|------:|--------|
-| Parity review baseline | ~721 fail / ~10783 pass | REPORT-2026-07-25 |
-| After residual `d159cf7` | **248 fail / 11000 pass** | JSON reporter |
-| After doctor corpus `5dd46b0` | **178 fail / 11065 pass** | `/tmp/vitest-after-doctor.log` |
-| After cluster close `f4d28b1` | **119 fail / 11124 pass** | `/tmp/vitest-after-clusters.log` |
-| After residual-2 `26e34dc` | **77 fail / 11160 pass** | `/tmp/vitest-after-residual2.log` |
-| Core gate | **217/217 green** | `npm run test:vitest:core` |
-| Three-axis | **green on macOS** | `5ee02cf` |
+| Parity review baseline | ~721 fail | REPORT |
+| After cluster wave 1 | **119 fail** | post-doctor + dual-read |
+| After wave 2 `26e34dc` | **77 fail / 11160 pass** | run.cjs / shipping / PSM |
+| After wave 3 `49ebf5a` | **51 fail / 11186 pass** | owner identity / hooks dual-read / contracts |
+| Core gate | **217/217** | `npm run test:vitest:core` |
+| Smoke | **green** | `npm run test:smoke` |
 
-**Delta from parity baseline:** roughly **−640 failures**.
+**Delta from parity baseline:** roughly **−670 failures**.
 
-### Cluster close (`f4d28b1` → `26e34dc`)
+### Wave 3 closed (`49ebf5a`)
 
 | Cluster | Fix |
 |---------|-----|
-| `run-cjs-graceful-fallback` | `GROK_PLUGIN_ROOT` dual-read; Worker diagnostic once |
-| `session-start-template` | dual-read config/state-root; OMG update/AGENTS compact |
-| `plugin-shipping-surface` | realpath-safe local import resolution (macOS `/var`) |
-| `psm-tmux-naming` | `psm_omg_*` brand in tests + SKILL |
-| `setup-claude-md` #3476 | soft-skip when bridge coordinator untracked |
-| UserPromptSubmit outer fuse | keyword/skill host timeout 30s |
+| `runtime-owner-client` | accept cross-platform process-start identity prefixes |
+| `setup-contracts` | dual-read GROK_PLUGIN_ROOT; SessionEnd async + hooks/scripts path |
+| `hook-command-portability` | portable `${GROK_CONFIG_DIR:-${CLAUDE_CONFIG_DIR:-$HOME/.grok}}` |
+| `session-start-script-context` | fixtures under `~/.grok` dual-read |
+| `session-isolation` | macOS lock owner via `ps lstart` hash (not `/proc`) |
+| `windows-hide` | production manifest includes `hooks/scripts` + `scripts` |
+| `plugin-setup-deps` | Grok wording; pass-through dual-read hooks |
 
-### Top remaining (post-`26e34dc`)
+### Top remaining (~51)
 
-| ~Fails | File | Likely cause |
-|-------:|------|----------------|
-| 6 | `runtime-owner-client.test.ts` | owner epoch / reclaim |
-| 5 | `setup-contracts-regression.test.ts` | hooks / packaging |
-| 4 | `plugin-setup-deps.test.ts` | deps / coordinator optional |
-| 4 | `session-start-script-context.test.ts` | script path dual-read lag |
-| 3 | docs/lint/hooks portability clusters | brand / Windows hide |
-| … | `session-isolation` | `/proc` Linux-only on macOS |
+| ~Fails | Area |
+|-------:|------|
+| 3 | claude-goal-adapter-doc, workflow-drift-guard, autopilot cancel |
+| 2 | hooks-command-escaping, manual-compact, npm-package-hook-surface, plugin-skill-budget, release-guidance, tier0-docs, subagent-lock, hook-templates, state-tools |
+| … | smaller one-off brand/docs lag |
 
-## Intentional 🟡
-
-| Surface | Why intentional |
-|---------|-----------------|
-| Named workflow full gate Linux-only | `/proc` + flock |
-| Windows find-node patch scope | dual bash/node entrypoints |
-| bridge/*.cjs not committed | multi-MB artifact; `build:bridge` |
-| coordinator optional | `build:bridge:extra` |
-| Full vitest 100% | product gate = core + smoke |
-
-## Product gates
+## Product gates (ship bar)
 
 ```bash
 npm run test:vitest:core   # 217
 npm run test:smoke
 npm run mcp:probe
 ```
+
+Full vitest residual is **not** the ship bar (intentional platform 🟡 + OMC lag).
