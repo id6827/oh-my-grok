@@ -447,7 +447,8 @@ describe('Contract 9: hooks/hooks.json portability', () => {
       for (const hookGroup of eventHooks as Array<{ hooks: Array<{ type: string; command: string }> }>) {
         for (const hook of hookGroup.hooks) {
           if (hook.type !== 'command') continue;
-          if (!hook.command.includes('$GROK_PLUGIN_ROOT')) {
+          // Dual-read form is ${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT} — match bare name
+          if (!hook.command.includes('GROK_PLUGIN_ROOT')) {
             violations.push({ event: eventType, command: hook.command });
           }
         }
@@ -491,22 +492,27 @@ describe('Contract 9: hooks/hooks.json portability', () => {
   });
 
 
-  it('source hook commands use direct node run.cjs without sh/find-node bootstraps', () => {
+  it('source hook commands use direct node (hooks/scripts or run.cjs) without sh/find-node bootstraps', () => {
     if (!existsSync(HOOKS_JSON_PATH)) return;
 
     const hooksJson = JSON.parse(readFileSync(HOOKS_JSON_PATH, 'utf-8'));
     const violations: { event: string; command: string; reason: string }[] = [];
+    // OMG ships dual-read roots: ${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}
+    // Most hooks are direct node on hooks/scripts/*.mjs; SessionStart may use bash session-start.sh.
+    const directNode = /^node "\$\{?GROK_PLUGIN_ROOT/;
+    const allowedShell = /^bash "\$\{?GROK_PLUGIN_ROOT/;
 
     for (const [eventType, eventHooks] of Object.entries(hooksJson.hooks || {})) {
       for (const hookGroup of eventHooks as Array<{ hooks: Array<{ type: string; command: string }> }>) {
         for (const hook of hookGroup.hooks) {
           if (hook.type !== 'command') continue;
-          if (!hook.command.startsWith('node "$GROK_PLUGIN_ROOT"/scripts/run.cjs ')) {
-            violations.push({ event: eventType, command: hook.command, reason: 'not direct node run.cjs' });
+          const cmd = hook.command;
+          if (cmd.includes('find-node.sh') || /^(?:"\/bin\/sh"|sh)\s/.test(cmd)) {
+            violations.push({ event: eventType, command: cmd, reason: 'uses sh/find-node bootstrap' });
+            continue;
           }
-          if (/^(?:"\/bin\/sh"|sh)\s/.test(hook.command) || hook.command.includes('find-node.sh')) {
-            violations.push({ event: eventType, command: hook.command, reason: 'uses sh/find-node bootstrap' });
-          }
+          if (directNode.test(cmd) || allowedShell.test(cmd)) continue;
+          violations.push({ event: eventType, command: cmd, reason: 'not dual-read GROK/CLAUDE node or bash entry' });
         }
       }
     }
@@ -514,8 +520,8 @@ describe('Contract 9: hooks/hooks.json portability', () => {
     if (violations.length > 0) {
       const details = violations.map(v => `  ${v.event} (${v.reason}): ${v.command}`).join('\n');
       expect.fail(
-        `Found non-Windows-safe source hook commands in hooks.json:\n${details}\n\n` +
-        `Source plugin manifest commands must be direct: node "$GROK_PLUGIN_ROOT"/scripts/run.cjs ...`
+        `Found non-portable source hook commands in hooks.json:\n${details}\n\n` +
+        `Prefer: node "\${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/…"`,
       );
     }
   });
@@ -615,7 +621,8 @@ describe('OMG setup Ralph Ruby dependency guidance (issue #2969)', () => {
     expect(content).toContain('command -v ruby');
     expect(content).toContain('Ralph workflows require Ruby');
     expect(content).toContain('sudo apt update && sudo apt install ruby-full');
-    expect(content).toContain('restart Claude Code');
+    // Grok host wording (OMC said "Claude Code")
+    expect(content).toMatch(/restart (Grok|Claude Code|the host)/i);
   });
 });
 
@@ -655,7 +662,7 @@ describe('Contract 11: SessionEnd hooks are async (issue #3240)', () => {
     }
   });
 
-  it('keeps both SessionEnd scripts on the direct asynchronous run.cjs path', () => {
+  it('keeps SessionEnd scripts on the direct asynchronous node hooks/scripts path', () => {
     if (!existsSync(HOOKS_JSON_PATH)) return;
 
     const hooksJson = JSON.parse(readFileSync(HOOKS_JSON_PATH, 'utf-8')) as {
@@ -664,10 +671,14 @@ describe('Contract 11: SessionEnd hooks are async (issue #3240)', () => {
     const commands = (hooksJson.hooks.SessionEnd ?? [])
       .flatMap(group => group.hooks)
       .filter(hook => hook.type === 'command')
-      .map(hook => hook.command);
+      .map(hook => hook.command ?? '');
 
-    expect(commands).toContain('node "$GROK_PLUGIN_ROOT"/scripts/run.cjs "$GROK_PLUGIN_ROOT"/scripts/session-end.mjs');
-    expect(commands).toContain('node "$GROK_PLUGIN_ROOT"/scripts/run.cjs "$GROK_PLUGIN_ROOT"/scripts/wiki-session-end.mjs');
+    // OMG plugin-first: hooks/scripts/*.mjs with dual-read root (not scripts/run.cjs)
+    expect(commands.some(c => c.includes('hooks/scripts/session-end.mjs') && c.includes('GROK_PLUGIN_ROOT'))).toBe(true);
+    expect(commands.some(c => c.includes('hooks/scripts/wiki-session-end.mjs') && c.includes('GROK_PLUGIN_ROOT'))).toBe(true);
+    for (const cmd of commands) {
+      expect(cmd).toMatch(/^node /);
+    }
   });
 
   it('non-SessionEnd hooks do not unconditionally carry async:true', () => {

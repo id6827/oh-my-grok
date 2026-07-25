@@ -37,8 +37,9 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
     vi.resetModules();
   });
 
-  it('default config: commands use ${CLAUDE_CONFIG_DIR:-$HOME/.claude} pattern', async () => {
+  it('default config: commands use portable GROK/CLAUDE config-dir expansion', async () => {
     delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.GROK_CONFIG_DIR;
     vi.resetModules();
 
     const { getHooksSettingsConfig } = await import('../../installer/hooks.js');
@@ -55,9 +56,11 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
 
     expect(commands.length).toBeGreaterThan(0);
 
-    // On default config, all commands should use the portable env-var pattern
+    // Dual-read portable pattern (not expanded absolute ~/.grok)
     for (const cmd of commands) {
-      expect(cmd).toContain('${CLAUDE_CONFIG_DIR:-$HOME/.claude}');
+      expect(cmd).toMatch(/\$\{GROK_CONFIG_DIR:-/);
+      expect(cmd).toContain('/hooks/');
+      expect(cmd).not.toMatch(/\/(?:home|Users)\/[^/]+\//);
     }
   });
 
@@ -95,6 +98,7 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
 
   it('no command contains a hardcoded home directory path', async () => {
     delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.GROK_CONFIG_DIR;
     vi.resetModules();
 
     const { getHooksSettingsConfig } = await import('../../installer/hooks.js');
@@ -118,7 +122,7 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
       const details = violations.map(v => `  ${v.event}: ${v.command}`).join('\n');
       expect.fail(
         `Found hardcoded home directory paths in hook commands:\n${details}\n\n` +
-        `Hook commands must use $HOME or \${CLAUDE_CONFIG_DIR:-$HOME/.claude}, not resolved absolute home paths.`
+        `Hook commands must use portable \${GROK_CONFIG_DIR:-…} expansion, not resolved absolute home paths.`
       );
     }
   });
@@ -150,6 +154,7 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
   it('Windows default config: emits concrete hook paths without POSIX shell expansion', async () => {
     Object.defineProperty(process, 'platform', { value: 'win32' });
     delete process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.GROK_CONFIG_DIR;
     vi.resetModules();
 
     const { getHooksSettingsConfig } = await import('../../installer/hooks.js');
@@ -166,8 +171,10 @@ describe('Contract 7: hook command portability (#2084, #2348)', () => {
 
     expect(commands.length).toBeGreaterThan(0);
     for (const cmd of commands) {
-      expect(cmd).toContain('/.claude/hooks/');
-      expect(cmd).not.toContain('${CLAUDE_CONFIG_DIR:-$HOME/.claude}');
+      // Windows expands to absolute host config dir (.grok default dual-read)
+      expect(cmd).toMatch(/\/\.(?:grok|claude)\/hooks\//);
+      expect(cmd).not.toContain('${GROK_CONFIG_DIR:-');
+      expect(cmd).not.toContain('${CLAUDE_CONFIG_DIR:-');
       expect(cmd).not.toContain('%USERPROFILE%');
     }
   });

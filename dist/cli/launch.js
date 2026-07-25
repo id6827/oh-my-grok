@@ -138,7 +138,8 @@ export function prepareOmcLaunchConfigDir(baseConfigDir = getClaudeConfigDir()) 
     return runtimeConfigDir;
 }
 function isDefaultClaudeConfigDirPath(configDir) {
-    return configDir === join(homedir(), '.claude');
+    const home = homedir();
+    return configDir === join(home, '.grok') || configDir === join(home, '.claude');
 }
 /**
  * Extract the OMG-specific --notify flag from launch args.
@@ -487,7 +488,9 @@ function runClaudeInsideTmux(cwd, args) {
  * so our values take precedence.
  */
 export const TMUX_ENV_FORWARD = [
+    // Dual-read: Grok primary + Claude compat (Claude CLI still reads CLAUDE_CONFIG_DIR)
     'GROK_CONFIG_DIR',
+    'CLAUDE_CONFIG_DIR',
     'OMC_NOTIFY',
     'OMC_OPENCLAW',
     'OMC_TELEGRAM',
@@ -702,10 +705,14 @@ export async function launchCommand(args) {
     }
     const launchConfigDir = prepareOmcLaunchConfigDir();
     if (isDefaultClaudeConfigDirPath(launchConfigDir)) {
+        // Default host dirs: let the child resolve via dual-read (~/.grok then ~/.claude)
         delete process.env.GROK_CONFIG_DIR;
+        delete process.env.CLAUDE_CONFIG_DIR;
     }
     else {
+        // Explicit / runtime profile: set both so Grok dual-read and Claude CLI agree
         process.env.GROK_CONFIG_DIR = launchConfigDir;
+        process.env.CLAUDE_CONFIG_DIR = launchConfigDir;
     }
     const normalizedArgs = normalizeClaudeLaunchArgs(argsAfterWebhook);
     const sessionId = `omg-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`;

@@ -89,11 +89,19 @@ function normalizePath(value: string): string {
 }
 
 function isDefaultClaudeConfigDir(): boolean {
-  return normalizePath(getClaudeConfigDir()) === normalizePath(join(homedir(), '.claude'));
+  const dir = normalizePath(getClaudeConfigDir());
+  const home = homedir();
+  return dir === normalizePath(join(home, '.grok')) || dir === normalizePath(join(home, '.claude'));
 }
 
 function quoteCommandPath(path: string): string {
   return `"${path.replace(/"/g, '\\"')}"`;
+}
+
+/** Portable dual-read config dir for standalone ~/.hooks installs. */
+function portableConfigDirExpansion(): string {
+  // GROK primary → CLAUDE dual-read → ~/.grok
+  return '${GROK_CONFIG_DIR:-${CLAUDE_CONFIG_DIR:-$HOME/.grok}}';
 }
 
 function buildHookCommand(filename: string): string {
@@ -102,7 +110,7 @@ function buildHookCommand(filename: string): string {
   }
 
   if (isDefaultClaudeConfigDir()) {
-    return `node "\${GROK_CONFIG_DIR:-$HOME/.claude}/hooks/${filename}"`;
+    return `node "${portableConfigDirExpansion()}/hooks/${filename}"`;
   }
 
   return `node ${quoteCommandPath(join(getClaudeConfigDir(), 'hooks', filename).replace(/\\/g, '/'))}`;

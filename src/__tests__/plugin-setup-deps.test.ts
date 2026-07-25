@@ -96,7 +96,7 @@ describe('plugin-setup.mjs Ralph Ruby dependency guidance (issue #2969)', () => 
   it('prints actionable install guidance for fresh Ubuntu users', () => {
     expect(scriptContent).toContain('Ralph workflows require Ruby');
     expect(scriptContent).toContain('sudo apt update && sudo apt install ruby-full');
-    expect(scriptContent).toContain('restart Claude Code');
+    expect(scriptContent).toMatch(/restart Grok Build/);
   });
 });
 
@@ -208,6 +208,12 @@ describe('plugin-setup.mjs hook command portability', () => {
     expect(commands.length).toBeGreaterThan(0);
     for (const { event, command } of commands) {
       const patched = patchCommand(command, WINDOWS_PREFIX);
+      // OMG plugin-first: dual-read node hooks/scripts (or bash session-start) pass through
+      if (command.includes('hooks/scripts/') || command.includes('session-start.sh') || command.includes('${GROK_PLUGIN_ROOT:-')) {
+        expect(patched, event).toBe(command);
+        expect(patched, event).not.toContain('find-node.sh');
+        continue;
+      }
       expect(patched, event).toMatch(/^node "\$GROK_PLUGIN_ROOT"\/scripts\/run\.cjs /);
       expect(patched, event).not.toContain('find-node.sh');
       expect(patched, event).not.toContain('/bin/sh');
@@ -231,6 +237,11 @@ describe('plugin-setup.mjs hook command portability', () => {
     expect(commands.length).toBeGreaterThan(0);
     for (const { event, command } of commands) {
       const patched = patchCommand(command, UNIX_PREFIX);
+      // Already dual-read portable commands are left unchanged
+      if (command.includes('hooks/scripts/') || command.includes('session-start.sh') || command.includes('${GROK_PLUGIN_ROOT:-')) {
+        expect(patched, event).toBe(command);
+        continue;
+      }
       expect(patched, event).toMatch(/^sh "\$GROK_PLUGIN_ROOT"\/scripts\/find-node\.sh "\$GROK_PLUGIN_ROOT"\/scripts\/run\.cjs /);
       expect(patched, event).toContain('"$GROK_PLUGIN_ROOT"/scripts/');
       expect(patched, event).not.toContain('/bin/sh');

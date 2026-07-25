@@ -78,17 +78,24 @@ function normalizePath(value) {
     return value.replace(/\\/g, '/').replace(/\/+$/, '');
 }
 function isDefaultClaudeConfigDir() {
-    return normalizePath(getClaudeConfigDir()) === normalizePath(join(homedir(), '.claude'));
+    const dir = normalizePath(getClaudeConfigDir());
+    const home = homedir();
+    return dir === normalizePath(join(home, '.grok')) || dir === normalizePath(join(home, '.claude'));
 }
 function quoteCommandPath(path) {
     return `"${path.replace(/"/g, '\\"')}"`;
+}
+/** Portable dual-read config dir for standalone ~/.hooks installs. */
+function portableConfigDirExpansion() {
+    // GROK primary → CLAUDE dual-read → ~/.grok
+    return '${GROK_CONFIG_DIR:-${CLAUDE_CONFIG_DIR:-$HOME/.grok}}';
 }
 function buildHookCommand(filename) {
     if (isWindows()) {
         return `node ${quoteCommandPath(join(getClaudeConfigDir(), 'hooks', filename).replace(/\\/g, '/'))}`;
     }
     if (isDefaultClaudeConfigDir()) {
-        return `node "\${GROK_CONFIG_DIR:-$HOME/.claude}/hooks/${filename}"`;
+        return `node "${portableConfigDirExpansion()}/hooks/${filename}"`;
     }
     return `node ${quoteCommandPath(join(getClaudeConfigDir(), 'hooks', filename).replace(/\\/g, '/'))}`;
 }

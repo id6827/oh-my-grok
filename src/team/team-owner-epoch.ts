@@ -113,17 +113,35 @@ export function processStartIdentityForPlatform(
   }
 }
 
-export function isValidProcessStartIdentity(value: unknown, platform: NodeJS.Platform = process.platform): value is string {
-  if (typeof value !== 'string' || value.length > 1024) return false;
-  if (platform === 'linux') return /^linux:[1-9]\d*$/.test(value);
-  if (platform === 'win32') return /^win32:[1-9]\d*$/.test(value);
-  if (platform === 'darwin') {
-    const match = /^darwin:([1-9]\d*):(\d+)$/.exec(value);
-    return match !== null && Number(match[2]) < 1_000_000;
+/**
+ * Validate a process-start identity token by its **own prefix**, not the host
+ * platform. Records may be fixtures or cross-host artifacts (`linux:…` on
+ * macOS tests); death detection still requires a well-formed identity.
+ *
+ * When `platform` is passed, optionally require that prefix to match.
+ */
+export function isValidProcessStartIdentity(value: unknown, platform?: NodeJS.Platform): value is string {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 1024) return false;
+
+  if (/^linux:[1-9]\d*$/.test(value)) {
+    return platform === undefined || platform === 'linux';
   }
+  if (/^win32:[1-9]\d*$/.test(value)) {
+    return platform === undefined || platform === 'win32';
+  }
+  const darwin = /^darwin:([1-9]\d*):(\d+)$/.exec(value);
+  if (darwin) {
+    if (Number(darwin[2]) >= 1_000_000) return false;
+    return platform === undefined || platform === 'darwin';
+  }
+
   const separator = value.indexOf(':');
-  return separator > 0 && value.slice(0, separator) === platform
-    && value.slice(separator + 1).length > 0 && !/[\u0000-\u001f\u007f]/.test(value.slice(separator + 1));
+  if (separator <= 0) return false;
+  const prefix = value.slice(0, separator);
+  const rest = value.slice(separator + 1);
+  if (!rest || /[\u0000-\u001f\u007f]/.test(rest)) return false;
+  if (platform !== undefined && prefix !== platform) return false;
+  return true;
 }
 
 export function currentProcessStartIdentity(pid: number = process.pid): string | null {

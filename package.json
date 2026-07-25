@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/build-runtime-compat.mjs",
+    "prepublishOnly": "npm run build",
     "test": "npm run test:smoke",
     "validate": "node scripts/validate-parity.mjs",
     "doctor": "node bin/omg.js doctor",

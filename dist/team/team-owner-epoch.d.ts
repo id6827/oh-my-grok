@@ -26,6 +26,13 @@ export type OwnerFenceCheck = {
     reason: 'missing' | 'malformed' | 'superseded' | 'mismatch';
 };
 export declare function processStartIdentityForPlatform(pid: number, platform?: NodeJS.Platform, exec?: typeof execFileSync): string | null;
+/**
+ * Validate a process-start identity token by its **own prefix**, not the host
+ * platform. Records may be fixtures or cross-host artifacts (`linux:…` on
+ * macOS tests); death detection still requires a well-formed identity.
+ *
+ * When `platform` is passed, optionally require that prefix to match.
+ */
 export declare function isValidProcessStartIdentity(value: unknown, platform?: NodeJS.Platform): value is string;
 export declare function currentProcessStartIdentity(pid?: number): string | null;
 export declare function isProcessIdentityDead(record: Pick<OwnerEpochRecord, 'pid' | 'process_started_at'>): boolean;

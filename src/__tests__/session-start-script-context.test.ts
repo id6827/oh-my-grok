@@ -51,6 +51,8 @@ describe('session-start.mjs regression #1386', () => {
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
       },
       timeout: 15000,
     }).trim();
@@ -138,6 +140,8 @@ describe('session-start.mjs regression #1386', () => {
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
       },
       timeout: 15000,
     }).trim();
@@ -182,6 +186,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         CLAUDE_CODE_USE_BEDROCK: '1',
       },
       timeout: 15000,
@@ -203,16 +209,16 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('surfaces update notices through systemMessage without injecting them into additionalContext', () => {
-    const claudeDir = join(fakeHome, '.claude');
+    const configDir = join(fakeHome, '.grok');
     const pluginRoot = join(tempDir, 'plugin');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(pluginRoot, { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '1.0.0', type: 'module' }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '999.0.0',
@@ -232,6 +238,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -254,19 +262,19 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('does not show update notice when stale GROK_PLUGIN_ROOT is older than plugin cache', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const stalePluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.14.4');
-    const latestPluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.14.5');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const stalePluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.14.4');
+    const latestPluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.14.5');
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(stalePluginRoot, { recursive: true });
     mkdirSync(latestPluginRoot, { recursive: true });
     writeFileSync(join(stalePluginRoot, 'package.json'), JSON.stringify({ version: '4.14.4', type: 'module' }));
     writeFileSync(join(latestPluginRoot, 'package.json'), JSON.stringify({ version: '4.14.5', type: 'module' }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '4.14.5',
@@ -286,6 +294,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: stalePluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -307,11 +317,11 @@ ${'- oversized startup guidance\n'.repeat(700)}
 
 
   it('suppresses plugin update notices when npm latest is newer than the marketplace channel', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const pluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
-    const marketplaceRoot = join(claudeDir, 'plugins', 'marketplaces', 'omg');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const pluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
+    const marketplaceRoot = join(configDir, 'plugins', 'marketplaces', 'omg');
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(join(pluginRoot), { recursive: true });
     mkdirSync(join(marketplaceRoot, '.claude-plugin'), { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '4.15.4', type: 'module' }));
@@ -320,10 +330,10 @@ ${'- oversized startup guidance\n'.repeat(700)}
       plugins: [{ name: 'oh-my-grok', version: '4.15.4' }],
       version: '4.15.4',
     }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '4.15.5',
@@ -344,6 +354,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -359,11 +371,11 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('does not fall back to npm notices when marketplace metadata is unavailable', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const pluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
-    const marketplaceRoot = join(claudeDir, 'plugins', 'marketplaces', 'omg');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const pluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
+    const marketplaceRoot = join(configDir, 'plugins', 'marketplaces', 'omg');
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(pluginRoot, { recursive: true });
     mkdirSync(join(marketplaceRoot, '.claude-plugin'), { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '4.15.4', type: 'module' }));
@@ -375,10 +387,10 @@ ${'- oversized startup guidance\n'.repeat(700)}
     writeFileSync(join(marketplaceRoot, '.claude-plugin', 'marketplace.json'), JSON.stringify({
       plugins: [{ name: 'oh-my-grok', version: '999x.0.0' }],
     }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '4.15.5',
@@ -399,6 +411,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -410,7 +424,7 @@ ${'- oversized startup guidance\n'.repeat(700)}
     const output = JSON.parse(result.stdout) as { systemMessage?: string };
     expect(output.systemMessage ?? '').not.toContain('[OMG UPDATE AVAILABLE]');
     expect(output.systemMessage ?? '').not.toContain('4.15.5');
-    expect(JSON.parse(readFileSync(join(claudeDir, '.omg', 'update-check.json'), 'utf-8'))).toMatchObject({
+    expect(JSON.parse(readFileSync(join(configDir, '.omg', 'update-check.json'), 'utf-8'))).toMatchObject({
       latestVersion: '4.15.4',
       currentVersion: '4.15.4',
       updateAvailable: false,
@@ -419,18 +433,18 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('treats a stable marketplace version as newer than the matching prerelease', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const pluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.16.0-beta.1');
-    const marketplaceRoot = join(claudeDir, 'plugins', 'marketplaces', 'omg');
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const pluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.16.0-beta.1');
+    const marketplaceRoot = join(configDir, 'plugins', 'marketplaces', 'omg');
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(pluginRoot, { recursive: true });
     mkdirSync(join(marketplaceRoot, '.claude-plugin'), { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '4.16.0-beta.1', type: 'module' }));
     writeFileSync(join(marketplaceRoot, '.claude-plugin', 'marketplace.json'), JSON.stringify({
       plugins: [{ name: 'oh-my-grok', version: '4.16.0' }],
     }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
 
     const result = spawnSync(NODE, [SCRIPT_PATH], {
       input: JSON.stringify({
@@ -443,6 +457,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -457,11 +473,11 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('uses the marketplace clone version for plugin update notices instead of npm latest', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const pluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.3');
-    const marketplaceRoot = join(claudeDir, 'plugins', 'marketplaces', 'omg');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const pluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.3');
+    const marketplaceRoot = join(configDir, 'plugins', 'marketplaces', 'omg');
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(join(pluginRoot), { recursive: true });
     mkdirSync(join(marketplaceRoot, '.claude-plugin'), { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '4.15.3', type: 'module' }));
@@ -469,10 +485,10 @@ ${'- oversized startup guidance\n'.repeat(700)}
       plugins: [{ name: 'oh-my-grok', version: '4.15.4' }],
       version: '4.15.4',
     }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '4.15.5',
@@ -493,6 +509,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },
@@ -510,22 +528,22 @@ ${'- oversized startup guidance\n'.repeat(700)}
   });
 
   it('does not emit npm-channel drift guidance when managed marketplace plugin is current', () => {
-    const claudeDir = join(fakeHome, '.claude');
-    const pluginRoot = join(claudeDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
-    const marketplaceRoot = join(claudeDir, 'plugins', 'marketplaces', 'omg');
-    mkdirSync(join(claudeDir, '.omg'), { recursive: true });
-    mkdirSync(join(claudeDir, 'hud'), { recursive: true });
+    const configDir = join(fakeHome, '.grok');
+    const pluginRoot = join(configDir, 'plugins', 'cache', 'omg', 'oh-my-grok', '4.15.4');
+    const marketplaceRoot = join(configDir, 'plugins', 'marketplaces', 'omg');
+    mkdirSync(join(configDir, '.omg'), { recursive: true });
+    mkdirSync(join(configDir, 'hud'), { recursive: true });
     mkdirSync(pluginRoot, { recursive: true });
     mkdirSync(join(marketplaceRoot, '.claude-plugin'), { recursive: true });
     writeFileSync(join(pluginRoot, 'package.json'), JSON.stringify({ version: '4.15.4', type: 'module' }));
     writeFileSync(join(marketplaceRoot, '.claude-plugin', 'marketplace.json'), JSON.stringify({
       plugins: [{ name: 'oh-my-grok', version: '4.15.4' }],
     }));
-    writeFileSync(join(claudeDir, '.omg-version.json'), JSON.stringify({ version: '4.15.5' }));
-    writeFileSync(join(claudeDir, 'hud', 'omg-hud.mjs'), '');
-    writeFileSync(join(claudeDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
+    writeFileSync(join(configDir, '.omg-version.json'), JSON.stringify({ version: '4.15.5' }));
+    writeFileSync(join(configDir, 'hud', 'omg-hud.mjs'), '');
+    writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ statusLine: 'node ~/.grok/hud/omg-hud.mjs' }));
     writeFileSync(
-      join(claudeDir, '.omg', 'update-check.json'),
+      join(configDir, '.omg', 'update-check.json'),
       JSON.stringify({
         timestamp: Date.now(),
         latestVersion: '4.15.5',
@@ -546,6 +564,8 @@ ${'- oversized startup guidance\n'.repeat(700)}
         ...process.env,
         HOME: fakeHome,
         USERPROFILE: fakeHome,
+        GROK_CONFIG_DIR: undefined as unknown as string,
+        CLAUDE_CONFIG_DIR: undefined as unknown as string,
         GROK_PLUGIN_ROOT: pluginRoot,
         OMC_NOTIFY: '0',
       },

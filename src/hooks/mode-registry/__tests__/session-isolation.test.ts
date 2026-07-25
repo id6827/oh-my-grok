@@ -1,5 +1,5 @@
-import { randomUUID } from 'crypto';
-import { spawn } from 'child_process';
+import { createHash, randomUUID } from 'crypto';
+import { spawn, execFileSync } from 'child_process';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
@@ -38,8 +38,18 @@ describe('Session-Scoped State Isolation', () => {
   });
 
   function liveLockOwner() {
-    const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-    const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+    // Linux: /proc starttime ticks. Darwin/other: ps lstart → stable token (matches mode-state dual path).
+    let processStart: string;
+    if (process.platform === 'linux') {
+      const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
+      processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19]!;
+    } else {
+      const lstart = execFileSync('ps', ['-o', 'lstart=', '-p', String(process.pid)], {
+        encoding: 'utf8',
+        env: { ...process.env, LC_ALL: 'C', LANG: 'C' },
+      }).trim();
+      processStart = createHash('sha256').update(lstart).digest('hex').slice(0, 16);
+    }
     return JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() });
   }
 
