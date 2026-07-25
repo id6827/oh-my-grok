@@ -54,6 +54,43 @@ async function status() {
 }
 
 function hud() {
+  const presetIdx = args.findIndex((a) => a === "--preset" || a.startsWith("--preset="));
+  if (presetIdx >= 0) {
+    let presetName = "";
+    const tok = args[presetIdx];
+    if (tok.startsWith("--preset=")) {
+      presetName = tok.slice("--preset=".length);
+    } else {
+      presetName = args[presetIdx + 1] || "";
+    }
+    const rest = args.filter((_, i) => {
+      if (i === presetIdx) return false;
+      if (!tok.startsWith("--preset=") && i === presetIdx + 1) return false;
+      return true;
+    });
+    const apply = spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `
+import { applyPreset } from ${JSON.stringify(pathToFileURL(join(root, "dist/hud/state.js")).href)};
+import { PRESET_CONFIGS } from ${JSON.stringify(pathToFileURL(join(root, "dist/hud/types.js")).href)};
+const name = ${JSON.stringify(String(presetName).trim().toLowerCase())};
+if (!(name in PRESET_CONFIGS)) {
+  console.error("Unknown HUD preset " + JSON.stringify(${JSON.stringify(presetName)}) + ". Expected: " + Object.keys(PRESET_CONFIGS).join(", "));
+  process.exit(1);
+}
+const cfg = applyPreset(name);
+console.error("[omg hud] preset=" + cfg.preset + " (saved to settings omcHud)");
+`,
+      ],
+      { encoding: "utf8", stdio: ["ignore", "inherit", "inherit"] },
+    );
+    if (apply.status !== 0) process.exit(apply.status ?? 1);
+    runNode("scripts/hud/omg-hud.mjs", rest);
+    return;
+  }
   runNode("scripts/hud/omg-hud.mjs", args);
 }
 
@@ -201,7 +238,7 @@ async function askCmd(askArgs) {
 function help() {
   console.log(`oh-my-grok CLI v0.9+
 
-  version | status | hud [--watch] | setup | setup-hud
+  version | status | hud [--watch] [--preset NAME] | setup | setup-hud
   team <N>:<agent> "task" | team status | team shutdown
   ask <provider> <prompt> | ask <provider> -p "..."
   state list|get|set|clear

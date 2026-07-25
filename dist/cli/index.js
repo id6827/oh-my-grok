@@ -1301,7 +1301,20 @@ program
     .description('Run the OMG HUD statusline renderer')
     .option('--watch', 'Run in watch mode (continuous polling for tmux pane)')
     .option('--interval <ms>', 'Poll interval in milliseconds', '1000')
+    .option('--preset <name>', 'Persist HUD preset (minimal|focused|full|opencode|dense) then render')
     .action(async (options) => {
+    if (options.preset) {
+        const { applyPreset } = await import('../hud/state.js');
+        const { PRESET_CONFIGS } = await import('../hud/types.js');
+        const name = String(options.preset).trim().toLowerCase();
+        if (!(name in PRESET_CONFIGS)) {
+            console.error(`Unknown HUD preset "${options.preset}". Expected: ${Object.keys(PRESET_CONFIGS).join(', ')}`);
+            process.exitCode = 1;
+            return;
+        }
+        const cfg = applyPreset(name);
+        console.error(`[omg hud] preset=${cfg.preset} (saved to settings omcHud)`);
+    }
     const { main: hudMain } = await import('../hud/index.js');
     if (options.watch) {
         const intervalMs = parseInt(options.interval, 10);

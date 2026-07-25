@@ -34,7 +34,7 @@ These ship as **TS + skills + hooks/state** on Grok. They are **not** required t
 |---------|----------------------|---------------|
 | **ultragoal / autoresearch / ralphthon / verification engines** | Skill entry + state under `.omg/` + persistent-mode / keyword activation where wired; unit tests pass | Claude-only host widgets |
 | **skillify / learner** | `/skillify` (and `/learner` alias) skill drafts; simplified `hooks/scripts/skill-injector.mjs` mode hints on UserPromptSubmit | Full OMC learner bundle always loaded via skill-bridge in every prompt (skill-bridge still **built** for installer/OMC script path) |
-| **HUD** | Statusline + `--watch`; presets `minimal` / `focused` / `full` / `opencode` / `dense` via settings `omcHud.preset` (default `focused`); unit tests | `omg hud --preset` CLI flag (not required) |
+| **HUD** | Statusline + `--watch`; presets via settings `omcHud.preset` (default `focused`); **CLI** `omg hud --preset <name>` persists then renders | — |
 | **Notifications** | Config skill + TS providers | Host push guarantees |
 | **Wiki / deepinit** | Registered hooks + skills | Full knowledge-base product UI |
 | **better-sqlite3** | optionalDependency + shim; job-state dynamic import | Native module required on all hosts |

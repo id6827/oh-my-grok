@@ -16,9 +16,15 @@ Configure the OMG HUD (Heads-Up Display) for the statusline.
 
 ```bash
 node bin/omg.js hud
+node bin/omg.js hud --preset minimal   # persist omcHud.preset then render
+node bin/omg.js hud --preset=focused
+node bin/omg.js hud --preset full --watch
 node scripts/hud/omg-hud.mjs
 node bin/omg.js setup-hud   # installs ~/.grok/hud/omg-hud.mjs
 ```
+
+Presets: `minimal` | `focused` (default) | `full` | `opencode` | `dense`.  
+Saved under `~/.grok/settings.json` → `omcHud.preset` (respects `GROK_CONFIG_DIR`).
 
 Shows: active modes, PRD progress, running subagents (multi-line), timestamp.
 
