@@ -203,6 +203,11 @@
           },
           {
             "type": "command",
+            "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/workflow-drift-guard.mjs\"",
+            "timeout": 3
+          },
+          {
+            "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/review-gate.mjs\"",
             "timeout": 10
           },

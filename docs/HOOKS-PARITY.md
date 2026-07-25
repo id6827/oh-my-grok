@@ -23,7 +23,7 @@ OMG hooks under `hooks/scripts/` + `hooks/hooks.json` + built `dist/hooks/*`.
 | cleanup-orphans / team | ✅ cleanup-orphans + omg team | dry-run if no tmux |
 | review-gate / verify-deliverables | ✅ registered on Stop | Fail-open if no deliverables |
 | post-tool-rules-injector | ✅ registered | |
-| workflow-drift-guard | 🟡 file present | not always registered |
+| workflow-drift-guard | ✅ registered on Stop | after context-guard; timeout 3; fail-open ambiguous |
 | openclaw | N/A | |
 | build-* / release / eval | ❌ | Dev tooling optional |
 
@@ -33,7 +33,7 @@ SessionStart (+ project-memory + wiki + setup matchers), SessionEnd (+ wiki + cl
 UserPromptSubmit (keyword + injector + skill-active-guard),  
 PreToolUse, PostToolUse (+ project-memory + rules-injector), PostToolUseFailure,  
 SubagentStart, SubagentStop, PreCompact (+ project-memory + wiki),  
-Stop (+ context-guard + review-gate + verify-deliverables),  
+Stop (+ persistent-mode + stop-continuation + context-guard + workflow-drift-guard + review-gate + verify-deliverables),  
 PermissionRequest (Bash/shell).
 
 ## Runtime package

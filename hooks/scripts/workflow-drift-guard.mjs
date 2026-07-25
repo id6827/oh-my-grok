@@ -900,7 +900,7 @@ async function main() {
     return;
   }
   const input = safeJsonParse(await readStdin());
-  // Claude Code docs warn Stop hooks receive stop_hook_active while already
+  // Grok Build docs warn Stop hooks receive stop_hook_active while already
   // continuing from a Stop hook; fail open to avoid self-reinforcing loops.
   if (input.stop_hook_active === true || input.stopHookActive === true) {
     console.log(JSON.stringify({ suppressOutput: true }));
@@ -909,7 +909,7 @@ async function main() {
 
   const message = lastAssistantMessage(input);
   if (shouldBlockStructuredDecision(message)) {
-    console.log(JSON.stringify(makeBlock('[WORKFLOW DRIFT GUARD] The final response contains a supported local selection fork that should be asked with structured AskUserQuestion. Continue by calling AskUserQuestion with 2-4 options and keep allowOther enabled unless free-form input is unsafe.')));
+    console.log(JSON.stringify(makeBlock('[WORKFLOW DRIFT GUARD] The final response contains a supported local selection fork that should be asked with structured ask_user_question. Continue by calling ask_user_question with 2-4 options and keep allowOther enabled unless free-form input is unsafe.')));
     return;
   }
 

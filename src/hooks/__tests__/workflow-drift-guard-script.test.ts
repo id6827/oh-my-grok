@@ -76,14 +76,10 @@ describe('workflow-drift-guard Stop hook', () => {
       }
     }
 
-    // OMG: workflow-drift-guard is ported but not always registered in Stop (intentional partial).
-    // When registered, must use dual-read GROK_PLUGIN_ROOT path.
-    if (registrations.length === 0) {
-      expect(existsSync(SCRIPT) || existsSync(TEMPLATE)).toBe(true);
-      return;
-    }
+    // Registered on Stop (OMC parity, timeout 3). Dual-read GROK_PLUGIN_ROOT path.
     expect(registrations).toHaveLength(1);
     expect(registrations[0]?.event).toBe('Stop');
+    expect(registrations[0]?.timeout).toBe(3);
     expect(registrations[0]?.command).toMatch(/GROK_PLUGIN_ROOT/);
     expect(registrations[0]?.command).toContain('workflow-drift-guard.mjs');
     if (existsSync(SCRIPT) && existsSync(TEMPLATE)) {

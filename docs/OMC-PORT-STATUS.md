@@ -2,12 +2,13 @@
 
 **Source pin:** OMC `4.15.7` @ `41a4c0f77144c5beb5f5f000a89cff379c680606` — see `docs/OMC-SOURCE.md` (upgrade checkpoint)  
 **OMG version:** `0.9.0-rc.1`  
-**Last updated:** 2026-07-26 (full vitest residual **0 fail / 11225 pass**; product gate remains core+smoke; bridge default builds coordinator/team-bridge/skill-bridge)  
+**Last updated:** 2026-07-26 (product-subset freeze + workflow-drift-guard registered; vitest residual **0 fail**)  
 **Legend:** ✅ ported (build-green, usable) · 🟡 partial / intentional reduce · ❌ missing · N/A documented
 
 **Module coverage** (touched = ported+partial): run `node scripts/port-inventory.mjs`  
 **Do not merge** with checklist similarity scores (`docs/SIMILARITY.md`).  
-**Residual tracker:** `parity-review/VITEST-RESIDUAL-2026-07-25.md` · plan: `.omg/plans/ralplan-omc-omg-parity-gap-2026-07-25.md`
+**Product subset freeze:** `docs/GROK-PRODUCT-SUBSET.md`  
+**Residual tracker:** `parity-review/VITEST-RESIDUAL-2026-07-25.md` · plan: `parity-review/ralplan-omc-omg-parity-gap-2026-07-25.md`
 
 ---
 
@@ -69,12 +70,12 @@
 | context-safety | 🟡 | compat helper; not a standalone hooks.json entry |
 | persistent-mode | ✅ | product Stop: `hooks/scripts/persistent-mode.mjs` |
 | review-gate, verify-deliverables | ✅ registered (Stop); risk-assess is helper |
-| workflow-drift-guard | 🟡 | file present, **not** registered (intentional omit until OMC event map proven) |
+| workflow-drift-guard | ✅ | registered on Stop (timeout 3, after context-guard) |
 | setup-init, setup-maintenance | ✅ registered (SessionStart matchers) |
 | cleanup-orphans | ✅ registered (SessionEnd) |
-| session-summary / status | 🟡 | CLI/HUD spawn, not hooks.json |
+| session-summary / status | 🟡 | CLI/HUD spawn, not hooks.json (subset freeze) |
 | post-tool-rules-injector | ✅ registered (PostToolUse) |
-| named autopilot + flock / macOS lock | 🟡 | **Linux full gate**; macOS soft skip (host N/A) |
+| named autopilot + flock / macOS lock | 🟡 | **frozen host N/A** — Linux+flock only for `--workflow`; legacy autopilot cross-platform (`GROK-PRODUCT-SUBSET.md` §C) |
 | SessionEnd primary timeout | ✅ | `session-end.mjs` timeout ≥30s |
 | Windows find-node → run.cjs patch | 🟡 | rewrites **find-node.sh** launchers only |
 
@@ -87,17 +88,17 @@ See also `docs/HOOKS-PARITY.md`.
 | live tmux multi-provider | ✅ | works when tmux present (`dry_run:false`); smoke covers live path |
 | autopilot `execution` solo/team | ✅ | config documented README + settings-schema |
 | heartbeat / orphan cleanup | 🟡 | TS present; cleanup registered on SessionEnd |
-| HUD statusline + presets | 🟡 | watch + basic; presets in `src/hud` |
+| HUD statusline + presets | ✅ | presets minimal/focused/full/opencode/dense via `omcHud.preset` (default focused); unit tests + applyPreset |
 
 ## E. Features / modes
 
 | Surface | Status |
 |---------|--------|
-| ultragoal / autoresearch / ralph / ralplan / ultraqa | 🟡 | TS + skills + persistent-mode; Grok product surface = skill+hooks (not OMC host UI) |
-| verification gates | 🟡 | TS |
-| notifications config | 🟡 | TS + skill |
-| openclaw | N/A / 🟡 | code present |
-| skillify/learner engine | 🟡 | skill + simplified injector; full skill-bridge built for installer |
+| ultragoal / autoresearch / ralph / ralplan / ultraqa | ✅ | **subset freeze**: skill + state + keyword/persistent-mode; not Claude host UI (`GROK-PRODUCT-SUBSET.md` §B) |
+| verification gates | ✅ | TS + skills under subset freeze |
+| notifications config | ✅ | TS + skill under subset freeze |
+| openclaw | N/A / 🟡 | code present; not product-required on Grok |
+| skillify/learner engine | ✅ | **subset freeze**: skill + simplified Grok injector; skill-bridge built for OMC path |
 | deepinit / wiki engine | ✅ | hooks registered + skills |
 
 ## F. Repo / quality / packaging

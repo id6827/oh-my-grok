@@ -1,7 +1,7 @@
 # Ralplan — OMC ↔ OMG parity gap close (2026-07-25 → 2026-07-26)
 
-**Status:** in progress (vitest residual closed; packaging/docs wave active)  
-**Sources:** `parity-review/REPORT-2026-07-25.md`, `parity-review/VITEST-RESIDUAL-2026-07-25.md`, `docs/OMC-PORT-STATUS.md`  
+**Status:** **closed for progressable residual** (product-subset freeze published)  
+**Sources:** `parity-review/REPORT-2026-07-25.md`, `parity-review/VITEST-RESIDUAL-2026-07-25.md`, `docs/OMC-PORT-STATUS.md`, `docs/GROK-PRODUCT-SUBSET.md`  
 **Pin:** OMC 4.15.7 @ `41a4c0f` · OMG `0.9.0-rc.1`
 
 ---
@@ -10,10 +10,10 @@
 
 Move from **NO — near-complete** toward an accurate product-parity claim:
 
-1. Full vitest residual green **or** accurately classified  
-2. Stale residual docs eliminated  
-3. Bridge/coordinator packaging policy explicit  
-4. Remaining 🟡 either promoted with evidence or frozen as Grok product subset
+1. Full vitest residual green **or** accurately classified ✅  
+2. Stale residual docs eliminated ✅  
+3. Bridge/coordinator packaging policy explicit ✅  
+4. Remaining 🟡 either promoted with evidence or frozen as Grok product subset ✅  
 
 ---
 
@@ -21,59 +21,37 @@ Move from **NO — near-complete** toward an accurate product-parity claim:
 
 | Item | Evidence |
 |------|----------|
-| Full vitest residual **0 fail / 11225 pass** | Wave 5 `d4b0211`; `parity-review/VITEST-RESIDUAL-2026-07-25.md` |
+| Full vitest residual **0 fail / 11225 pass** | Wave 5 `d4b0211` |
 | Core 217 + smoke green | product gates |
 | MCP 54 tools | `mcp:probe` |
-| Live tmux team | smoke + prior live checklist |
-| Wave 5 production dual-reads | omg team guard, OMG_SESSION_ID, keyword `/oh-my-grok:`, tmux prefixes |
-| Default `build:bridge` includes team-bridge + skill-bridge + coordinator | `package.json` (this wave) |
-| PORT-STATUS + HOOKS registration accuracy | this wave |
+| Default `build:bridge` includes team-bridge + skill-bridge + coordinator | `package.json` |
+| Release pack injects gitignored bridge entrypoints | `release.yml` |
+| PORT-STATUS + residual docs accurate | packaging wave |
+| **Grok product subset freeze** | `docs/GROK-PRODUCT-SUBSET.md` |
+| **workflow-drift-guard** registered on Stop | `hooks/hooks.json` timeout 3 |
+| **HUD presets** promoted ✅ | unit tests + applyPreset evidence |
+| **Named workflow flock** frozen host N/A | subset §C + ADR |
+| **skill-injector dual-path** frozen | Grok simplified vs skill-bridge OMC path |
 
 ---
 
-## In this wave (progressable)
+## Remaining (optional / out of gate)
 
-| # | Work | Status |
-|---|------|--------|
-| 1 | Merge `build:bridge:extra` into default `build:bridge` | ✅ |
-| 2 | CI assert new bridge artifacts | ✅ |
-| 3 | Refresh `docs/OMC-PORT-STATUS.md` residual + hooks registration | ✅ |
-| 4 | Refresh residual code-review artifact | ✅ |
-| 5 | REPORT addendum: vitest axis ✅ | ✅ |
-| 6 | Keep shipping coordinator optional-when-absent (clean CI) | ✅ keep |
-| 7 | Release.yml: `build:bridge` + inject gitignored bridge into stage pack | ✅ |
+| # | Work | Notes |
+|---|------|-------|
+| Z1 | `omg hud --preset` CLI convenience | not required by subset freeze |
+| Z2 | Wire Grok UserPromptSubmit to full skill-bridge | product decision only (subset says no) |
+| Z3 | Claim YES 100% OMC host clone | not a goal of this freeze |
 
 ---
 
-## Remaining (next; not blocking product gates)
+## Acceptance
 
-| # | Work | Priority | Notes |
-|---|------|----------|-------|
-| A | ~~Release pack build:bridge~~ | done | release.yml injects REQUIRED_ENTRYPOINTS |
-| B | Decide Grok product subset freeze for feature engines (ultragoal/autoresearch/…) | P2 | TS+skill may be enough for “Grok product done” |
-| C | HUD preset smoke + promote or freeze 🟡 | P2 | |
-| D | `workflow-drift-guard` register vs intentional omit | P3 | file present, not in hooks.json |
-| E | skill-injector → skill-bridge wiring if full learner product needed | P3 | Grok injector is simplified |
-| F | named workflow flock — freeze host N/A (Linux full) | P3 | already intentional |
-
----
-
-## Explicit non-goals this wave
-
-- Bulk OMC re-port  
-- Score inflation of SIMILARITY checklist  
-- Committing multi-MB `bridge/*.cjs`  
-- Claiming YES 100% without release-pack + product-subset freeze
-
----
-
-## Acceptance for “docs accurate near-complete”
-
-- [x] Vitest residual tracker shows 0 fail  
-- [x] OMC-PORT-STATUS residual number matches suite  
-- [x] Bridge default build produces coordinator + team-bridge + skill-bridge  
-- [ ] Release pipeline packs coordinator (follow-up)  
-- [ ] Product subset freeze published (follow-up)
+- [x] Vitest residual 0 fail  
+- [x] OMC-PORT-STATUS matches suite + subset  
+- [x] Bridge default build + release pack path  
+- [x] Product subset freeze published  
+- [x] workflow-drift-guard registered  
 
 ## Commands
 
@@ -83,4 +61,5 @@ npm run test:smoke
 npm run build:bridge
 npm run plugin:shipping:verify
 npm run mcp:probe
+npx vitest run src/hooks/__tests__/workflow-drift-guard-script.test.ts src/__tests__/hud/defaults.test.ts
 ```
