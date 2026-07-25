@@ -72,12 +72,12 @@
           {
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/keyword-detector.mjs\"",
-            "timeout": 8
+            "timeout": 30
           },
           {
             "type": "command",
             "command": "node \"${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/skill-injector.mjs\"",
-            "timeout": 8
+            "timeout": 30
           },
           {
             "type": "command",

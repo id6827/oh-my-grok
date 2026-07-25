@@ -3,11 +3,11 @@
 /**
  * State Root Resolver (ESM)
  *
- * Single authoritative entry point for resolving the .omc root directory in
+ * Single authoritative entry point for resolving the .omg root directory in
  * hook scripts, respecting the OMC_STATE_DIR environment variable.
  *
  * Delegates to getOmcRoot() from dist/lib/worktree-paths.js (the canonical
- * implementation) when CLAUDE_PLUGIN_ROOT is available. Falls back to inline
+ * implementation) when GROK_PLUGIN_ROOT is available. Falls back to inline
  * logic when dist is not built — this should never happen in production, but
  * provides a safe fallback during development or first-run scenarios.
  *
@@ -15,7 +15,7 @@
  *   - Uses directory path as hash source (not git remote URL). Matches
  *     canonical behavior for local-only repos; may differ for remote-backed
  *     repos when dist is missing — acceptable since dist is always present
- *     in production (CLAUDE_PLUGIN_ROOT is always set).
+ *     in production (GROK_PLUGIN_ROOT is always set).
  */
 
 import { join, basename } from 'path';
@@ -24,13 +24,13 @@ import { createHash } from 'crypto';
 import { pathToFileURL } from 'url';
 
 /**
- * Resolve the .omc root directory, respecting OMC_STATE_DIR.
+ * Resolve the .omg root directory, respecting OMC_STATE_DIR.
  *
  * @param {string} directory - Worktree root directory
- * @returns {Promise<string>} Absolute path to the .omc root
+ * @returns {Promise<string>} Absolute path to the .omg root
  */
 export async function resolveOmcStateRoot(directory) {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  const pluginRoot = process.env.GROK_PLUGIN_ROOT;
   if (pluginRoot) {
     try {
       const { getOmcRoot } = await import(
@@ -49,7 +49,7 @@ export async function resolveOmcStateRoot(directory) {
     const dirName = basename(directory).replace(/[^a-zA-Z0-9_-]/g, '_');
     return join(customDir, `${dirName}-${hash}`);
   }
-  return join(directory, '.omc');
+  return join(directory, '.omg');
 }
 
 /**
@@ -62,7 +62,7 @@ export async function resolveOmcStateRoot(directory) {
  * @returns {Promise<{readPath: string, writePath: string}>} Unbranded path pair
  */
 export async function resolveSessionStatePathsForHook(directory, stateName, sessionId) {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  const pluginRoot = process.env.GROK_PLUGIN_ROOT;
   if (pluginRoot) {
     try {
       const { resolveSessionStatePaths } = await import(

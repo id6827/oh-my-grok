@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// OMC Session Start Hook (Node.js)
+// OMG Session Start Hook (Node.js)
 // Restores persistent mode states when session starts
 // Cross-platform: Windows, macOS, Linux
 
@@ -94,9 +94,15 @@ async function checkForUpdates(currentVersion) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2000);
   try {
-    const response = await fetch('https://registry.npmjs.org/oh-my-claude-sisyphus/latest', {
-      signal: controller.signal
+    // Prefer published OMG package; fall back to OMC pin package name during dual-publish
+    let response = await fetch('https://registry.npmjs.org/oh-my-grok/latest', {
+      signal: controller.signal,
     });
+    if (!response.ok) {
+      response = await fetch('https://registry.npmjs.org/oh-my-claude-sisyphus/latest', {
+        signal: controller.signal,
+      });
+    }
 
     if (!response.ok) {
       throw new Error('Network response was not ok');
@@ -217,7 +223,7 @@ function looksLikeOmcGuidance(content) {
   return (
     typeof content === 'string' &&
     content.includes('<guidance_schema_contract>') &&
-    /oh-my-(claudecode|codex)/i.test(content) &&
+    /oh-my-(grok|claudecode|codex)/i.test(content) &&
     OMC_STARTUP_COMPACTABLE_SECTIONS.some(
       section => content.includes(`<${section}>`) && content.includes(`</${section}>`),
     )
@@ -246,7 +252,7 @@ function compactOmcStartupGuidance(content) {
     return removedAny ? normalized : content;
   }
 
-  const notice = '\n\n[OMC startup guidance truncated to preserve an 8000-character budget. Read the source file directly for the full document.]';
+  const notice = '\n\n[OMG startup guidance truncated to preserve an 8000-character budget. Read the source file directly for the full document.]';
   return `${normalized.slice(0, OMC_STARTUP_GUIDANCE_MAX_CHARS - notice.length).trimEnd()}${notice}`;
 }
 
@@ -254,9 +260,9 @@ function formatUpdateNoticeForUser(updateInfo, options = {}) {
   const latestVersion = updateInfo?.latestVersion || 'latest';
   const currentVersion = updateInfo?.currentVersion || 'unknown';
   const action = options.autoUpgradePrompt === false
-    ? 'To update later, run: omc update'
-    : 'Run /update to upgrade now, or use /plugin install oh-my-claudecode';
-  return `[OMC UPDATE AVAILABLE] oh-my-claudecode v${latestVersion} is available (current: v${currentVersion}). ${action}`;
+    ? 'To update later, run: omg update'
+    : 'Run /update to upgrade now, or use /plugin install oh-my-grok';
+  return `[OMG UPDATE AVAILABLE] oh-my-grok v${latestVersion} is available (current: v${currentVersion}). ${action}`;
 }
 
 function buildSessionStartAdditionalContext(messages) {
@@ -383,21 +389,21 @@ ${priorityContext}
 const STALE_STATE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 /**
- * Validate that a candidate cwd is a real OMC workspace anchor.
+ * Validate that a candidate cwd is a real OMG workspace anchor.
  * Returns the candidate unchanged if it is non-empty AND contains a
- * `.omc-workspace` marker OR a `.git` directory.
+ * `.omg-workspace` marker OR a `.git` directory.
  * Otherwise emits a one-line warning to stderr and returns null,
  * signalling the caller to skip all state mutations.
  */
 function validateCwd(candidate) {
   if (!candidate || typeof candidate !== 'string') {
     process.stderr.write(
-      `[OMC] session-start: refusing to use cwd '${candidate}' as workspace anchor (no .omc-workspace or .git marker)\n`
+      `[OMG] session-start: refusing to use cwd '${candidate}' as workspace anchor (no .omg-workspace or .git marker)\n`
     );
     return null;
   }
   // cwd is commonly a subdirectory of the repo/workspace root, so walk up
-  // looking for a `.omc-workspace` marker or `.git` dir. Stop before scanning
+  // looking for a `.omg-workspace` marker or `.git` dir. Stop before scanning
   // $HOME (or above) so a stray marker/repo in $HOME cannot validate an
   // unrelated directory. Returns the original candidate so downstream root
   // resolution (getOmcRoot/resolveOmcStateRoot) can anchor it.
@@ -406,7 +412,7 @@ function validateCwd(candidate) {
   let cursor = candidate;
   while (true) {
     if (home && cursor === home) break;
-    if (existsSync(join(cursor, '.omc-workspace')) || existsSync(join(cursor, '.git'))) {
+    if (existsSync(join(cursor, '.omg-workspace')) || existsSync(join(cursor, '.omc-workspace')) || existsSync(join(cursor, '.git'))) {
       return candidate;
     }
     const parent = dirname(cursor);
@@ -414,7 +420,7 @@ function validateCwd(candidate) {
     cursor = parent;
   }
   process.stderr.write(
-    `[OMC] session-start: refusing to use cwd '${candidate}' as workspace anchor (no .omc-workspace or .git marker)\n`
+    `[OMG] session-start: refusing to use cwd '${candidate}' as workspace anchor (no .omg-workspace or .git marker)\n`
   );
   return null;
 }
@@ -481,7 +487,7 @@ function hasConflictingUltraworkRestore(state, sessionId, directory, source) {
 
 async function getUltraworkRestoreCandidate(directory, sessionId) {
   const { readPath: localPath } = await resolveSessionStatePathsForHook(directory, 'ultrawork', sessionId || undefined);
-  const globalPath = join(homedir(), '.omc', 'state', 'ultrawork-state.json');
+  const globalPath = join(homedir(), '.omg', 'state', 'ultrawork-state.json');
 
   const localState = readJsonFile(localPath);
   if (hasConflictingUltraworkRestore(localState, sessionId, directory, 'local')) {
@@ -514,7 +520,7 @@ Detected an active ultrawork session for ${scope}.
 Owner session: ${ownerSession}
 Started: ${startedAt}
 
-To avoid shared \.omc/state bleed across parallel sessions, OMC suppressed the restore for this session.
+To avoid shared \.omg/state bleed across parallel sessions, OMG suppressed the restore for this session.
 Continue normally in this session, or use a separate worktree / close the other same-root session before resuming the prior ultrawork state.
 
 </session-restore>
@@ -540,12 +546,12 @@ async function main() {
     const userMessages = [];
 
     // Check for updates (non-blocking)
-    // Read version from OMC's own package.json, not the project's (fixes #516)
+    // Read version from OMG's own package.json, not the project's (fixes #516)
     let currentVersion = null;
     for (let i = 1; i <= 4; i++) {
       const candidate = join(__dirname, ...Array(i).fill('..'), 'package.json');
       const pkg = readJsonFile(candidate);
-      if ((pkg?.name === 'oh-my-claude-sisyphus' || pkg?.name === 'oh-my-claudecode') && pkg?.version) {
+      if ((pkg?.name === 'oh-my-grok' || pkg?.name === 'oh-my-claude-sisyphus' || pkg?.name === 'oh-my-claudecode') && pkg?.version) {
         currentVersion = pkg.version;
         break;
       }
@@ -572,7 +578,11 @@ async function main() {
 
     const updateInfo = currentVersion ? await checkForUpdates(currentVersion) : null;
     if (updateInfo) {
-      const configPath = join(getClaudeConfigDir(), '.omc-config.json');
+      // Dual-read config filenames: OMG primary, OMC legacy
+      const configPath =
+        ['.omg-config.json', '.omc-config.json']
+          .map((name) => join(getClaudeConfigDir(), name))
+          .find((path) => existsSync(path)) || join(getClaudeConfigDir(), '.omg-config.json');
       const omcConfig = readJsonFile(configPath) || {};
       userMessages.push(formatUpdateNoticeForUser(updateInfo, {
         autoUpgradePrompt: omcConfig.autoUpgradePrompt !== false,
