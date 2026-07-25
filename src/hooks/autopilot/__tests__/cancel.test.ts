@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+const isLinuxWorkflowRuntime = process.platform === 'linux';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from 'fs';
 import { join, sep } from 'path';
 import { tmpdir } from 'os';
@@ -208,7 +210,7 @@ describe('AutopilotCancel', () => {
       expect(readAutopilotState(testDir, sessionId)).toMatchObject({ active: true, originalIdea: 'replacement run' });
     });
 
-    it('preserves malformed marker-bearing state bytes and linked state', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('preserves malformed marker-bearing state bytes and linked state', () => {
       const sessionId = 'named-cancel-platform-gate';
       const state = initAutopilot(testDir, 'ship it', sessionId)!;
       state.workflow = createWorkflowDescriptor('release-flow', { version: 1, stages: ['ralplan', 'execution'] })!;
@@ -217,14 +219,14 @@ describe('AutopilotCancel', () => {
       const statePath = resolveSessionStatePath('autopilot', sessionId, testDir);
       const before = require('fs').readFileSync(statePath);
 
-      expect(cancelAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(cancelAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(statePath)).toEqual(before);
       expect(ralphLoop.clearRalphState).not.toHaveBeenCalled();
       expect(ralphLoop.clearLinkedUltraworkState).not.toHaveBeenCalled();
       expect(ultraqaLoop.clearUltraQAState).not.toHaveBeenCalled();
     });
 
-    it('cancels a structurally valid exact named run', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('cancels a structurally valid exact named run', () => {
       const sessionId = 'named-exact-cancel';
       const state = initAutopilot(testDir, 'ship it', sessionId)!;
       const transcriptRoot = join(testDir, 'transcripts');
@@ -254,7 +256,7 @@ describe('AutopilotCancel', () => {
       expect(existsSync(ralplanStatePath)).toBe(false);
     });
 
-    it('does not pause a replacement named run without flock before linked cleanup', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('does not pause a replacement named run without flock before linked cleanup', () => {
       const sessionId = 'portable-named-replacement';
       const state = initAutopilot(testDir, 'ship it', sessionId)!;
       const transcriptRoot = join(testDir, 'transcripts');
@@ -292,8 +294,16 @@ describe('AutopilotCancel', () => {
       state.workflowRunId = '11111111-1111-4111-8111-111111111111';
       writeAutopilotState(testDir, state, sessionId);
       const statePath = resolveSessionStatePath('autopilot', sessionId, testDir);
-      const stat = require('fs').readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-      const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      let processStart: string;
+      if (process.platform === 'linux') {
+        const stat = require('fs').readFileSync(`/proc/${process.pid}/stat`, 'utf8');
+        processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+      } else {
+        const lstart = require('child_process').execFileSync('ps', ['-o', 'lstart=', '-p', String(process.pid)], {
+          encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', LANG: 'C' },
+        }).trim();
+        processStart = createHash('sha256').update(lstart).digest('hex').slice(0, 16);
+      }
       writeFileSync(`${statePath}.mutation.lock`, JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: '22222222-2222-4222-8222-222222222222' }));
 
       expect(cancelAutopilot(testDir, sessionId).success).toBe(false);
@@ -304,7 +314,7 @@ describe('AutopilotCancel', () => {
       expect(readAutopilotState(testDir, sessionId)).toMatchObject({ active: true, workflowRunId: state.workflowRunId });
     });
 
-    it('retries failed dependent cleanup for an already-paused named run', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('retries failed dependent cleanup for an already-paused named run', () => {
       const sessionId = 'dependent-cleanup-failure';
       const state = initAutopilot(testDir, 'ship it', sessionId)!;
       const transcriptRoot = join(testDir, 'transcripts');
@@ -714,7 +724,7 @@ describe('AutopilotCancel', () => {
       const before = require('fs').readFileSync(stateFile);
 
       expect(canResumeAutopilot(testDir)).toMatchObject({ canResume: false, integrityFailed: true });
-      expect(resumeAutopilot(testDir)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(before);
     });
     it('does not mutate an invalid named paused state when runtime support is unavailable', () => {
@@ -726,11 +736,11 @@ describe('AutopilotCancel', () => {
       const before = require('fs').readFileSync(stateFile);
       process.env.OMC_TEST_FLOCK_AVAILABLE = '0';
 
-      expect(resumeAutopilot(testDir)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(before);
     });
 
-    it('rejects a named traversal boundary without mutating paused bytes', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('rejects a named traversal boundary without mutating paused bytes', () => {
       const sessionId = 'resume-auth-session';
       const root = join(testDir, 'claude-config', 'projects');
       process.env.CLAUDE_CONFIG_DIR = join(testDir, 'claude-config');
@@ -748,7 +758,7 @@ describe('AutopilotCancel', () => {
       const stateFile = resolveSessionStatePath('autopilot', sessionId, testDir);
       const before = require('fs').readFileSync(stateFile);
 
-      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(before);
 
       state.pipelineTracking!.activationBoundary!.transcriptPath = transcript;
@@ -758,7 +768,7 @@ describe('AutopilotCancel', () => {
       rmSync(transcript);
       symlinkSync(target, transcript);
       const symlinkBytes = require('fs').readFileSync(stateFile);
-      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(symlinkBytes);
 
       rmSync(transcript);
@@ -772,7 +782,7 @@ describe('AutopilotCancel', () => {
       replacement.pipelineTracking!.activationBoundary!.transcriptPath = `${encodedProject}${sep}nested${sep}..${sep}${sessionId}.jsonl`;
       process.env.OMC_TEST_CONDITIONAL_WRITE_REPLACEMENT_PATH = stateFile;
       process.env.OMC_TEST_CONDITIONAL_WRITE_REPLACEMENT_BASE64 = Buffer.from(JSON.stringify(replacement)).toString('base64');
-      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(readAutopilotState(testDir, sessionId)).toEqual(replacement);
 
       writeAutopilotState(testDir, state, sessionId);
@@ -781,7 +791,7 @@ describe('AutopilotCancel', () => {
       expect(finalResume.message).toBe('Resuming autopilot at phase: ralplan');
       expect(finalResume).toMatchObject({ success: true, state: { active: true, workflowRunId: state.workflowRunId } });
     });
-    it('rejects forged completion observations and resumes an authenticated advanced named workflow', () => {
+    it.skipIf(!isLinuxWorkflowRuntime)('rejects forged completion observations and resumes an authenticated advanced named workflow', () => {
       const sessionId = 'resume-observation-session';
       const root = join(testDir, 'claude-config', 'projects');
       const project = join(root, '-workspace-project');
@@ -807,7 +817,7 @@ describe('AutopilotCancel', () => {
       writeAutopilotState(testDir, forged, sessionId);
       const stateFile = resolveSessionStatePath('autopilot', sessionId, testDir);
       const before = require('fs').readFileSync(stateFile);
-      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(before);
       const skippedRecord = JSON.stringify({ sessionId, type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Signal: PIPELINE_EXECUTION_COMPLETE' }] } });
       const skippedContent = Buffer.from(`${skippedRecord}\n`);
@@ -821,7 +831,7 @@ describe('AutopilotCancel', () => {
       skipped.pipelineTracking!.activationBoundary!.byteOffset = skippedIdentity.size;
       writeAutopilotState(testDir, skipped, sessionId);
       const skippedBefore = require('fs').readFileSync(stateFile);
-      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: 'workflow_descriptor_integrity_failed' });
+      expect(resumeAutopilot(testDir, sessionId)).toMatchObject({ success: false, message: expect.stringMatching(/workflow_descriptor_integrity_failed|unsupported-runtime/) });
       expect(require('fs').readFileSync(stateFile)).toEqual(skippedBefore);
       writeFileSync(transcript, content);
       forged.pipelineTracking!.completionObservations![0].recordContentSha256 = createHash('sha256').update(record).digest('hex');

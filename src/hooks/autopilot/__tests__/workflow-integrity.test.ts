@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+// Named workflow integrity requires Linux + flock (see isWorkflowRuntimeSupported).
+const isLinuxWorkflowRuntime = process.platform === "linux";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
 
 import { join } from "path";
@@ -24,7 +27,7 @@ import {
   validateNamedWorkflowStateStructure,
 } from "../named-workflow-resume-validator.js";
 
-describe("workflow descriptor integrity enforcement (#3487)", () => {
+describe.skipIf(!isLinuxWorkflowRuntime)("workflow descriptor integrity enforcement (#3487)", () => {
   let testDir: string;
 
   beforeEach(() => {

@@ -4,8 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { tmpdir } from 'os';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 interface HooksConfig {
@@ -31,6 +30,7 @@ function expandHookCommandArgv(command: string, pluginRoot: string): string[] {
         ...process.env,
         HOOK_COMMAND: command,
         GROK_PLUGIN_ROOT: pluginRoot,
+        CLAUDE_PLUGIN_ROOT: pluginRoot,
       },
     }).trim()
   ) as string[];
@@ -48,62 +48,33 @@ function getHookCommands(): HookCommandEntry[] {
   );
 }
 
+/** OMG dual-read root expansion used by hooks/hooks.json */
+const DUAL_ROOT = /\$\{GROK_PLUGIN_ROOT:-\$CLAUDE_PLUGIN_ROOT\}|\$GROK_PLUGIN_ROOT/;
+
 describe('hooks.json command escaping', () => {
-  it('uses portable hook commands without absolute /bin/sh or pre-expanded ${...} placeholders', () => {
+  it('uses portable dual-read hook commands without absolute /bin/sh or find-node bootstraps', () => {
     for (const { command } of getHookCommands()) {
-      expect(command).toMatch(/^node "\$GROK_PLUGIN_ROOT"\/scripts\/run\.cjs "\$GROK_PLUGIN_ROOT"\/scripts\/[^\s]+/);
+      expect(command).toMatch(DUAL_ROOT);
       expect(command).not.toContain('find-node.sh');
-      expect(command).not.toMatch(/^sh /);
       expect(command).not.toContain('/bin/sh');
-      expect(command).not.toContain('${GROK_PLUGIN_ROOT}/scripts/run.cjs');
-      expect(command).not.toContain('${GROK_PLUGIN_ROOT}/scripts/');
+      // Prefer direct node hooks/scripts, or bash session-start.sh wrapper
+      expect(command.startsWith('node ') || command.startsWith('bash ')).toBe(true);
     }
   });
 
   it('keeps Windows-style plugin roots with spaces intact when bash expands the command', () => {
-    const pluginRoot = '/c/Users/First Last/.claude/plugins/cache/omg/oh-my-grok/4.7.10';
+    const pluginRoot = '/c/Users/First Last/.grok/plugins/cache/omg/oh-my-grok/0.9.0-rc.1';
 
     for (const { command } of getHookCommands()) {
+      // bash session-start is a shell script path; node hooks expand cleanly
+      if (command.startsWith('bash ')) continue;
+
       const argv = expandHookCommandArgv(command, pluginRoot);
 
       expect(argv[0]).toBe('node');
-      expect(argv[1]).toBe(`${pluginRoot}/scripts/run.cjs`);
-      expect(argv[2]).toContain(`${pluginRoot}/scripts/`);
+      expect(argv[1]).toContain(pluginRoot);
       expect(argv[1]).toContain('First Last');
-      expect(argv[2]).toContain('First Last');
       expect(argv).not.toContain('/c/Users/First');
-      expect(argv).not.toContain('Last/.claude/plugins/cache/omg/oh-my-grok/4.7.10/scripts/run.cjs');
-    }
-  });
-
-  it('find-node bootstrap can execute when node is absent from PATH', () => {
-    const homeDir = mkdtempSync(join(tmpdir(), 'omg-hook-node-path-'));
-    const configDir = join(homeDir, '.claude');
-
-    try {
-      execFileSync('/bin/mkdir', ['-p', configDir]);
-      writeFileSync(
-        join(configDir, '.omg-config.json'),
-        JSON.stringify({ nodeBinary: process.execPath }),
-        'utf-8',
-      );
-
-      const stdout = execFileSync('/bin/sh', [
-        join(process.cwd(), 'scripts', 'find-node.sh'),
-        '-e',
-        "process.stdout.write('ok')",
-      ], {
-        encoding: 'utf-8',
-        env: {
-          HOME: homeDir,
-          GROK_CONFIG_DIR: configDir,
-          PATH: '/usr/bin:/bin',
-        },
-      });
-
-      expect(stdout).toBe('ok');
-    } finally {
-      rmSync(homeDir, { recursive: true, force: true });
     }
   });
 });

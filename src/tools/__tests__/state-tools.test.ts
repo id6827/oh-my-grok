@@ -26,8 +26,18 @@ vi.mock('../../lib/worktree-paths.js', async () => {
 });
 
 function liveLockOwner() {
-  const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-  const processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19];
+  let processStart: string;
+  if (process.platform === 'linux') {
+    const stat = readFileSync(`/proc/${process.pid}/stat`, 'utf8');
+    processStart = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[19]!;
+  } else {
+    const { execFileSync } = require('node:child_process') as typeof import('node:child_process');
+    const lstart = execFileSync('ps', ['-o', 'lstart=', '-p', String(process.pid)], {
+      encoding: 'utf8',
+      env: { ...process.env, LC_ALL: 'C', LANG: 'C' },
+    }).trim();
+    processStart = createHash('sha256').update(lstart).digest('hex').slice(0, 16);
+  }
   return JSON.stringify({ version: 1, pid: process.pid, processStart, createdAt: new Date().toISOString(), nonce: randomUUID() });
 }
 

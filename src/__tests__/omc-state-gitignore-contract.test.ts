@@ -13,15 +13,16 @@ describe('.omg gitignore state contract', () => {
       .map((line) => line.trim())
       .filter(Boolean);
 
-    expect(gitignore).toEqual(expect.arrayContaining([
-      '!.omg/',
-      '.omg/*',
-      '!.omg/skills/',
-      '!.omg/skills/**',
-    ]));
+    // Accept .omg/** (current) or .omg/* (legacy) ignore styles
+    const hasOmgIgnore = gitignore.some((l) => l === '.omg/**' || l === '.omg/*' || l === '.omg/');
+    expect(hasOmgIgnore).toBe(true);
+    expect(gitignore).toEqual(
+      expect.arrayContaining(['!.omg/skills/', '!.omg/skills/**']),
+    );
 
-    expect(gitignore.indexOf('!.omg/')).toBeLessThan(gitignore.indexOf('.omg/*'));
-    expect(gitignore.indexOf('.omg/*')).toBeLessThan(gitignore.indexOf('!.omg/skills/'));
-    expect(gitignore.indexOf('!.omg/skills/')).toBeLessThan(gitignore.indexOf('!.omg/skills/**'));
+    const skillsIdx = gitignore.indexOf('!.omg/skills/');
+    const skillsGlobIdx = gitignore.indexOf('!.omg/skills/**');
+    expect(skillsIdx).toBeGreaterThanOrEqual(0);
+    expect(skillsGlobIdx).toBeGreaterThan(skillsIdx);
   });
 });
