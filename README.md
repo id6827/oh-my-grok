@@ -2,9 +2,42 @@
 
 **Multi-agent orchestration for [Grok Build](https://x.ai) / Grok CLI.**
 
-Ported from [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) with Grok-native upgrades: **real-time web/X search**, **Image Gen UI mockups**, and **Vision UI QA**.
+Port of [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) onto Grok, with Grok-native upgrades: **real-time web/X search**, **Image Gen UI mockups**, and **Vision UI QA**.
+
+| | |
+|--|--|
+| **OMG version** | `0.9.0-rc.1` |
+| **State root** | `.omg/` (never `.omc/`) |
+| **Product gates** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
 
 > Don't learn the harness. Just use OMG.
+
+---
+
+## OMC source pin (upstream checkpoint)
+
+OMG tracks a **pinned OMC commit** so future ports can re-diff from a known baseline. Full detail: [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+
+| Field | Value |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm package** | `oh-my-claude-sisyphus` |
+| **Pinned version** | **`4.15.7`** |
+| **Pinned commit** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **Commit subject** | `chore: promote dev to main for v4.15.7 release` |
+| **Commit date** | 2026-07-23 04:44:59 +0000 |
+| **Short form** | `4.15.7` @ `41a4c0f` |
+
+When you upgrade OMC intentionally:
+
+1. Check out / cache the new upstream tree.
+2. Record `version` + `git rev-parse HEAD` in [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+3. Re-run `node scripts/port-inventory.mjs` and update [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md).
+4. Diff OMG against the **previous pin** (`41a4c0f…`) as the checkpoint, then advance the pin.
+
+Local cache tip: marketplace trees under `~/.grok/marketplace-cache/*` — pick the folder whose `package.json` matches `oh-my-claude-sisyphus@4.15.7` (or the new pin).
+
+---
 
 ## Install
 
@@ -35,6 +68,8 @@ In a Grok session, try:
 /ui-mockup "dark mode settings page with profile card"
 ```
 
+---
+
 ## Recommended pipeline
 
 ```text
@@ -45,11 +80,15 @@ In a Grok session, try:
 /autopilot       →  implement → QA → multi-agent validation
 ```
 
-Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
+Cancel anytime with `/cancel`. Runtime state lives under **`.omg/`**.
+
+Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan` for consensus, then explicit approval before execution. UI without design → `/ui-mockup`. Ecosystem unknowns → `/web-research`.
+
+---
 
 ## Autopilot execution: `solo` vs `team`
 
-`/autopilot` always orchestrates **agents + skills**. How the **implementation stage** runs depends on config — pick what matches your taste.
+`/autopilot` always orchestrates **agents + skills**. How the **implementation stage** runs depends on config.
 
 | Mode | Config | How work runs | What you see |
 |------|--------|---------------|--------------|
@@ -58,12 +97,12 @@ Cancel anytime with `/cancel`. State lives under **`.omg/`** (not `.omc/`).
 
 ### Configure (project or user)
 
-**Project** (recommended for one repo): `.grok/omg.jsonc`  
+**Project** (recommended): `.grok/omg.jsonc`  
 **User** (all projects): `~/.config/grok-omg/config.jsonc`  
-Project wins over user. Full keys: [docs/settings-schema.md](docs/settings-schema.md).
+Project wins over user. Schema: [`docs/settings-schema.md`](docs/settings-schema.md).
 
 ```jsonc
-// .grok/omg.jsonc — default mental model: stay in this Grok session
+// .grok/omg.jsonc — stay in this Grok session
 {
   "autopilot": {
     "execution": "solo"
@@ -72,12 +111,12 @@ Project wins over user. Full keys: [docs/settings-schema.md](docs/settings-schem
 ```
 
 ```jsonc
-// .grok/omg.jsonc — OMC-like multi-CLI workers in tmux
+// .grok/omg.jsonc — multi-CLI workers in tmux
 {
   "autopilot": {
     "execution": "team",
     "team": {
-      // one or more: grok | cursor | codex | claude | gemini | antigravity | executor
+      // grok | cursor | codex | claude | gemini | antigravity | executor
       "agentTypes": ["grok"]
     }
   }
@@ -86,7 +125,7 @@ Project wins over user. Full keys: [docs/settings-schema.md](docs/settings-schem
 
 ### Watch team workers (when `execution: "team"`)
 
-Grok’s chat UI does **not** auto-open OMC-style side panes. That is expected: process teams are **tmux-backed**.
+Grok’s chat UI does **not** auto-open OMC-style side panes. Process teams are **tmux-backed**.
 
 ```bash
 node bin/omg.js team status          # or: omg team status
@@ -104,47 +143,47 @@ omg team 2:cursor "fix failing tests"
 omg team shutdown
 ```
 
-### Which should you use?
-
 | Prefer **solo** when… | Prefer **team** when… |
 |----------------------|------------------------|
-| Day-to-day coding in one Grok window | You want visible CLI workers in **tmux** |
-| You don’t want to install/use tmux | Mixing **cursor / codex / gemini** workers |
+| Day-to-day coding in one Grok window | Visible CLI workers in **tmux** |
+| No tmux install/setup | Mixing **cursor / codex / gemini** workers |
 | Fast feedback in the same transcript | Long parallel implementers isolated from the orchestrator |
-| macOS laptop, minimal setup | CI/server or multi-provider execution |
 
-**Opinion / default:** keep **`solo`** unless you already live in tmux or need multi-CLI isolation. Solo is the lower-friction Grok-native path; team is the power path when you want process-level workers and OMC-like pane visibility via `tmux attach`.
+**Default recommendation:** keep **`solo`** unless you already live in tmux or need multi-CLI isolation.
+
+---
 
 ## What you get
 
 | Surface | Count | Notes |
 |---------|------:|-------|
-| Agents | 20 | OMC 19 + `visual-designer` |
-| Skills | 43 | OMC 41 (omc→omg rename) + `ui-mockup` + `web-research` |
-| Hooks | SessionStart | Ensures `.omg/` tree |
+| Agents | 20 | OMC set + `visual-designer` |
+| Skills | 45 | omc→omg renames + `ui-mockup` + `web-research` + extras |
+| MCP tools | ~54 | `omg-tools` via plugin `.mcp.json` |
+| State | `.omg/` | specs, plans, artifacts, mode state |
 
 ### Grok exclusives
 
 - **`/web-research`** — live docs, releases, issues, X signal → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
-- **Search-on-fail** — core skills instruct `web_search` before blind retries
+- **Search-on-fail** — core skills prefer `web_search` before blind retries
 
-### Review modes (OMC keyword parity)
+### Review modes
 
-- **`/security-review`** — or say `security review` / `보안 리뷰` → security-reviewer agent
-- **`/code-review`** — or say `code review` / `review this PR` → code-reviewer agent
+- **`/security-review`** — or say `security review` / `보안 리뷰`
+- **`/code-review`** — or say `code review` / `review this PR`
 
-### Core skills (OMC parity)
+### Core skills (highlights)
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
-### Hooks (Layer B, v0.5)
+### Hooks (Layer B)
 
-`SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · cancel clears `.omg/state`
+`SessionStart` · `UserPromptSubmit` (keyword + skill-injector) · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` (persistent-mode) · `SessionEnd` · cancel clears `.omg/state`
 
 ### MCP tools (`omg-tools`)
 
-Plugin `.mcp.json` default server id **`omg-tools`** → `mcp/run-tools-server.mjs` → full tools (~54: LSP, AST, wiki, notepad, `state_*`, …).
+Plugin default server id **`omg-tools`** → `mcp/run-tools-server.mjs` → full tools (~54: LSP, AST, wiki, notepad, `state_*`, …).
 
 ```bash
 npm run build && npm run build:bridge   # preferred CJS bundle
@@ -161,24 +200,12 @@ node bin/omg.js version
 node bin/omg.js status      # file HUD + threshold
 node bin/omg.js state list
 node bin/omg.js doctor
-npm test
+node bin/omg.js team status
+npm test                    # smoke (build + foundation + hooks + team + hud)
+npm run test:vitest:core    # product vitest gate (217)
 ```
 
-### Similarity (Strict)
-
-**Each layer A/B/C/D must be ≥90** (not just a weighted average).
-v0.7: **A93 / B91 / C90 / D90** — see [docs/SIMILARITY.md](docs/SIMILARITY.md).
-
-## Parity layers (v0.7)
-
-| Layer | Score (Strict ≥90) |
-|-------|-------------------:|
-| A Prompt/skills | 93 |
-| B Hooks | 91 |
-| C Runtime/team/MCP | 90 |
-| D HUD | 90 |
-
-See [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md), [docs/SIMILARITY.md](docs/SIMILARITY.md).
+---
 
 ## Project layout
 
@@ -186,26 +213,59 @@ See [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md), [docs/SIMILARITY.md](docs/SI
 agents/           # subagent definitions
 skills/*/SKILL.md # slash skills
 hooks/            # hooks.json + scripts
-docs/             # architecture, parity, migration
-scripts/          # port + validate + smoke
+src/              # TypeScript runtime (OMC-scale port)
+dist/             # tsc output
+bridge/           # esbuild CJS bundles (mcp-server, cli, team, …)
+mcp/              # MCP launchers
+bin/omg.js        # CLI entry (aliases: omg, omc, oh-my-grok)
+docs/             # architecture, OMC pin, port status, migration
+parity-review/    # evidence-based parity notes (not a product gate)
 plugin.json       # Grok plugin manifest
 ```
+
+---
 
 ## Development
 
 ```bash
+npm run build
+npm run build:bridge          # optional; needed for preferred MCP CJS path
+npm run test:vitest:core      # product unit gate
+npm run test:smoke            # build + foundation + hooks + team + hud
+npm run mcp:probe
 node scripts/validate-parity.mjs
-./scripts/smoke-skills.sh
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
 grok plugin validate .
-# re-port helpers after refreshing OMC cache:
-# node scripts/port-from-omc.mjs
 ```
+
+Re-port helpers after refreshing the OMC cache (see pin above):
+
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
+
+**Product quality bar:** core vitest + smoke + MCP probe. Full `npm run test:vitest` is a residual suite (OMC lag + intentional platform partials) — see [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) and [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md).
+
+### Docs map
+
+| Doc | Purpose |
+|-----|---------|
+| [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) | **Upstream pin / re-pin checklist** |
+| [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md) | Surface-by-surface port status + intentional 🟡 |
+| [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md) | First-run guide |
+| [`docs/settings-schema.md`](docs/settings-schema.md) | Config keys (`autopilot.execution`, team, …) |
+| [`docs/PARITY-MATRIX.md`](docs/PARITY-MATRIX.md) | Layer checklist |
+| [`parity-review/`](parity-review/) | 100% product-port evidence notes |
+
+---
 
 ## License
 
-MIT. Includes original copyright for oh-my-claudecode (Yeachan Heo and contributors) plus oh-my-grok contributors. See [LICENSE](LICENSE).
+MIT. Includes original copyright for oh-my-claudecode (Yeachan Heo and contributors) plus oh-my-grok contributors. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## Credits
 
-- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — orchestration design, agents, and skill protocols
-- xAI Grok Build — plugin/skills/hooks runtime
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — orchestration design, agents, skills, and runtime protocols
+- xAI Grok Build — plugin / skills / hooks / MCP host runtime

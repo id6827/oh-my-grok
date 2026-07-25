@@ -1,8 +1,8 @@
 # OMC Port Status
 
-**Source pin:** OMC `4.15.7` @ `41a4c0f` — see `docs/OMC-SOURCE.md`  
+**Source pin:** OMC `4.15.7` @ `41a4c0f77144c5beb5f5f000a89cff379c680606` — see `docs/OMC-SOURCE.md` (upgrade checkpoint)  
 **OMG version:** `0.9.0-rc.1`  
-**Last updated:** 2026-07-25 (parity review + three-axis green + solo/team docs; full vitest residual **119 fail** after dual-read/brand cluster close — product gate remains core+smoke)
+**Last updated:** 2026-07-25 (README + OMC pin checkpoint; full vitest residual **119 fail** — product gate remains core+smoke)
 **Legend:** ✅ ported (build-green, usable) · 🟡 partial / intentional reduce · ❌ missing · N/A documented
 
 **Module coverage** (touched = ported+partial): run `node scripts/port-inventory.mjs`  
@@ -103,7 +103,7 @@
 |---------|--------|
 | benchmarks/missions/geobench | ✅ trees ported |
 | examples/seminar/research/shellmark | ✅ ported |
-| eslint/prettier/vitest | 🟡 core **217 green**; residual cluster ~**9** fails (mode-state emergency/flock edge + short-write mock); macOS: install `util-linux` for flock |
+| eslint/prettier/vitest | 🟡 core **217 green**; full suite residual **~119** fails (OMC lag + intentional platform partials — see `parity-review/VITEST-RESIDUAL-2026-07-25.md`) |
 | CI workflows | ✅ `ci.yml` OMG smoke+core vitest+bridge+`plugin:shipping:verify`; release guarded |
 | plugin shipping verify | ✅ `npm run plugin:shipping:verify` + doctor step; root `plugin.json`; coordinator optional |
 | tmux live team | ✅ tmux installed; `dry_run: false` create/shutdown smoke + test-team live path |
