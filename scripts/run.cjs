@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * OMC Cross-platform hook runner (run.cjs).
+ * OMG Cross-platform hook runner (run.cjs).
  *
  * Uses process.execPath (the Node binary already running this script) to spawn
  * ordinary hooks. The two trusted UserPromptSubmit hooks run in a Worker so the
  * runner retains ownership of their synchronous timeout boundary.
+ *
+ * Plugin root dual-read: GROK_PLUGIN_ROOT → CLAUDE_PLUGIN_ROOT.
  */
 
 const { spawn } = require('child_process');
@@ -32,14 +34,26 @@ function canonicalPluginRoot(pluginRoot) {
 }
 
 /**
- * Resolve the hook script target path, handling stale CLAUDE_PLUGIN_ROOT.
+ * Plugin root dual-read: GROK_PLUGIN_ROOT (primary) then CLAUDE_PLUGIN_ROOT.
+ */
+function configuredPluginRootPath() {
+  const raw =
+    process.env.GROK_PLUGIN_ROOT?.trim() ||
+    process.env.CLAUDE_PLUGIN_ROOT?.trim() ||
+    '';
+  return raw || null;
+}
+
+/**
+ * Resolve the hook script target path, handling stale GROK/CLAUDE_PLUGIN_ROOT.
  *
  * A direct target remains valid for the generic child path even without a
  * trusted plugin root. Worker eligibility receives only independently proven
  * configured-root or selected-cache-version provenance.
  */
 function resolveTarget(targetPath) {
-  const configuredRoot = canonicalPluginRoot(process.env.CLAUDE_PLUGIN_ROOT);
+  const configuredPath = configuredPluginRootPath();
+  const configuredRoot = configuredPath ? canonicalPluginRoot(configuredPath) : null;
 
   try {
     if (existsSync(targetPath)) {
@@ -53,7 +67,6 @@ function resolveTarget(targetPath) {
   }
 
   try {
-    const configuredPath = process.env.CLAUDE_PLUGIN_ROOT;
     if (!configuredPath) return null;
 
     const cacheBase = dirname(configuredPath);
@@ -332,7 +345,12 @@ async function runWorker(targetPath, manifestHook, timeoutMs) {
     if (stderr.length) await writeBuffer(process.stderr, Buffer.concat(stderr));
     if (workerError) {
       const diagnostic = workerError.stack || workerError.message || String(workerError);
-      await writeBuffer(process.stderr, Buffer.from(`${diagnostic}\n`));
+      const alreadyBuffered = Buffer.concat(stderr).toString('utf8').includes(diagnostic)
+        || Buffer.concat(stderr).toString('utf8').includes(workerError.message || '');
+      // Worker streams already surface most failures; avoid duplicating the same diagnostic.
+      if (!alreadyBuffered) {
+        await writeBuffer(process.stderr, Buffer.from(`${diagnostic}\n`));
+      }
     }
   };
   const waitForWorkerOutput = () => Promise.all([

@@ -19,7 +19,7 @@ psm_tmux_safe_name() {
 }
 
 # Build the canonical tmux session name for a PSM public session id
-# (e.g. "omg:pr-123" -> "psm_omc_pr-123"). The colon-form id remains the
+# (e.g. "omg:pr-123" -> "psm_omg_pr-123"). The colon-form id remains the
 # human-facing identifier in sessions.json and on the CLI.
 psm_tmux_name_from_id() {
     psm_tmux_safe_name "psm:${1}"

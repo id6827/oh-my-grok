@@ -59,26 +59,26 @@ describe('PSM tmux-safe naming contract (issue #3528)', () => {
   describe('canonical contract', () => {
     it('psm_tmux_safe_name translates both ":" and "."', () => {
       const out = runShell(`${SOURCE} psm_tmux_safe_name "omg:pr-123"; echo; psm_tmux_safe_name "repo.js:feat-a.b"`);
-      expect(out).toBe('omc_pr-123\nrepo_js_feat-a_b');
+      expect(out).toBe('omg_pr-123\nrepo_js_feat-a_b');
     });
 
     it('psm_tmux_name_from_id prefixes psm_ and produces no reserved chars', () => {
       const out = runShell(`${SOURCE} psm_tmux_name_from_id "omg:pr-123"`);
-      expect(out).toBe('psm_omc_pr-123');
+      expect(out).toBe('psm_omg_pr-123');
       expect(out).not.toContain(':');
       expect(out).not.toContain('.');
     });
 
     it('translation is idempotent for already-safe names', () => {
-      const out = runShell(`${SOURCE} psm_tmux_safe_name "psm_omc_pr-123"`);
-      expect(out).toBe('psm_omc_pr-123');
+      const out = runShell(`${SOURCE} psm_tmux_safe_name "psm_omg_pr-123"`);
+      expect(out).toBe('psm_omg_pr-123');
     });
   });
 
   describe('create + registration', () => {
     it('creates the session under the tmux-safe name', () => {
       const out = runShell(`${SOURCE} psm_create_tmux_session "psm:omg:pr-123" "/tmp"`);
-      expect(out).toBe('created|psm_omc_pr-123');
+      expect(out).toBe('created|psm_omg_pr-123');
     });
 
     it('fail-closed: errors when the session is absent after new-session', () => {
@@ -103,7 +103,7 @@ tmux() {
       const out = runShell(
         `${SOURCE} psm_create_tmux_session "psm:omg:pr-123" "/tmp" >/dev/null;` +
           ` psm_tmux_session_exists "psm:omg:pr-123" && echo COLON=yes || echo COLON=no;` +
-          ` psm_tmux_session_exists "psm_omc_pr-123" && echo SAFE=yes || echo SAFE=no`,
+          ` psm_tmux_session_exists "psm_omg_pr-123" && echo SAFE=yes || echo SAFE=no`,
       );
       expect(out).toBe('COLON=yes\nSAFE=yes');
     });
@@ -114,20 +114,20 @@ tmux() {
       const listMock = `
 tmux() {
   case "$1" in
-    list-sessions) printf 'psm_omc_pr-1|100|0\\nother|101|0\\n' ;;
+    list-sessions) printf 'psm_omg_pr-1|100|0\\nother|101|0\\n' ;;
     *) : ;;
   esac
 }
 `;
       const out = runShell(`CREATED_FILE=$(mktemp); ${listMock} source "${TMUX_SH}"; psm_list_tmux_sessions`);
-      expect(out).toBe('psm_omc_pr-1|100|0');
+      expect(out).toBe('psm_omg_pr-1|100|0');
     });
   });
 
   describe('attach', () => {
     it('psm_tmux_session_name helper emits the tmux-safe form', () => {
       const out = runShell(`${SOURCE} psm_tmux_session_name "omg" "pr" "123"`);
-      expect(out).toBe('psm_omc_pr-123');
+      expect(out).toBe('psm_omg_pr-123');
     });
   });
 
@@ -136,9 +136,9 @@ tmux() {
       const out = runShell(
         `${SOURCE} psm_create_tmux_session "psm:omg:pr-123" "/tmp" >/dev/null;` +
           ` psm_kill_tmux_session "psm:omg:pr-123";` +
-          ` psm_tmux_session_exists "psm_omc_pr-123" && echo STILL=yes || echo STILL=no`,
+          ` psm_tmux_session_exists "psm_omg_pr-123" && echo STILL=yes || echo STILL=no`,
       );
-      expect(out).toBe('killed|psm_omc_pr-123\nSTILL=no');
+      expect(out).toBe('killed|psm_omg_pr-123\nSTILL=no');
     });
   });
 
@@ -151,15 +151,15 @@ tmux() {
         JSON.stringify({
           version: 1,
           sessions: {
-            'omg:pr-123': { id: 'omg:pr-123', type: 'review', project: 'omg', tmux: 'psm_omc_pr-123' },
-            'omg:issue-42': { id: 'omg:issue-42', type: 'fix', project: 'omg', tmux: 'psm_omc_issue-42' },
+            'omg:pr-123': { id: 'omg:pr-123', type: 'review', project: 'omg', tmux: 'psm_omg_pr-123' },
+            'omg:issue-42': { id: 'omg:issue-42', type: 'fix', project: 'omg', tmux: 'psm_omg_issue-42' },
           },
           stats: { total_created: 2, total_cleaned: 0 },
         }),
       );
       const out = runShell(
         `source "${CONFIG_SH}"; source "${TMUX_SH}"; source "${SESSION_SH}";` +
-          ` psm_get_session_id_for_tmux "psm_omc_issue-42"`,
+          ` psm_get_session_id_for_tmux "psm_omg_issue-42"`,
         home,
       );
       expect(out).toBe('omg:issue-42');
@@ -209,7 +209,7 @@ describe('PSM tmux-safe naming — source & docs contract (issue #3528)', () => 
   });
 
   it('SKILL.md advertises the tmux-safe session name, not the colon form', () => {
-    expect(skill).toContain('psm_omc_pr-123');
+    expect(skill).toContain('psm_omg_pr-123');
     expect(skill).not.toContain('`psm:omg:pr-123`');
     expect(skill).not.toContain('grep "^psm:"');
   });

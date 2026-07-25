@@ -162,9 +162,9 @@ tmux-safe name at every tmux boundary; attach directly with the tmux-safe name.
 
 | Type | Public ID (`psm attach`/`kill`) | Tmux Session (`tmux attach -t`) | Worktree Dir |
 |------|---------------------------------|---------------------------------|--------------|
-| PR Review | `omg:pr-123` | `psm_omc_pr-123` | `~/.psm/worktrees/omg/pr-123` |
-| Issue Fix | `omg:issue-42` | `psm_omc_issue-42` | `~/.psm/worktrees/omg/issue-42` |
-| Feature | `omg:feat-auth` | `psm_omc_feat-auth` | `~/.psm/worktrees/omg/feat-auth` |
+| PR Review | `omg:pr-123` | `psm_omg_pr-123` | `~/.psm/worktrees/omg/pr-123` |
+| Issue Fix | `omg:issue-42` | `psm_omg_issue-42` | `~/.psm/worktrees/omg/issue-42` |
+| Feature | `omg:feat-auth` | `psm_omg_feat-auth` | `~/.psm/worktrees/omg/feat-auth` |
 
 ---
 
@@ -273,9 +273,9 @@ Parse `{{ARGUMENTS}}` to determine:
 
      ID: omg:pr-123
      Worktree: ~/.psm/worktrees/omg/pr-123
-     Tmux: psm_omc_pr-123
+     Tmux: psm_omg_pr-123
 
-   To attach: tmux attach -t psm_omc_pr-123   (or: psm attach omg:pr-123)
+   To attach: tmux attach -t psm_omg_pr-123   (or: psm attach omg:pr-123)
    ```
 
 ### Subcommand: `fix <ref>`
