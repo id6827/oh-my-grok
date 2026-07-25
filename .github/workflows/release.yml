@@ -72,6 +72,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Bridge CJS outputs (mcp-server, cli, coordinator, …) are gitignored and
+      # must be built before npm pack so release-boundary / smoke can assert
+      # package/bridge/claude-md-coordinator.cjs and other required entrypoints.
+      - name: Build bridge bundles
+        run: npm run build:bridge
+
+      - name: Confirm bridge pack inputs exist
+        run: |
+          test -f bridge/mcp-server.cjs
+          test -f bridge/cli.cjs
+          test -f bridge/runtime-cli.cjs
+          test -f bridge/claude-md-coordinator.cjs
+          test -f bridge/team.js
+
       - name: Run functional tests
         run: npm test -- --run
 
@@ -98,7 +112,23 @@ jobs:
           SEED_NAME=$(npm pack --ignore-scripts --pack-destination "$SEED_DIR" --silent)
           SEED_TARBALL="$SEED_DIR/$SEED_NAME"
           node scripts/release-boundary.mjs prepare-stage --seed-tarball "$SEED_TARBALL" --stage "$STAGE" --git-head "$GITHUB_SHA"
-          FINAL_NAME=$(npm pack "$STAGE/package" --ignore-scripts --pack-destination "$FINAL_DIR" --silent)
+          # npm pack from a git checkout omits .gitignore'd paths (bridge/*.cjs,
+          # bridge/team.js) even when built on disk. Inject release-boundary
+          # REQUIRED_ENTRYPOINTS bridge artifacts into the stage so the final
+          # archive includes package/bridge/claude-md-coordinator.cjs et al.
+          STAGE_PKG="$STAGE/package"
+          for f in \
+            bridge/cli.cjs \
+            bridge/claude-md-coordinator.cjs \
+            bridge/mcp-server.cjs \
+            bridge/runtime-cli.cjs \
+            bridge/team.js
+          do
+            test -f "$f"
+            mkdir -p "$STAGE_PKG/$(dirname "$f")"
+            cp -f "$f" "$STAGE_PKG/$f"
+          done
+          FINAL_NAME=$(npm pack "$STAGE_PKG" --ignore-scripts --pack-destination "$FINAL_DIR" --silent)
           FINAL_TARBALL="$FINAL_DIR/$FINAL_NAME"
           FINAL_TARBALL_SHA256=$(sha256sum "$FINAL_TARBALL" | cut -d ' ' -f 1)
           node scripts/release-boundary.mjs assert-archive --tarball "$FINAL_TARBALL" --version "$VERSION" --git-head "$GITHUB_SHA"

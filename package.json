@@ -21,7 +21,7 @@
     "test:unit": "node scripts/tests/test-runtime-foundation.mjs",
     "test:vitest": "vitest run --exclude \"tests/perf/**\"",
     "test:smoke": "npm run build && node scripts/tests/test-runtime-foundation.mjs && node scripts/tests/test-hooks.mjs && node scripts/tests/test-team.mjs && node scripts/tests/test-hud.mjs",
-    "build:bridge": "node scripts/build-mcp-server.mjs && node scripts/build-cli.mjs && node scripts/build-runtime-cli.mjs && node scripts/build-team-server.mjs",
+    "build:bridge": "node scripts/build-mcp-server.mjs && node scripts/build-cli.mjs && node scripts/build-runtime-cli.mjs && node scripts/build-team-server.mjs && node scripts/build-bridge-entry.mjs && node scripts/build-skill-bridge.mjs && node scripts/build-claude-md-coordinator.mjs",
     "build:bridge:extra": "node scripts/build-bridge-entry.mjs && node scripts/build-skill-bridge.mjs && node scripts/build-claude-md-coordinator.mjs",
     "build:all": "npm run build && npm run build:bridge",
     "test:vitest:core": "vitest run src/utils src/config/__tests__/models.test.ts src/config/__tests__/plan-output.test.ts src/lib/__tests__/session-id.test.ts src/lib/__tests__/payload-limits.test.ts src/lib/__tests__/swallowed-error.test.ts",

@@ -16,7 +16,10 @@ npm run build:all      # both
 | `scripts/build-cli.mjs` | `bridge/cli.cjs`, `bridge/team.js` |
 | `scripts/build-runtime-cli.mjs` | `bridge/runtime-cli.cjs` |
 | `scripts/build-team-server.mjs` | `bridge/team-mcp.cjs` |
-| optional `build:bridge:extra` | bridge-entry, skill-bridge, claude-md-coordinator |
+| `scripts/build-bridge-entry.mjs` | `bridge/team-bridge.cjs` (OMC-compat standalone) |
+| `scripts/build-skill-bridge.mjs` | `dist/hooks/skill-bridge.cjs` |
+| `scripts/build-claude-md-coordinator.mjs` | `bridge/claude-md-coordinator.cjs` |
+| `build:bridge:extra` | alias for the three extra builders only (compat) |
 
 ## Runtime entries (product)
 

@@ -119,4 +119,7 @@ jobs:
           test -f bridge/cli.cjs
           test -f bridge/runtime-cli.cjs
           test -f bridge/team-mcp.cjs
+          test -f bridge/team-bridge.cjs
+          test -f bridge/claude-md-coordinator.cjs
+          test -f dist/hooks/skill-bridge.cjs
           ls -lh bridge/*.cjs bridge/team.js

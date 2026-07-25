@@ -483,10 +483,11 @@ function resolveCoordinatorSource(root) {
 
 function validateCoordinatorHandshake(root, requiredPaths, packageJson, pluginJson) {
   const coordinator = 'bridge/claude-md-coordinator.cjs';
-  // Grok plugin installs do not require the Claude-md coordinator bundle.
-  // When absent, skip handshake (optional extra build: npm run build:bridge:extra).
+  // Coordinator is produced by default `npm run build:bridge` but remains gitignored.
+  // Clean CI trees that only run `npm run build` may still omit it — skip handshake then.
+  // When present, handshake is hard (source sha + engine version must match).
   if (!existsSync(join(root, coordinator))) {
-    console.log('plugin shipping surface: coordinator optional (bridge/claude-md-coordinator.cjs not built) — skipped');
+    console.log('plugin shipping surface: coordinator not built (run npm run build:bridge) — skipped');
     return;
   }
   if (!requiredPaths.has(coordinator)) requiredPaths.add(coordinator);

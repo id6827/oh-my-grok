@@ -242,6 +242,7 @@ describe('release generation', () => {
     expect(workflow).not.toContain('npm view');
     expect(workflow).not.toContain('skipping publish');
     expect(workflow).toContain('npm run build');
+    expect(workflow).toContain('npm run build:bridge');
     expect(workflow).toContain('npm run plugin:shipping:verify');
     expect(workflow).toContain(
       '- name: Verify plugin shipping surface\n        run: npm run plugin:shipping:verify\n\n      - name: Build',
@@ -258,9 +259,11 @@ describe('release generation', () => {
     expect(workflow).toContain(
       'node scripts/release-boundary.mjs prepare-stage --seed-tarball "$SEED_TARBALL" --stage "$STAGE" --git-head "$GITHUB_SHA"',
     );
-    expect(workflow).toContain(
-      'npm pack "$STAGE/package" --ignore-scripts --pack-destination "$FINAL_DIR" --silent',
+    // Final pack may use $STAGE/package or $STAGE_PKG after bridge inject (gitignored cjs).
+    expect(workflow).toMatch(
+      /npm pack "\$STAGE(?:\/package|_PKG)" --ignore-scripts --pack-destination "\$FINAL_DIR" --silent/,
     );
+    expect(workflow).toContain('bridge/claude-md-coordinator.cjs');
     expect(workflow).toContain(
       'node scripts/release-boundary.mjs assert-archive --tarball "$FINAL_TARBALL" --version "$VERSION" --git-head "$GITHUB_SHA"',
     );
@@ -314,15 +317,19 @@ describe('release generation', () => {
     const stagePreparation = workflow.indexOf(
       'node scripts/release-boundary.mjs prepare-stage',
     );
-    const finalPack = workflow.indexOf(
-      'npm pack "$STAGE/package" --ignore-scripts --pack-destination "$FINAL_DIR" --silent',
+    const finalPackMatch = workflow.match(
+      /npm pack "\$STAGE(?:\/package|_PKG)" --ignore-scripts --pack-destination "\$FINAL_DIR" --silent/,
     );
+    const finalPack = finalPackMatch?.index ?? -1;
     const archiveAssertion = workflow.indexOf(
       'node scripts/release-boundary.mjs assert-archive',
     );
     const evidenceWrite = workflow.indexOf(
       'node scripts/release-boundary.mjs write-evidence',
     );
+    expect(seedPack).toBeGreaterThanOrEqual(0);
+    expect(stagePreparation).toBeGreaterThanOrEqual(0);
+    expect(finalPack).toBeGreaterThanOrEqual(0);
     expect(seedPack).toBeLessThan(stagePreparation);
     expect(stagePreparation).toBeLessThan(finalPack);
     expect(finalPack).toBeLessThan(archiveAssertion);

@@ -27,9 +27,17 @@
 
 - **Soft-align tests** to OMG packaging (`.grok`, plugin-first hooks, Grok Build team wording, first-class `code-review` / `security-review`, npm bin missing-bridge tolerance, HUD single package name, tool-error boundary margin, owner-epoch ESRCH death)
 
-### Remaining
+### Remaining (vitest)
 
-None for full vitest residual (0 fails). Product gates remain the release bar:
+None for full vitest residual (0 fails).
+
+### Related parity follow-ups (not vitest)
+
+See `.omg/plans/ralplan-omc-omg-parity-gap-2026-07-25.md`:
+
+- Default `build:bridge` now includes team-bridge + skill-bridge + coordinator (packaging wave)
+- Release pack still needs `build:bridge` before archive if coordinator is required
+- Intentional 🟡 product partials (feature engines, workflow-drift-guard, HUD presets) need promote-or-freeze
 
 ## Product gates
 
@@ -37,4 +45,6 @@ None for full vitest residual (0 fails). Product gates remain the release bar:
 npm run test:vitest:core
 npm run test:smoke
 npm run mcp:probe
+npm run build:bridge
+npm run plugin:shipping:verify
 ```
