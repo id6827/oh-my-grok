@@ -500,7 +500,11 @@ describe('omg ask command', () => {
       const result = runCli(
         ['ask', 'claude', '--agent-prompt=executor', '--prompt', 'ship feature'],
         wd,
-        { OMC_ASK_ADVISOR_SCRIPT: stubPath },
+        {
+          OMC_ASK_ADVISOR_SCRIPT: stubPath,
+          // Host CODEX_HOME would short-circuit project .omx/.codex scope resolution.
+          CODEX_HOME: '',
+        },
       );
 
       expect(result.error).toBeUndefined();

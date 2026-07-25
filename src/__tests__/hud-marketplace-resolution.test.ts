@@ -259,11 +259,14 @@ describe('HUD marketplace resolution', () => {
     expect(existsSync(hudScriptPath)).toBe(true);
 
     const content = readFileSync(hudScriptPath, 'utf-8');
+    // Published package name is the only npm HUD target after OMG branding
+    // (legacy dual-name order check is a no-op when both slots are identical).
     expect(content).toContain('"oh-my-grok/dist/hud/index.js"');
-    expect(content).toContain('"oh-my-grok/dist/hud/index.js"');
-    expect(content.indexOf('"oh-my-grok/dist/hud/index.js"')).toBeLessThan(
-      content.indexOf('"oh-my-grok/dist/hud/index.js"')
-    );
+    const firstNpm = content.indexOf('"oh-my-grok/dist/hud/index.js"');
+    expect(firstNpm).toBeGreaterThanOrEqual(0);
+    // Prefer npm package resolution over marketplace/plugin-cache-only paths
+    // by ensuring the package string appears in the npm fallback block.
+    expect(content).toMatch(/npmHudPackages[\s\S]*oh-my-grok\/dist\/hud\/index\.js/);
 
     execFileSync(process.execPath, [hudScriptPath], {
       cwd: root,

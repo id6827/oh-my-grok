@@ -73,7 +73,8 @@ describe('Skill Finder', () => {
 
   it('should get skills directory for user scope', () => {
     const userDir = getSkillsDir('user');
-    expect(userDir).toContain('.claude');
+    // Dual-read config dir: ~/.grok (canonical) or ~/.claude (compat) via GROK/CLAUDE_CONFIG_DIR.
+    expect(userDir).toMatch(/(\.grok|\.claude)/);
     expect(userDir).toContain('omg-learned');
   });
 

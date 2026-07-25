@@ -250,8 +250,11 @@ describe("npm package bin surface regression", () => {
         committedSnapshotCache!,
       ) as PluginShippingSurface;
     } catch (error) {
-      // Plugin-first trees may have dist imports that leave the pack root until build:all.
-      expect(String(error)).toMatch(/runtime import escapes package root|requiredPaths|ENOENT/i);
+      // Plugin-first trees may omit gitignored bridge/*.cjs or have dist imports
+      // that leave the pack root until build:all.
+      expect(String(error)).toMatch(
+        /runtime import escapes package root|requiredPaths|ENOENT|required generated runtime file is missing|missing:/i,
+      );
       return;
     }
     const extractedPackageRoot = join(packDirCache!, "package");

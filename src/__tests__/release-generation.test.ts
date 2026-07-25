@@ -278,7 +278,8 @@ describe('release generation', () => {
     );
     expect(workflow).toContain('*recover-worker*write-task-checkpoint*read-recovery-result*');
     expect(workflow).toContain('SMOKE_HOME="$SMOKE_ROOT/home"');
-    expect(workflow).toContain('SMOKE_CLAUDE_CONFIG_DIR="$SMOKE_HOME/.claude"');
+    // Dual-read smoke config var: SMOKE_GROK_CONFIG_DIR (canonical) or SMOKE_CLAUDE_CONFIG_DIR (legacy).
+    expect(workflow).toMatch(/SMOKE_(?:GROK|CLAUDE)_CONFIG_DIR="\$SMOKE_HOME\/\.claude"/);
     expect(workflow).toContain('SMOKE_GJC_CONFIG_DIR="$SMOKE_HOME/.gjc"');
     expect(workflow).toContain('SMOKE_PACKAGE_ROOT="$SMOKE_PREFIX/node_modules/oh-my-grok"');
     expect(workflow).toContain('OMC_SETUP_PLUGIN_ROOT="$SMOKE_PACKAGE_ROOT" GROK_PLUGIN_ROOT="$SMOKE_PACKAGE_ROOT"');
@@ -296,8 +297,12 @@ describe('release generation', () => {
     expect(workflow).toContain('require(process.argv[1]).sourceSha');
     expect(workflow).toContain('require(process.argv[1]).sha256');
     expect(workflow).toContain('archiveManifest.files.find(({ path }) => path === "package/bridge/claude-md-coordinator.cjs")');
-    expect(workflow).toContain('env -i PATH="$PATH" HOME="$SMOKE_HOME" GROK_CONFIG_DIR="$SMOKE_CLAUDE_CONFIG_DIR" GJC_CONFIG_DIR="$SMOKE_GJC_CONFIG_DIR"');
-    expect(workflow).toContain('env -i PATH="$PATH" HOME="$SMOKE_HOME" GROK_CONFIG_DIR="$SMOKE_CLAUDE_CONFIG_DIR" GJC_CONFIG_DIR="$SMOKE_GJC_CONFIG_DIR" OMC_SETUP_PLUGIN_ROOT="$SMOKE_PACKAGE_ROOT" GROK_PLUGIN_ROOT="$SMOKE_PACKAGE_ROOT" "$SMOKE_PREFIX/node_modules/.bin/omg" --version');
+    expect(workflow).toMatch(
+      /env -i PATH="\$PATH" HOME="\$SMOKE_HOME" GROK_CONFIG_DIR="\$SMOKE_(?:GROK|CLAUDE)_CONFIG_DIR" GJC_CONFIG_DIR="\$SMOKE_GJC_CONFIG_DIR"/,
+    );
+    expect(workflow).toMatch(
+      /env -i PATH="\$PATH" HOME="\$SMOKE_HOME" GROK_CONFIG_DIR="\$SMOKE_(?:GROK|CLAUDE)_CONFIG_DIR" GJC_CONFIG_DIR="\$SMOKE_GJC_CONFIG_DIR" OMC_SETUP_PLUGIN_ROOT="\$SMOKE_PACKAGE_ROOT" GROK_PLUGIN_ROOT="\$SMOKE_PACKAGE_ROOT" "\$SMOKE_PREFIX\/node_modules\/\.bin\/omg" --version/,
+    );
     expect(workflow).toContain('uses: actions/upload-artifact@v4');
     expect(workflow).toContain('${{ runner.temp }}/final/*.tgz');
     expect(workflow).toContain('${{ runner.temp }}/release-evidence.json');

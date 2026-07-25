@@ -120,7 +120,8 @@ import { wrapUntrustedFileContent } from "../agents/prompt-helpers.js";
 const PKILL_F_FLAG_PATTERN = /\bpkill\b.*\s-f\b/;
 const PKILL_FULL_FLAG_PATTERN = /\bpkill\b.*--full\b/;
 const WORKER_BLOCKED_TMUX_PATTERN = /\btmux\s+/i;
-const WORKER_BLOCKED_TEAM_CLI_PATTERN = /\bom[cx]\s+team\b(?!\s+api\b)/i;
+// Match omg (canonical), omc (compat), omx (legacy brand) team orchestration CLI.
+const WORKER_BLOCKED_TEAM_CLI_PATTERN = /\b(?:omg|omc|omx)\s+team\b(?!\s+api\b)/i;
 const WORKER_BLOCKED_SKILL_PATTERN = /\$(team|ultrawork|autopilot|ralph)\b/i;
 
 const TEAM_TERMINAL_VALUES = new Set([

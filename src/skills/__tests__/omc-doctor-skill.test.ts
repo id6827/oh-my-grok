@@ -45,6 +45,6 @@ describe('omg-doctor skill package version diagnostic (issue #2981)', () => {
     const content = readFileSync(skillPath, 'utf8');
 
     expect(content).toContain('npm view oh-my-grok version');
-    expect(content).not.toContain('npm view oh-my-grok version');
+    expect(content).not.toContain('npm view oh-my-claudecode version');
   });
 });

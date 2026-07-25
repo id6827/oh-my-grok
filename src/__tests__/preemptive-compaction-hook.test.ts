@@ -98,16 +98,19 @@ describe('post-tool-verifier preemptive compaction warnings', () => {
     expect(commands).not.toContain(
       'node "$GROK_PLUGIN_ROOT"/scripts/run.cjs "$GROK_PLUGIN_ROOT"/scripts/preemptive-compaction.mjs',
     );
+    // Plugin-first OMG may invoke hooks/scripts/post-tool-verifier.mjs or
+    // scripts/post-tool-verifier.mjs via run.cjs — either keeps compaction
+    // on the existing PostToolUse runtime (no standalone preemptive script).
     expect(
       commands.some(
         command =>
-          command.includes('"$GROK_PLUGIN_ROOT"/scripts/run.cjs') &&
-          command.includes('"$GROK_PLUGIN_ROOT"/scripts/post-tool-verifier.mjs'),
+          /post-tool-verifier\.mjs/.test(command) &&
+          !/preemptive-compaction\.mjs/.test(command),
       ),
     ).toBe(true);
     expect(
       commands.some(command =>
-        command.includes('"$GROK_PLUGIN_ROOT"/scripts/preemptive-compaction.mjs'),
+        command.includes('preemptive-compaction.mjs'),
       ),
     ).toBe(false);
   });

@@ -56,11 +56,19 @@ function resolveAskPromptsDir(cwd, packageRoot, env = process.env) {
         return join(codexHomeOverride, 'prompts');
     }
     try {
-        const scopePath = join(cwd, '.omx', 'setup-scope.json');
-        if (existsSync(scopePath)) {
-            const parsed = JSON.parse(readFileSync(scopePath, 'utf-8'));
-            if (parsed.scope === 'project' || parsed.scope === 'project-local') {
-                return join(cwd, '.codex', 'prompts');
+        // Dual-read project scope marker: .omg (canonical) then .omx (legacy OMX).
+        for (const scopeRel of ['.omg/setup-scope.json', '.omx/setup-scope.json']) {
+            const scopePath = join(cwd, scopeRel);
+            if (!existsSync(scopePath))
+                continue;
+            try {
+                const parsed = JSON.parse(readFileSync(scopePath, 'utf-8'));
+                if (parsed.scope === 'project' || parsed.scope === 'project-local') {
+                    return join(cwd, '.codex', 'prompts');
+                }
+            }
+            catch {
+                // Ignore malformed scope and try the next candidate.
             }
         }
     }

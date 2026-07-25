@@ -60,8 +60,10 @@ describe('Consolidation contracts', () => {
       expect(names).not.toContain('analyze');
       expect(names).not.toContain('build-fix');
       expect(names).not.toContain('tdd');
-      expect(names).not.toContain('code-review');
-      expect(names).not.toContain('omg-security-review');
+      // code-review / security-review are first-class OMG skills (not deleted thin wrappers).
+      expect(names).toContain('code-review');
+      // security-review may be registered as security-review and/or omg-security-review.
+      expect(names.some((n) => n === 'security-review' || n === 'omg-security-review')).toBe(true);
     });
 
     it('hides deprecated compatibility aliases from default listings', () => {

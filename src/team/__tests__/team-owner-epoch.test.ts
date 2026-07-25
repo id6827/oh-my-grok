@@ -112,9 +112,10 @@ describe('runtime owner epochs', () => {
     expect(isFencedServiceMaintenance(baseConfig({ runtime_owner_epoch: { epoch: 2, nonce: 'two' }, service_recovery: { epoch: 2, nonce: 'two' } }), { epoch: 2, nonce: 'two' })).toBe(true);
   });
 
-  it('treats blank or malformed live-PID identities as unverifiable, never dead', () => {
+  it('treats blank or malformed live-PID identities as unverifiable; ESRCH is positive death', () => {
     expect(isValidProcessStartIdentity('')).toBe(false);
     expect(isValidProcessStartIdentity('malformed')).toBe(false);
+    // Live PID + blank/malformed identity → unverifiable, never "dead" by reuse.
     expect(isProcessIdentityDead({ pid: process.pid, process_started_at: '' })).toBe(false);
     expect(isProcessIdentityDead({ pid: process.pid, process_started_at: 'malformed' })).toBe(false);
     const malformedSamePlatform = process.platform === 'linux' ? 'linux:not-a-start-tick'
@@ -122,8 +123,9 @@ describe('runtime owner epochs', () => {
     const crossPlatform = process.platform === 'linux' ? 'win32:123' : 'linux:123';
     expect(isValidProcessStartIdentity(malformedSamePlatform)).toBe(false);
     expect(isValidProcessStartIdentity(crossPlatform)).toBe(false);
-    expect(isProcessIdentityDead({ pid: 2_147_483_647, process_started_at: malformedSamePlatform })).toBe(false);
-    expect(isProcessIdentityDead({ pid: 2_147_483_647, process_started_at: crossPlatform })).toBe(false);
+    // PID gone (ESRCH) is positive death regardless of identity token shape — reclaim path.
+    expect(isProcessIdentityDead({ pid: 2_147_483_647, process_started_at: malformedSamePlatform })).toBe(true);
+    expect(isProcessIdentityDead({ pid: 2_147_483_647, process_started_at: crossPlatform })).toBe(true);
     expect(() => publishOwnerEpoch(cwd, 'blank-owner-team', 1, {
       pid: process.pid, processStartedAt: '', nonce: 'blank-owner',
     })).toThrow('process_start_identity_unavailable');

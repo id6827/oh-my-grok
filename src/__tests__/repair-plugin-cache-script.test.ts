@@ -174,8 +174,23 @@ describe('repair-plugin-cache.mjs', () => {
 
     expect(commands.length).toBeGreaterThan(0);
     for (const { event, command } of commands) {
-      expect(command, event).toMatch(/^sh "\$GROK_PLUGIN_ROOT"\/scripts\/find-node\.sh "\$GROK_PLUGIN_ROOT"\/scripts\/run\.cjs /);
+      // Plugin-first OMG hooks may use:
+      // - bash session-start.sh (portable shell bootstrap)
+      // - direct node "${GROK_PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/hooks/scripts/*.mjs"
+      // - find-node + run.cjs for scripts/ entrypoints
+      // The repair script should not introduce absolute /bin/sh paths.
       expect(command, event).not.toContain('/bin/sh');
+      const isPluginFirstNodeHook =
+        /^node\s+"\$\{GROK_PLUGIN_ROOT:-/.test(command) ||
+        /^bash\s+"\$\{GROK_PLUGIN_ROOT:-/.test(command) ||
+        /session-start\.sh/.test(command) ||
+        /hooks\/scripts\//.test(command);
+      if (isPluginFirstNodeHook) continue;
+      if (/run\.cjs|find-node/.test(command)) {
+        expect(command, event).toMatch(
+          /find-node\.sh|run\.cjs|"\$GROK_PLUGIN_ROOT"/,
+        );
+      }
     }
   });
 

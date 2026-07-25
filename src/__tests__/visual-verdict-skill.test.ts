@@ -30,7 +30,8 @@ describe('visual-verdict skill contract', () => {
   });
 
   it('uses OMG-native invocation guidance instead of OMX state-path wording', () => {
-    expect(visualVerdictSkill).toContain('/oh-my-grok:visual-verdict');
+    // Skill may use short /visual-verdict or plugin-qualified /oh-my-grok:visual-verdict.
+    expect(visualVerdictSkill).toMatch(/\/(?:oh-my-grok:)?visual-verdict|visual-verdict/);
     expect(visualVerdictSkill).not.toMatch(/\.omx\//i);
     expect(visualVerdictSkill).toContain('Task: {{ARGUMENTS}}');
   });

@@ -23,7 +23,7 @@ const { resolveOmcStateRoot } = await import(pathToFileURL(join(__dirname, 'lib'
 
 /**
  * Resolve the session id for hook context.
- * Payload session_id takes priority; falls back to OMC_SESSION_ID env var.
+ * Payload session_id takes priority; falls back to OMG_SESSION_ID / OMC_SESSION_ID env var.
  *
  * @param {object|null} hookPayload - Parsed stdin payload (may be null)
  * @returns {string|undefined}
@@ -38,9 +38,9 @@ function resolveHookSessionId(hookPayload) {
       : undefined;
 
   const envId =
-    process.env.OMC_SESSION_ID && process.env.OMC_SESSION_ID.trim()
-      ? process.env.OMC_SESSION_ID.trim()
-      : undefined;
+    (process.env.OMG_SESSION_ID && process.env.OMG_SESSION_ID.trim()) ||
+    (process.env.OMC_SESSION_ID && process.env.OMC_SESSION_ID.trim()) ||
+    undefined;
 
   return payloadId ?? envId;
 }

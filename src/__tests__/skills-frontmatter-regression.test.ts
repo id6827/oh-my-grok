@@ -28,7 +28,8 @@ describe('builtin skill drafting contracts for learned skills (issue #2425)', ()
     expect(learner).toBeDefined();
     expect(learner!.aliasOf).toBe('skillify');
     expect(learner!.deprecatedAlias).toBe(true);
-    expect(learner!.template).toContain('Prefer `/oh-my-grok:skillify`');
+    // Prefer short /skillify (or plugin-qualified form) in alias docs.
+    expect(learner!.template).toMatch(/Prefer `\/(?:oh-my-grok:)?skillify`/);
     expect(learner!.template).toContain('Do **not** write plain markdown without frontmatter.');
     expect(learner!.template).toContain('.omg/skills/<skill-name>.md');
     expect(learner!.template).toContain('skills/omg-learned/<skill-name>.md');

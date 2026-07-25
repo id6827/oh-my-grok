@@ -45,17 +45,23 @@ export function getTeamTmuxSessions(teamName) {
     const sanitized = teamName.replace(/[^a-zA-Z0-9-]/g, "");
     if (!sanitized)
         return [];
-    const prefix = `omg-team-${sanitized}-`;
+    // Dual-read: canonical omg-team-* plus legacy omc-team-* sessions.
+    const prefixes = [`omg-team-${sanitized}-`, `omc-team-${sanitized}-`];
     try {
         const output = tmuxShell("list-sessions -F '#{session_name}'", {
             timeout: 3000,
             stdio: ["pipe", "pipe", "pipe"],
         });
-        return output
-            .trim()
-            .split("\n")
-            .filter((s) => s.startsWith(prefix))
-            .map((s) => s.slice(prefix.length));
+        const workers = [];
+        for (const line of output.trim().split("\n")) {
+            for (const prefix of prefixes) {
+                if (line.startsWith(prefix)) {
+                    workers.push(line.slice(prefix.length));
+                    break;
+                }
+            }
+        }
+        return workers;
     }
     catch {
         return [];

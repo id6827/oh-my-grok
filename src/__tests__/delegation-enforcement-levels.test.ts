@@ -177,14 +177,16 @@ describe('delegation-enforcement-levels', () => {
     });
 
     it('falls back to global config when no local config', () => {
+      // getClaudeConfigDir defaults to ~/.grok (GROK_CONFIG_DIR dual-read);
+      // also accept ~/.claude for CLAUDE_CONFIG_DIR / legacy mocks.
       mockExistsSync.mockImplementation((p: unknown) => {
         const s = String(p);
-        if (/[\\/]mock[\\/]home[\\/]\.claude[\\/]\.omg-config\.json$/.test(s)) return true;
+        if (/[\\/]mock[\\/]home[\\/]\.(?:grok|claude)[\\/]\.omg-config\.json$/.test(s)) return true;
         return false;
       });
       mockReadFileSync.mockImplementation((p: unknown) => {
         const s = String(p);
-        if (/[\\/]mock[\\/]home[\\/]\.claude[\\/]\.omg-config\.json$/.test(s)) {
+        if (/[\\/]mock[\\/]home[\\/]\.(?:grok|claude)[\\/]\.omg-config\.json$/.test(s)) {
           return JSON.stringify({ delegationEnforcementLevel: 'strict' });
         }
         return '';
