@@ -20,7 +20,7 @@ function readLock(path: string): ProcessIdentityLockRecord | null {
   try {
     const record = JSON.parse(readFileSync(path, 'utf8')) as ProcessIdentityLockRecord;
     return record.schema_version === 1 && Number.isSafeInteger(record.pid) && record.pid > 0
-      && isValidProcessStartIdentity(record.process_started_at) && typeof record.nonce === 'string' && record.nonce.length > 0
+      && isValidProcessStartIdentity(record.process_started_at, 'any') && typeof record.nonce === 'string' && record.nonce.length > 0
       ? record : null;
   } catch { return null; }
 }

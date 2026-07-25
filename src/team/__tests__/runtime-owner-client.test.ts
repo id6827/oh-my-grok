@@ -98,6 +98,14 @@ function seedBootstrapRecoveryRequest(
     created_at: new Date().toISOString() }));
 }
 
+
+/** Host-valid but wrong start token → alive PID is treated as identity-mismatched (dead). */
+function mismatchedProcessStart(): string {
+  if (process.platform === 'darwin') return 'darwin:1:0';
+  if (process.platform === 'win32') return 'win32:1';
+  return 'linux:1';
+}
+
 describe('runtime owner durable request admission', () => {
   it('joins concurrent copies of the same request and never dispatches owner effects twice', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'runtime-owner-replay-'));
@@ -250,7 +258,7 @@ describe('runtime owner durable request admission', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'runtime-owner-successor-'));
     try {
       seedV2Team(cwd);
-      publishOwnerEpoch(cwd, 'recovery-team', 1, { pid: process.pid, processStartedAt: 'linux:1', nonce: 'dead-owner' });
+      publishOwnerEpoch(cwd, 'recovery-team', 1, { pid: process.pid, processStartedAt: mismatchedProcessStart(), nonce: 'dead-owner' });
       const dispatch = vi.fn();
       const bootstrapOwner = vi.fn(async (input: RecoverDeadWorkerOwnerInput, priorEpoch: number | null) => {
         expect(priorEpoch).toBe(1);
@@ -344,7 +352,7 @@ describe('runtime owner durable request admission', () => {
       mkdirSync(join(configPath, '..'), { recursive: true });
       writeFileSync(configPath, JSON.stringify(validV2Config(teamName)));
       if (manifest !== undefined) writeFileSync(absPath(cwd, TeamPaths.manifest(teamName)), manifest);
-      publishOwnerEpoch(cwd, teamName, 1, { pid: process.pid, processStartedAt: 'linux:1', nonce: 'dead-owner' });
+      publishOwnerEpoch(cwd, teamName, 1, { pid: process.pid, processStartedAt: mismatchedProcessStart(), nonce: 'dead-owner' });
       const bootstrapOwner = vi.fn(async (input: RecoverDeadWorkerOwnerInput) => {
         publishOwnerEpoch(cwd, teamName, 2, { nonce: 'successor-owner' });
         publishSuccess(input.cwd, input.requestId);
@@ -501,7 +509,7 @@ describe('recovery admission lock crash takeover', () => {
       const lockPath = absPath(cwd, TeamPaths.recoveryAdmissionLock('payload-hash'));
       mkdirSync(join(lockPath, '..'), { recursive: true });
       writeFileSync(lockPath, JSON.stringify({ schema_version: 1, pid: 2_147_483_647,
-        process_started_at: 'linux:1', nonce: 'crashed-owner', created_at: new Date().toISOString() }));
+        process_started_at: mismatchedProcessStart(), nonce: 'crashed-owner', created_at: new Date().toISOString() }));
 
       const effect = vi.fn(() => 'reclaimed');
       await expect(withRecoveryAdmissionLock(cwd, 'payload-hash', effect)).resolves.toBe('reclaimed');
@@ -547,7 +555,7 @@ describe('recovery owner bootstrap candidates', () => {
         created_at: new Date().toISOString() }));
       const baseInput = { teamName, cwd, workerName: 'worker-1', requestId };
       await recoveryOwnerBootstrapTestHooks.publishCandidate(baseInput, recoveryId, 1, 'dead-child',
-        2_147_483_647, 'linux:1', null);
+        2_147_483_647, mismatchedProcessStart(), null);
       expect(recoveryOwnerBootstrapTestHooks.hasLiveOrUnknownCandidate(baseInput, recoveryId, 1, null)).toBe(false);
       expect(readRecoveryOutcome(cwd, requestId)).toBeNull();
 

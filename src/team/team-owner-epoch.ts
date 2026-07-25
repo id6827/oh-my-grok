@@ -52,7 +52,7 @@ function parseRecord(path: string, expectedEpoch?: number): OwnerEpochRecord | n
     if (parsed.schema_version !== 1 || !Number.isSafeInteger(parsed.epoch) || parsed.epoch < 1
       || (expectedEpoch !== undefined && parsed.epoch !== expectedEpoch)
       || typeof parsed.nonce !== 'string' || typeof parsed.pid !== 'number'
-      || !isValidProcessStartIdentity(parsed.process_started_at) || typeof parsed.payload_hash !== 'string') return null;
+      || !isValidProcessStartIdentity(parsed.process_started_at, 'any') || typeof parsed.payload_hash !== 'string') return null;
     const { payload_hash, ...unsigned } = parsed;
     return digest(unsigned) === payload_hash ? parsed : null;
   } catch {
@@ -114,25 +114,29 @@ export function processStartIdentityForPlatform(
 }
 
 /**
- * Validate a process-start identity token by its **own prefix**, not the host
- * platform. Records may be fixtures or cross-host artifacts (`linux:…` on
- * macOS tests); death detection still requires a well-formed identity.
+ * Validate a process-start identity token.
  *
- * When `platform` is passed, optionally require that prefix to match.
+ * - Default: require prefix to match the host `platform` (publish/current).
+ * - `platform: 'any'`: accept any well-formed token (fixtures, death detection
+ *   of foreign identities like `linux:1` on macOS).
  */
-export function isValidProcessStartIdentity(value: unknown, platform?: NodeJS.Platform): value is string {
+export function isValidProcessStartIdentity(
+  value: unknown,
+  platform: NodeJS.Platform | 'any' = process.platform,
+): value is string {
   if (typeof value !== 'string' || value.length === 0 || value.length > 1024) return false;
 
+  const any = platform === 'any';
   if (/^linux:[1-9]\d*$/.test(value)) {
-    return platform === undefined || platform === 'linux';
+    return any || platform === 'linux';
   }
   if (/^win32:[1-9]\d*$/.test(value)) {
-    return platform === undefined || platform === 'win32';
+    return any || platform === 'win32';
   }
   const darwin = /^darwin:([1-9]\d*):(\d+)$/.exec(value);
   if (darwin) {
     if (Number(darwin[2]) >= 1_000_000) return false;
-    return platform === undefined || platform === 'darwin';
+    return any || platform === 'darwin';
   }
 
   const separator = value.indexOf(':');
@@ -140,7 +144,9 @@ export function isValidProcessStartIdentity(value: unknown, platform?: NodeJS.Pl
   const prefix = value.slice(0, separator);
   const rest = value.slice(separator + 1);
   if (!rest || /[\u0000-\u001f\u007f]/.test(rest)) return false;
-  if (platform !== undefined && prefix !== platform) return false;
+  // Known platform prefixes that failed the strict format above are invalid.
+  if (prefix === 'linux' || prefix === 'win32' || prefix === 'darwin') return false;
+  if (!any && prefix !== platform) return false;
   return true;
 }
 
@@ -158,14 +164,17 @@ function processStartIdentitiesMayMatch(recorded: string, observed: string): boo
 
 
 export function isProcessIdentityDead(record: Pick<OwnerEpochRecord, 'pid' | 'process_started_at'>): boolean {
-  if (!Number.isSafeInteger(record.pid) || record.pid < 1 || !isValidProcessStartIdentity(record.process_started_at)) return false;
+  if (!Number.isSafeInteger(record.pid) || record.pid < 1) return false;
   try {
     process.kill(record.pid, 0);
   } catch (error: unknown) {
+    // Positive death: PID gone. Foreign identity tokens are fine here.
     return (error as NodeJS.ErrnoException).code === 'ESRCH';
   }
+  // Process is alive. Only prove PID-reuse death when the recorded identity is
+  // valid for this host; foreign/malformed tokens are unverifiable → not dead.
+  if (!isValidProcessStartIdentity(record.process_started_at)) return false;
   const observed = currentProcessStartIdentity(record.pid);
-  // Unknown or malformed identity is never positive proof of death.
   return isValidProcessStartIdentity(observed) && !processStartIdentitiesMayMatch(record.process_started_at, observed);
 }
 
@@ -190,7 +199,10 @@ export function publishOwnerEpoch(cwd: string, teamName: string, epoch: number, 
   const target = absPath(cwd, TeamPaths.ownerEpoch(teamName, epoch));
   mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
   const start = input.processStartedAt ?? currentProcessStartIdentity(input.pid ?? process.pid);
-  if (!isValidProcessStartIdentity(start)) throw new Error('process_start_identity_unavailable');
+  // Explicit processStartedAt may be a cross-platform fixture; current process must match host.
+  if (!isValidProcessStartIdentity(start, input.processStartedAt ? 'any' : process.platform)) {
+    throw new Error('process_start_identity_unavailable');
+  }
   const unsigned = {
     schema_version: 1 as const,
     epoch,
