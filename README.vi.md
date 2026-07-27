@@ -1,425 +1,273 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**Điều phối đa agent cho [Grok Build](https://x.ai) / Grok CLI.**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-> **Dành cho người dùng Codex:** Hãy xem [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) — cùng trải nghiệm điều phối cho OpenAI Codex CLI.
-
-**Điều phối đa tác tử cho Grok Build. Không cần thời gian làm quen.**
-
-*Đừng học Grok Build. Cứ dùng OMG.*
-
-[Bắt đầu nhanh](#bắt-đầu-nhanh) • [Tài liệu](https://yeachan-heo.github.io/oh-my-grok-website) • [Tham chiếu CLI](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference) • [Quy trình](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows) • [Hướng dẫn di chuyển](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## Trạng thái (2026-07)
+Port từ [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) sang Grok, kèm nâng cấp gốc Grok: **web/X search realtime**, **Image Gen UI mockup**, **Vision UI QA**.
 
 | | |
 |--|--|
 | **Phiên bản OMG** | `0.9.0-rc.1` |
 | **Thư mục state** | `.omg/` (không dùng `.omc/`) |
-| **Pin OMC** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **Parity** | Chuyển giao sản phẩm **gần hoàn chỉnh** (không clone 100% host Claude) |
-| **Module** | **100%** touched so với OMC (`node scripts/port-inventory.mjs`) |
-| **Cổng sản phẩm** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Tập con Grok** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **README chuẩn (EN)** | [`README.md`](README.md) |
+| **Pin OMC** | `4.15.7` @ `41a4c0f` |
+| **Cổng sản phẩm** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **Parity** | **Near-complete** (không phải clone 100% host Claude) |
 
-> Cài local: `grok plugin install <path-or-repo> --trust` · state tại **`.omg/`**.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> Đừng học harness. Cứ dùng OMG.
 
+### Trạng thái (2026-07)
 
-## Bắt đầu nhanh
+| Trục | Trạng thái |
+|------|--------|
+| Kiểm kê module | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Tập con Grok | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | cùng protocol OMC; đổi tên tool cho Grok |
 
-**Bước 1: Cài đặt**
+Kiểm tra tùy chọn: `npm run test:optional`.
+
+---
+
+## Pin nguồn OMC
+
+OMG theo dõi **commit OMC cố định** để re-diff. Chi tiết: [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+
+| Trường | Giá trị |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm** | `oh-my-claude-sisyphus` |
+| **Phiên bản pin** | **`4.15.7`** |
+| **Commit pin** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **Tiêu đề** | `chore: promote dev to main for v4.15.7 release` |
+| **Ngày** | 2026-07-23 04:44:59 +0000 |
+| **Dạng ngắn** | `4.15.7` @ `41a4c0f` |
+
+Khi nâng OMC có chủ đích:
+
+1. Checkout/cache cây upstream mới.
+2. Ghi `version` + HEAD vào `docs/OMC-SOURCE.md`.
+3. Chạy lại `port-inventory.mjs` và cập nhật `docs/OMC-PORT-STATUS.md`.
+4. Diff OMG so với **pin cũ** (`41a4c0f…`) rồi tiến pin.
+
+Cache local: `~/.grok/marketplace-cache/*` với `oh-my-claude-sisyphus@4.15.7`.
+
+---
+
+## Cài đặt
+
 ```bash
+# GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# or local checkout:
-# grok plugin install /path/to/oh-my-grok --trust
-# See English README.md for full install & pipeline
+grok plugin enable oh-my-grok
+
+# Local checkout
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
 ```
 
-**Bước 2: Thiết lập**
-```bash
-/omg-setup
-```
-
-Nếu bạn chạy OMG qua `omg --plugin-dir <path>` hoặc `claude --plugin-dir <path>`, hãy thêm `--plugin-dir-mode` vào `omg setup` (hoặc xuất `OMC_PLUGIN_ROOT` trước) để tránh trùng lặp các kỹ năng/tác nhân mà plugin đã cung cấp trong thời gian chạy. Để xem ma trận quyết định đầy đủ và tất cả các cờ có sẵn, hãy xem [phần Plugin directory flags trong REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags).
-
-<!-- TODO(i18n): verify translation -->
-
-**Bước 3: Xây một thứ gì đó**
-```
-autopilot: build a REST API for managing tasks
-```
-
-Vậy là xong. Mọi thứ còn lại đều tự động.
-
-### Chưa biết bắt đầu từ đâu?
-
-Nếu bạn chưa chắc chắn về yêu cầu, có ý tưởng mơ hồ, hoặc muốn kiểm soát chi tiết thiết kế:
-
-```
-/deep-interview "I want to build a task management app"
-```
-
-Deep interview sử dụng phương pháp hỏi Socratic để làm rõ suy nghĩ của bạn trước khi viết bất kỳ dòng code nào. Nó phát hiện các giả định ẩn và đo lường mức độ rõ ràng theo các chiều có trọng số, đảm bảo bạn biết chính xác cần xây dựng gì trước khi bắt đầu thực thi.
-
-## Team Mode (Khuyến nghị)
-
-Bắt đầu từ **v4.1.7**, **Team** là bề mặt điều phối chuẩn trong OMG. Các điểm vào cũ như **swarm** và **ultrapilot** vẫn được hỗ trợ, nhưng giờ đây chúng **được chuyển sang Team ở tầng bên dưới**.
+Xác minh:
 
 ```bash
-/team 3:executor "fix all TypeScript errors"
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-Team chạy theo pipeline theo từng giai đoạn:
+Trong phiên Grok:
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
+```
 
-Bật Grok Build native teams trong `~/.grok/settings.json`:
+---
 
-```json
+## Pipeline khuyến nghị
+
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
+
+Hủy bằng `/cancel`. State trong **`.omg/`**. Ý tưởng mơ hồ → `/deep-interview`. Spec sẵn → `/ralplan` rồi phê duyệt rõ ràng.
+
+---
+
+## Chạy Autopilot: `solo` vs `team`
+
+`/autopilot` luôn điều phối **agents + skills**. Chỉ **giai đoạn implement** đổi theo config.
+
+| Chế độ | Config | Cách chạy | Bạn thấy gì |
+|------|--------|---------------|--------------|
+| **`solo`** (mặc định) | omit / `"solo"` | `spawn_subagent` trong session + skills | Cùng chat Grok; **không tmux** |
+| **`team`** | `"execution": "team"` | worker `omg team` CLI | **tmux** (`omg-omg-team-…`); HUD `team:…` |
+
+### Cấu hình (project hoặc user)
+
+**Project**: `.grok/omg.jsonc` · **User**: `~/.config/grok-omg/config.jsonc` · project thắng.
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": { "execution": "solo" }
+}
+```
+
+```jsonc
+// .grok/omg.jsonc — team + tmux
+{
+  "autopilot": {
+    "execution": "team",
+    "team": { "agentTypes": ["grok"] }
   }
 }
 ```
 
-> Nếu teams bị tắt, OMG sẽ cảnh báo và chuyển sang chế độ thực thi không dùng team khi có thể.
+### Quan sát worker (`execution: "team"`)
 
-### Công nhân CLI tmux — Codex & Gemini (v4.4.0+)
-
-**v4.4.0 xóa các máy chủ MCP Codex/Gemini** (nhà cung cấp `x`, `g`). Dùng `/omg-teams` để khởi động tiến trình CLI thực sự trong các pane tmux phân chia:
+UI Grok **không** tự mở panel kiểu OMC. Team process dùng **tmux**.
 
 ```bash
-/omg-teams 2:codex   "review auth module for security issues"
-/omg-teams 2:gemini  "redesign UI components for accessibility"
-/omg-teams 1:claude  "implement the payment flow"
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
 ```
 
-Để xử lý công việc Codex + Gemini trong một lệnh, dùng skill **`/ccg`**:
+Team thủ công không full autopilot:
 
 ```bash
-/ccg Review this PR — architecture (Codex) and UI components (Gemini)
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
 ```
 
-| Skill | Công nhân | Tốt nhất cho |
-|-------|---------|----------|
-| `/omg-teams N:codex` | N pane Codex CLI | Xem xét code, phân tích bảo mật, kiến trúc |
-| `/omg-teams N:gemini` | N pane Gemini CLI | Thiết kế UI/UX, tài liệu, tác vụ ngữ cảnh lớn |
-| `/omg-teams N:claude` | N pane Claude CLI | Tác vụ chung qua Claude CLI trong tmux |
-| `/ccg` | 1 Codex + 1 Gemini | Điều phối ba mô hình song song |
+| Nên **solo** khi… | Nên **team** khi… |
+|----------------------|------------------------|
+| Code hằng ngày một cửa sổ Grok | Worker CLI hiện trong **tmux** |
+| Không cần cài tmux | Trộn **cursor / codex / gemini** |
+| Phản hồi nhanh cùng transcript | Implement dài tách khỏi orchestrator |
 
-Công nhân được tạo theo yêu cầu và tắt khi hoàn thành tác vụ — không lãng phí tài nguyên. Cần cài `codex` / `gemini` CLI và có phiên tmux đang hoạt động.
-
-> **Lưu ý: Tên package** — Dự án được xây dựng thương hiệu là **oh-my-grok** (repo, plugin, commands), nhưng package npm được phát hành dưới tên [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok). Nếu bạn cài công cụ CLI qua npm/bun, hãy dùng `npm install -g oh-my-grok`.
-
-### Cập nhật
-
-```bash
-# 1. Cập nhật bản sao marketplace
-/plugin marketplace update omg
-
-# 2. Chạy lại setup để làm mới cấu hình
-/omg-setup
-```
-
-> **Lưu ý:** Nếu tự động cập nhật marketplace chưa được bật, bạn cần chạy `/plugin marketplace update omg` thủ công để đồng bộ phiên bản mới nhất trước khi chạy setup.
-
-Nếu gặp sự cố sau khi cập nhật, hãy xóa cache plugin cũ:
-
-```bash
-/omg-doctor
-```
-
-<h1 align="center">Your Claude Just Have been Steroided.</h1>
-
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
+**Mặc định: **solo**, trừ khi đã dùng tmux hoặc cần multi-CLI.**
 
 ---
 
-## Vì sao chọn oh-my-grok?
+## Bạn nhận được
 
-- **Không cần cấu hình** - Hoạt động ngay với các mặc định thông minh
-- **Điều phối ưu tiên Team** - Team là bề mặt đa tác tử chuẩn (swarm/ultrapilot là lớp tương thích)
-- **Giao diện ngôn ngữ tự nhiên** - Không cần nhớ lệnh, chỉ cần mô tả điều bạn muốn
-- **Song song hóa tự động** - Tác vụ phức tạp được phân bổ cho các tác tử chuyên biệt
-- **Thực thi bền bỉ** - Không bỏ cuộc cho đến khi công việc được xác minh hoàn tất
-- **Tối ưu chi phí** - Định tuyến model thông minh giúp tiết kiệm 30-50% token
-- **Học từ kinh nghiệm** - Tự động trích xuất và tái sử dụng các mẫu giải quyết vấn đề
-- **Hiển thị theo thời gian thực** - HUD statusline cho thấy điều gì đang diễn ra phía sau
+| Bề mặt | SL | Ghi chú |
+|---------|------:|-------|
+| Agents | 20 | OMC + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | `omg-tools` |
+| State | `.omg/` | specs, plans, artifacts, modes |
 
----
+### Độc quyền Grok
 
-## Tính năng
+- **`/web-research`** — docs live → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → duyệt → Vision → code → Vision QA
+- **Search-on-fail** — ưu tiên `web_search` trước retry mù
 
-### Các chế độ điều phối
-Nhiều chiến lược cho nhiều tình huống — từ điều phối dựa trên Team đến refactor tiết kiệm token. [Tìm hiểu thêm →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
+### Chế độ review
 
-| Mode | Nó là gì | Dùng cho |
-|------|------------|---------|
-| **Team (khuyến nghị)** | Pipeline chuẩn theo giai đoạn (`team-plan → team-prd → team-exec → team-verify → team-fix`) | Các tác tử phối hợp trên một danh sách nhiệm vụ chung |
-| **omg-teams** | Công nhân CLI tmux — tiến trình `claude`/`codex`/`gemini` thực trong pane chia | Tác vụ Codex/Gemini CLI; tạo theo yêu cầu, tắt khi xong |
-| **ccg** | Tri-model: Codex (phân tích) + Gemini (thiết kế) song song, Claude tổng hợp | Công việc backend+UI cần cả Codex và Gemini |
-| **Autopilot** | Thực thi tự động (một tác tử dẫn dắt) | Làm tính năng end-to-end với ít thao tác phụ |
-| **Ultrawork** | Song song tối đa (không dùng team) | Sửa lỗi/refactor kiểu burst song song khi không cần Team |
-| **Ralph** | Chế độ bền bỉ với vòng lặp verify/fix | Tác vụ bắt buộc hoàn tất đầy đủ (không có hoàn thành một phần âm thầm) |
-| **Pipeline** | Xử lý tuần tự theo giai đoạn | Biến đổi nhiều bước cần thứ tự nghiêm ngặt |
-| **Swarm / Ultrapilot (cũ)** | Lớp tương thích chuyển sang **Team** | Quy trình hiện có và tài liệu cũ |
+- **`/security-review`**
+- **`/code-review`**
 
-### Điều phối thông minh
+### Skills chính
 
-- **32 tác tử chuyên biệt** cho kiến trúc, nghiên cứu, thiết kế, kiểm thử, khoa học dữ liệu
-- **Định tuyến model thông minh** - Haiku cho tác vụ đơn giản, Opus cho suy luận phức tạp
-- **Ủy quyền tự động** - Đúng tác tử cho đúng việc, mọi lúc
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
-### Trải nghiệm nhà phát triển
+### Hooks (Layer B)
 
-- **Magic keywords** - `ralph`, `ulw`, `plan` để kiểm soát rõ ràng
-- **HUD statusline** - Chỉ số điều phối theo thời gian thực trong status bar
-  - Nếu bạn khởi chạy Grok Build trực tiếp bằng `claude --plugin-dir <path>` (bỏ qua shim `omg`), hãy xuất `OMC_PLUGIN_ROOT=<path>` trong shell của bạn để gói HUD phân giải thành cùng một checkout như trình tải plugin. Xem [phần Plugin directory flags trong REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags) để biết chi tiết.
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
 
-  <!-- TODO(i18n): verify translation -->
-- **Học kỹ năng** - Trích xuất các mẫu tái sử dụng từ các phiên làm việc
-- **Phân tích & theo dõi chi phí** - Hiểu mức sử dụng token trên mọi phiên
+### MCP (`omg-tools`)
 
-### Đóng góp
-
-Bạn muốn đóng góp cho OMG? Xem [CONTRIBUTING.md](./CONTRIBUTING.md) để biết hướng dẫn nhà phát triển đầy đủ, bao gồm cách fork, thiết lập checkout cục bộ, liên kết nó làm plugin hoạt động, chạy các bài kiểm tra và gửi PR.
-
-<!-- TODO(i18n): verify translation -->
-
-### Kỹ năng Tùy chỉnh
-
-Học một lần, tái sử dụng mãi mãi. OMG trích xuất kiến thức gỡ lỗi thực chiến thành các tệp kỹ năng di động, tự động tiêm vào khi phù hợp.
-
-| | Phạm vi Dự án | Phạm vi Người dùng |
-|---|---|---|
-| **Đường dẫn** | `.omg/skills/` | `~/.omg/skills/` |
-| **Chia sẻ với** | Nhóm (quản lý phiên bản) | Tất cả dự án của bạn |
-| **Ưu tiên** | Cao (ghi đè phạm vi người dùng) | Thấp (dự phòng) |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-Bọc handler tại server.py:42 trong try/except ClientDisconnectedError...
-```
-
-**Quản lý kỹ năng:** `/skill list | add | remove | edit | search`
-**Tự động học:** `/skillify` trích xuất các mẫu tái sử dụng với tiêu chuẩn chất lượng nghiêm ngặt
-**Tự động tiêm:** Các kỹ năng phù hợp được tải vào ngữ cảnh tự động — không cần gọi thủ công
-
-[Danh sách tính năng đầy đủ →](docs/REFERENCE.md)
-
----
-
-## Magic Keywords
-
-Các phím tắt tùy chọn cho người dùng nâng cao. Không dùng chúng thì ngôn ngữ tự nhiên vẫn hoạt động tốt.
-
-| Keyword | Hiệu ứng | Ví dụ |
-|---------|--------|---------|
-| `team` | Điều phối Team chuẩn | `/team 3:executor "fix all TypeScript errors"` |
-| `omg-teams` | Công nhân CLI tmux (codex/gemini/claude) | `/omg-teams 2:codex "security review"` |
-| `ccg` | Điều phối tri-model Codex+Gemini | `/ccg review this PR` |
-| `autopilot` | Thực thi tự động toàn phần | `autopilot: build a todo app` |
-| `ralph` | Chế độ bền bỉ | `ralph: refactor auth` |
-| `ulw` | Song song tối đa | `ulw fix all errors` |
-| `plan` | Phỏng vấn lập kế hoạch | `plan the API` |
-| `ralplan` | Đồng thuận lập kế hoạch lặp | `ralplan this feature` |
-| `deep-interview` | Làm rõ yêu cầu theo phương pháp Socratic | `deep-interview "vague idea"` |
-| `swarm` | **Không còn khuyến nghị** — dùng `team` thay thế | `swarm 5 agents: fix lint errors` |
-| `ultrapilot` | **Không còn khuyến nghị** — dùng `team` thay thế | `ultrapilot: build a fullstack app` |
-
-**Ghi chú:**
-- **ralph bao gồm ultrawork**: khi bạn kích hoạt chế độ ralph, nó tự động bao gồm thực thi song song của ultrawork.
-- Cú pháp `swarm N agents` vẫn được nhận diện để trích xuất số lượng tác tử, nhưng runtime ở v4.1.7+ được hỗ trợ bởi Team.
-
-## Tiện ích
-
-### Chờ Rate Limit
-
-Tự động khôi phục phiên Grok Build khi rate limit được reset.
+Id mặc định **`omg-tools`** → `mcp/run-tools-server.mjs` → ~54 tools.
 
 ```bash
-omg wait          # Check status, get guidance
-omg wait --start  # Enable auto-resume daemon
-omg wait --stop   # Disable daemon
+npm run build && npm run build:bridge
+npm run mcp:probe
 ```
 
-**Yêu cầu:** tmux (để phát hiện phiên)
+Không bridge: `dist/mcp/standalone-server.js`. Thin: `mcp/omg-state-server.mjs`.
 
-### Notification Tags (Telegram/Discord/Slack)
-
-Bạn có thể cấu hình ai sẽ được tag khi stop callbacks gửi tóm tắt phiên.
+### CLI local
 
 ```bash
-# Set/replace tag list
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-omg config-stop-callback slack --enable --webhook <url> --tag-list "<!here>,<@U1234567890>"
-
-# Incremental updates
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
 ```
-
-Hành vi tag:
-- Telegram: `alice` trở thành `@alice`
-- Discord: hỗ trợ `@here`, `@everyone`, user ID dạng số, và `role:<id>`
-- Slack: hỗ trợ `<@MEMBER_ID>`, `<!channel>`, `<!here>`, `<!everyone>`, `<!subteam^GROUP_ID>`
-- callbacks kiểu `file` bỏ qua các tùy chọn tag
-
-### Tích hợp OpenClaw
-
-Chuyển tiếp các sự kiện phiên Grok Build đến gateway [OpenClaw](https://openclaw.ai/) để kích hoạt phản hồi tự động và quy trình làm việc thông qua tác nhân OpenClaw của bạn.
-
-**Thiết lập nhanh (khuyến nghị):**
-
-```bash
-/oh-my-grok:configure-notifications
-# → Nhập "openclaw" khi được hỏi → chọn "OpenClaw Gateway"
-```
-
-**Thiết lập thủ công:** tạo `~/.grok/omc_config.openclaw.json`:
-
-```json
-{
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
-    }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
-  }
-}
-```
-
-**Biến môi trường:**
-
-| Biến | Mô tả |
-|------|-------|
-| `OMC_OPENCLAW=1` | Bật OpenClaw |
-| `OMC_OPENCLAW_DEBUG=1` | Bật ghi log gỡ lỗi |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | Thay đổi đường dẫn file cấu hình |
-
-**Các sự kiện hook được hỗ trợ (6 hoạt động trong bridge.ts):**
-
-| Sự kiện | Kích hoạt | Biến template chính |
-|---------|----------|-------------------|
-| `session-start` | Phiên bắt đầu | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | Phản hồi Claude hoàn tất | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | Mỗi lần gửi prompt | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude yêu cầu nhập liệu từ người dùng | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | Trước khi gọi công cụ (tần suất cao) | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | Sau khi gọi công cụ (tần suất cao) | `{{toolName}}`, `{{sessionId}}` |
-
-**Biến môi trường kênh phản hồi:**
-
-| Biến | Mô tả |
-|------|-------|
-| `OPENCLAW_REPLY_CHANNEL` | Kênh phản hồi (ví dụ: `discord`) |
-| `OPENCLAW_REPLY_TARGET` | ID kênh |
-| `OPENCLAW_REPLY_THREAD` | ID thread |
-
-Xem `scripts/openclaw-gateway-demo.mjs` để tham khảo gateway chuyển tiếp payload OpenClaw đến endpoint tự động hóa HTTPS tùy chỉnh.
 
 ---
 
-## Tài liệu
+## Bố cục project
 
-- **[Tham chiếu đầy đủ](docs/REFERENCE.md)** - Tài liệu đầy đủ về tính năng
-- **[Tham chiếu CLI](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference)** - Tất cả lệnh, cờ và công cụ `omg`
-- **[Hướng dẫn thông báo](https://yeachan-heo.github.io/oh-my-grok-website/docs/#notifications)** - Thiết lập Discord, Telegram, Slack và webhook
-- **[Quy trình khuyến nghị](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows)** - Chuỗi skill đã qua thực chiến cho các tác vụ phổ biến
-- **[Ghi chú phát hành](https://yeachan-heo.github.io/oh-my-grok-website/docs/#release-notes)** - Có gì mới trong mỗi phiên bản
-- **[Website](https://yeachan-heo.github.io/oh-my-grok-website)** - Hướng dẫn tương tác và ví dụ
-- **[Hướng dẫn di chuyển](docs/MIGRATION.md)** - Nâng cấp từ v2.x
-- **[Kiến trúc](docs/ARCHITECTURE.md)** - Cách nó hoạt động phía sau
-- **[Theo dõi hiệu năng](docs/PERFORMANCE-MONITORING.md)** - Theo dõi tác tử, gỡ lỗi và tối ưu
+```text
+agents/  skills/  hooks/  src/  dist/  bridge/  mcp/  bin/omg.js  docs/  parity-review/  plugin.json
+```
 
 ---
 
-## Yêu cầu
+## Phát triển
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Gói thuê bao Claude Max/Pro HOẶC Anthropic API key
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
 
-### Tùy chọn: Điều phối Multi-AI
+Helper re-port sau khi refresh cache OMC:
 
-OMG có thể tùy chọn điều phối các nhà cung cấp AI bên ngoài để đối chiếu chéo và nhất quán thiết kế. Đây **không bắt buộc** — OMG vẫn hoạt động đầy đủ mà không cần chúng.
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
 
-| Provider | Cài đặt | Nó mở ra điều gì |
-|----------|---------|-----------------|
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | Design review, UI consistency (1M token context) |
-| [Codex CLI](https://github.com/openai/codex) | `npm install -g @openai/codex` | Architecture validation, code review cross-check |
+**Thanh chất lượng:** core + smoke + MCP. **Residual full: 0 fail**. Xem `docs/GROK-PRODUCT-SUBSET.md`.
 
-**Chi phí:** 3 gói Pro (Claude + Gemini + ChatGPT) bao phủ mọi thứ với khoảng $60/tháng.
+### Bản đồ docs
+
+| Doc | Mục đích |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | Pin upstream |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | Trạng thái từng bề mặt |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Định nghĩa “done” Grok |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | Hooks vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | Chạy lần đầu |
+| [docs/settings-schema.md](docs/settings-schema.md) | Khóa config |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | Checklist lớp |
+| [parity-review/](parity-review/) | Ghi chú bằng chứng |
 
 ---
 
 ## Giấy phép
 
-MIT
+MIT. Bản quyền gốc oh-my-claudecode và đóng góp oh-my-grok. Xem [LICENSE](LICENSE) và [NOTICE](NOTICE).
 
----
+## Ghi công
 
-<div align="center">
-
-**Lấy cảm hứng từ:** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/obra/superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code) • [Ouroboros](https://github.com/Q00/ouroboros)
-
-**Không cần thời gian làm quen. Sức mạnh tối đa.**
-
-</div>
-
-## Lịch sử sao
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
-
-## 💖 Ủng hộ dự án này
-
-Nếu Oh-My-Grok giúp ích cho quy trình làm việc của bạn, hãy cân nhắc tài trợ:
-
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-
-### Vì sao nên tài trợ?
-
-- Duy trì phát triển liên tục
-- Hỗ trợ ưu tiên cho nhà tài trợ
-- Ảnh hưởng đến lộ trình & tính năng
-- Góp phần duy trì mã nguồn mở miễn phí
-
-### Những cách khác để hỗ trợ
-
-- ⭐ Star repo
-- 🐛 Báo lỗi
-- 💡 Đề xuất tính năng
-- 📝 Đóng góp code
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — thiết kế điều phối, agents, skills, protocol
+- xAI Grok Build — plugin / skills / hooks / host MCP

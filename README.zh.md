@@ -1,429 +1,288 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**面向 [Grok Build](https://x.ai) / Grok CLI 的多智能体编排。**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-> **Codex 用户：** 查看 [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) — 为 OpenAI Codex CLI 提供同样的编排体验。
-
-**Grok Build 的多智能体编排系统。零学习曲线。**
-
-*无需学习 Grok Build，直接使用 OMG。*
-
-[快速开始](#快速开始) • [文档](https://yeachan-heo.github.io/oh-my-grok-website) • [CLI 参考](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference) • [工作流](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows) • [迁移指南](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## 状态快照（2026-07）
+[oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) 的 Grok 移植，并提供 Grok 原生能力：**实时 web/X 搜索**、**Image Gen UI 稿**、**Vision UI QA**。
 
 | | |
 |--|--|
 | **OMG 版本** | `0.9.0-rc.1` |
-| **状态目录** | `.omg/`（不要用 `.omc/`） |
-| **OMC 钉选** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **对等程度** | **Near-complete** 产品移植（不是 Claude 主机 100% 克隆） |
-| **模块覆盖** | 相对 OMC **100%** touched (`node scripts/port-inventory.mjs`) |
-| **产品门禁** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Grok 产品定义** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **英文正本** | [`README.md`](README.md)（安装与开发命令以英文为准） |
+| **状态根目录** | `.omg/` （不要用 `.omc/`） |
+| **OMC 钉选** | `4.15.7` @ `41a4c0f` |
+| **产品门禁** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **对等** | **Near-complete**（不是 Claude 主机 100% 克隆） |
 
-> 本地安装: `grok plugin install <path-or-repo> --trust` · 运行时状态在 **`.omg/`**.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> 不必学框架，直接用 OMG。
 
+### 状态快照（2026-07）
 
-## 快速开始
+| 维度 | 状态 |
+|------|--------|
+| 模块清单 | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Grok 产品子集 | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | 协议与 OMC 相同；主机工具名改为 Grok |
 
-**第一步：安装**
+可选检查：`npm run test:optional`（HUD `--preset`、release dry-run、skill/drift smokes）。
+
+---
+
+## OMC 源钉选（上游检查点）
+
+为便于后续 re-diff，跟踪 **固定 OMC 提交**。详见 [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md)。
+
+| 字段 | 值 |
+|-------|--------|
+| **上游** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm 包** | `oh-my-claude-sisyphus` |
+| **钉选版本** | **`4.15.7`** |
+| **钉选提交** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **提交说明** | `chore: promote dev to main for v4.15.7 release` |
+| **日期** | 2026-07-23 04:44:59 +0000 |
+| **简写** | `4.15.7` @ `41a4c0f` |
+
+有意升级 OMC 时：
+
+1. 检出/缓存新的上游树。
+2. 在 [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) 记录 `version` 与 `git rev-parse HEAD`。
+3. 重跑 `node scripts/port-inventory.mjs` 并更新 [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md)。
+4. 相对 **旧钉**（`41a4c0f…`）diff OMG，再推进钉选。
+
+本地缓存：在 `~/.grok/marketplace-cache/*` 中选择 `package.json` 为 `oh-my-claude-sisyphus@4.15.7`（或新钉）的目录。
+
+---
+
+## 安装
+
 ```bash
-# Grok Build（推荐）
+# From GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# 或本地检出
+grok plugin enable oh-my-grok
+
+# From a local checkout
 grok plugin install /path/to/oh-my-grok --trust
 grok plugin enable oh-my-grok
-# 完整说明见英文 README.md
 ```
 
-**第二步：配置**
-```bash
-/omg-setup
-```
-
-如果你通过 `omg --plugin-dir <path>` 或 `claude --plugin-dir <path>` 运行 OMG，请在 `omg setup` 中添加 `--plugin-dir-mode`（或提前导出 `OMC_PLUGIN_ROOT`），以避免复制插件在运行时已经提供的技能/代理。有关完整的决策矩阵和所有可用标志，请参阅 [REFERENCE.md 中的 Plugin directory flags 部分](./docs/REFERENCE.md#plugin-directory-flags)。
-
-<!-- TODO(i18n): verify translation -->
-
-**第三步：开始构建**
-```
-autopilot: build a REST API for managing tasks
-```
-
-就这么简单。其余都是自动的。
-
-### 不确定从哪里开始？
-
-如果你对需求不明确、有模糊的想法，或者想要精细控制设计：
-
-```
-/deep-interview "I want to build a task management app"
-```
-
-深度访谈使用苏格拉底式提问在编写任何代码之前帮你理清思路。它揭示隐藏假设并通过加权维度衡量清晰度，确保你在执行前明确知道要构建什么。
-
-## Team 模式（推荐）
-
-从 **v4.1.7** 开始，**Team** 是 OMG 的标准编排方式。**swarm** 和 **ultrapilot** 等旧版入口仍受支持，但现在**在底层路由到 Team**。
+验证:
 
 ```bash
-/team 3:executor "fix all TypeScript errors"
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-Team 按阶段化流水线运行：
+在 Grok 会话中试试：
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
+```
 
-在 `~/.grok/settings.json` 中启用 Grok Build 原生团队：
+---
 
-```json
+## 推荐流水线
+
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
+
+随时 `/cancel`。运行时状态在 **`.omg/`**。模糊想法 → `/deep-interview`。规格就绪 → `/ralplan` 共识后显式批准再执行。无设计 UI → `/ui-mockup`。生态未知 → `/web-research`。
+
+---
+
+## Autopilot 执行：`solo` vs `team`
+
+`/autopilot` 始终编排 **agents + skills**。**实现阶段**如何跑由配置决定。
+
+| 模式 | 配置 | 如何运行 | 你看到的 |
+|------|--------|---------------|--------------|
+| **`solo`** (默认) | omit `execution` / `"solo"` | 会话内 `spawn_subagent` + 技能路由 | 同一 Grok 对话；**无 tmux** |
+| **`team`** | `"execution": "team"` | `omg team` CLI 工作进程 | **tmux**（`omg-omg-team-…`）；HUD `team:…` |
+
+### 配置（项目 / 用户）
+
+**项目**（推荐）：`.grok/omg.jsonc` · **用户**：`~/.config/grok-omg/config.jsonc` · 项目优先。模式见 [`docs/settings-schema.md`](docs/settings-schema.md)。
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": {
+    "execution": "solo"
   }
 }
 ```
 
-> 如果团队被禁用，OMG 会发出警告并在可能的情况下回退到非 Team 执行模式。
-
-### tmux CLI 工作者 — Codex & Gemini (v4.4.0+)
-
-**v4.4.0 移除了 Codex/Gemini MCP 服务器**（`x`、`g` 提供商）。请改用 `/omg-teams` 在 tmux 分屏中启动真实的 CLI 进程：
-
-```bash
-/omg-teams 2:codex   "review auth module for security issues"
-/omg-teams 2:gemini  "redesign UI components for accessibility"
-/omg-teams 1:claude  "implement the payment flow"
-```
-
-如需在一个命令中混合使用 Codex + Gemini，请使用 **`/ccg`** 技能：
-
-```bash
-/ccg Review this PR — architecture (Codex) and UI components (Gemini)
-```
-
-| 技能 | 工作者 | 最适合 |
-|-------|---------|----------|
-| `/omg-teams N:codex` | N 个 Codex CLI 窗格 | 代码审查、安全分析、架构 |
-| `/omg-teams N:gemini` | N 个 Gemini CLI 窗格 | UI/UX 设计、文档、大上下文任务 |
-| `/omg-teams N:claude` | N 个 Claude CLI 窗格 | 通过 tmux 中的 Claude CLI 处理通用任务 |
-| `/ccg` | 1 个 Codex + 1 个 Gemini | 并行三模型编排 |
-
-工作者按需生成，任务完成后自动退出 — 无空闲资源浪费。需要安装 `codex` / `gemini` CLI 并有活跃的 tmux 会话。
-
-> **注意：包命名** — 项目品牌名为 **oh-my-grok**（仓库、插件、命令），但 npm 包以 [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok) 发布。通过 npm/bun 安装 CLI 工具时，请使用 `npm install -g oh-my-grok`。
-
-### 更新
-
-```bash
-# 1. 更新 marketplace 克隆
-/plugin marketplace update omg
-
-# 2. 重新运行设置以刷新配置
-/omg-setup
-```
-
-> **注意：** 如果 marketplace 自动更新未启用，您需要在运行设置之前手动执行 `/plugin marketplace update omg` 来同步最新版本。
-
-如果更新后遇到问题，清除旧的插件缓存：
-
-```bash
-/omg-doctor
-```
-
-<h1 align="center">你的 Claude 已被注入超能力。</h1>
-
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
-
----
-
-## 为什么选择 oh-my-grok？
-
-- **无需配置** - 开箱即用，智能默认设置
-- **Team 优先编排** - Team 是标准的多智能体界面（swarm/ultrapilot 是兼容性外观）
-- **自然语言交互** - 无需记忆命令，只需描述你的需求
-- **自动并行化** - 复杂任务自动分配给专业智能体
-- **持久执行** - 不会半途而废，直到任务验证完成
-- **成本优化** - 智能模型路由节省 30-50% 的 token
-- **从经验中学习** - 自动提取并复用问题解决模式
-- **实时可见性** - HUD 状态栏显示底层运行状态
-
----
-
-## 功能特性
-
-### 执行模式
-针对不同场景的多种策略 - 从全自动构建到 token 高效重构。[了解更多 →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
-
-| 模式 | 特点 | 适用场景 |
-|------|---------|---------|
-| **Team（推荐）** | 阶段化流水线 | 在共享任务列表上协作的 Claude 智能体 |
-| **omg-teams** | tmux CLI 工作者 | Codex/Gemini CLI 任务；按需生成，完成后退出 |
-| **ccg** | 三模型并行 | Codex（分析）+ Gemini（设计），Claude 合成 |
-| **Autopilot** | 自主执行 | 最小化繁琐配置的端到端功能开发 |
-| **Ultrawork** | 最大并行 | 不需要 Team 的并行修复/重构 |
-| **Ralph** | 持久模式 | 必须完整完成的任务 |
-| **Pipeline** | 顺序处理 | 需要严格顺序的多阶段转换 |
-| **Swarm / Ultrapilot（旧版）** | 路由到 Team | 现有工作流和旧文档 |
-
-### 智能编排
-
-- **32 个专业智能体** 涵盖架构、研究、设计、测试、数据科学
-- **智能模型路由** - 简单任务用 Haiku，复杂推理用 Opus
-- **自动委派** - 每次都选择最合适的智能体
-
-### 开发者体验
-
-- **魔法关键词** - `ralph`、`ulw`、`plan` 提供显式控制
-- **HUD 状态栏** - 状态栏实时显示编排指标
-  - 如果你直接使用 `claude --plugin-dir <path>` 启动 Grok Build（绕过 `omg` shim），请在 shell 中导出 `OMC_PLUGIN_ROOT=<path>`，以便 HUD bundle 解析到与插件加载器相同的 checkout。详情见 [REFERENCE.md 中的 Plugin directory flags 部分](./docs/REFERENCE.md#plugin-directory-flags)。
-
-  <!-- TODO(i18n): verify translation -->
-- **技能学习** - 从会话中提取可复用模式
-- **分析与成本追踪** - 了解所有会话的 token 使用情况
-
-### 贡献
-
-想为 OMG 做贡献？请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解完整的开发者指南，包括如何 fork、设置本地 checkout、将其链接为活跃插件、运行测试和提交 PR。
-
-<!-- TODO(i18n): verify translation -->
-
-### 自定义技能
-
-一次学习，永久复用。OMG 将调试过程中获得的实战知识提取为可移植的技能文件，并在相关场景中自动注入。
-
-| | 项目作用域 | 用户作用域 |
-|---|---|---|
-| **路径** | `.omg/skills/` | `~/.omg/skills/` |
-| **共享范围** | 团队（受版本控制） | 所有项目通用 |
-| **优先级** | 高（覆盖用户作用域） | 低（回退） |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-在 server.py:42 的处理程序外包裹 try/except ClientDisconnectedError...
-```
-
-**技能管理：** `/skill list | add | remove | edit | search`
-**自动学习：** `/skillify` 以严格的质量标准提取可复用模式
-**自动注入：** 匹配的技能自动加载到上下文中 — 无需手动调用
-
-[完整功能列表 →](docs/REFERENCE.md)
-
----
-
-## 魔法关键词
-
-为高级用户提供的可选快捷方式。不用它们，自然语言也能很好地工作。
-
-| 关键词 | 效果 | 示例 |
-|---------|--------|---------|
-| `team` | 标准 Team 编排 | `/team 3:executor "fix all TypeScript errors"` |
-| `omg-teams` | tmux CLI 工作者 (codex/gemini/claude) | `/omg-teams 2:codex "security review"` |
-| `ccg` | 三模型 Codex+Gemini 编排 | `/ccg review this PR` |
-| `autopilot` | 全自动执行 | `autopilot: build a todo app` |
-| `ralph` | 持久模式 | `ralph: refactor auth` |
-| `ulw` | 最大并行化 | `ulw fix all errors` |
-| `plan` | 规划访谈 | `plan the API` |
-| `ralplan` | 迭代规划共识 | `ralplan this feature` |
-| `deep-interview` | 苏格拉底式需求澄清 | `deep-interview "vague idea"` |
-| `swarm` | **已弃用** — 请使用 `team` | `swarm 5 agents: fix lint errors` |
-| `ultrapilot` | **已弃用** — 请使用 `team` | `ultrapilot: build a fullstack app` |
-
-**注意：**
-- **ralph 包含 ultrawork：** 激活 ralph 模式时，会自动包含 ultrawork 的并行执行。无需组合关键词。
-- `swarm N agents` 语法仍可被识别用于提取智能体数量，但运行时在 v4.1.7+ 中由 Team 支持。
-
----
-
-## 实用工具
-
-### 速率限制等待
-
-当速率限制重置时自动恢复 Grok Build 会话。
-
-```bash
-omg wait          # 检查状态，获取指导
-omg wait --start  # 启用自动恢复守护进程
-omg wait --stop   # 禁用守护进程
-```
-
-**需要：** tmux（用于会话检测）
-
-### 通知标签配置 (Telegram/Discord/Slack)
-
-你可以配置 stop 回调发送会话摘要时要 @ 谁。
-
-```bash
-# 设置/替换标签列表
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-omg config-stop-callback slack --enable --webhook <url> --tag-list "<!here>,<@U1234567890>"
-
-# 增量更新
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
-```
-
-标签规则：
-- Telegram：`alice` 会规范化为 `@alice`
-- Discord：支持 `@here`、`@everyone`、纯数字用户 ID、`role:<id>`
-- Slack：支持 `<@MEMBER_ID>`、`<!channel>`、`<!here>`、`<!everyone>`、`<!subteam^GROUP_ID>`
-- `file` 回调会忽略标签选项
-
-### OpenClaw 集成
-
-将 Grok Build 会话事件转发到 [OpenClaw](https://openclaw.ai/) 网关，通过您的 OpenClaw 代理实现自动化响应和工作流程。
-
-**快速设置（推荐）：**
-
-```bash
-/oh-my-grok:configure-notifications
-# → 提示时输入 "openclaw" → 选择 "OpenClaw Gateway"
-```
-
-**手动设置：** 创建 `~/.grok/omc_config.openclaw.json`：
-
-```json
+```jsonc
+// .grok/omg.jsonc — team + tmux
 {
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
+  "autopilot": {
+    "execution": "team",
+    "team": {
+      // grok | cursor | codex | claude | gemini | antigravity | executor
+      "agentTypes": ["grok"]
     }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
   }
 }
 ```
 
-**环境变量：**
+### 观察团队工作进程（`execution: "team"`）
 
-| 变量 | 说明 |
-|------|------|
-| `OMC_OPENCLAW=1` | 启用 OpenClaw |
-| `OMC_OPENCLAW_DEBUG=1` | 启用调试日志 |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | 覆盖配置文件路径 |
+Grok 聊天 UI **不会**自动打开 OMC 式侧栏。进程团队基于 **tmux**。
 
-**支持的钩子事件（bridge.ts 中 6 个活跃）：**
+```bash
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
+```
 
-| 事件 | 触发时机 | 主要模板变量 |
-|------|---------|-------------|
-| `session-start` | 会话开始时 | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | Claude 响应完成时 | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | 每次提交提示词时 | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude 请求用户输入时 | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | 工具调用前（高频） | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | 工具调用后（高频） | `{{toolName}}`, `{{sessionId}}` |
+不用完整 autopilot 的手动团队：
 
-**回复通道环境变量：**
+```bash
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
+```
 
-| 变量 | 说明 |
-|------|------|
-| `OPENCLAW_REPLY_CHANNEL` | 回复通道（例如 `discord`） |
-| `OPENCLAW_REPLY_TARGET` | 频道 ID |
-| `OPENCLAW_REPLY_THREAD` | 线程 ID |
+| 更适合 **solo** | 更适合 **team** |
+|----------------------|------------------------|
+| 单窗口日常编码 | 在 **tmux** 中可见 CLI 工作进程 |
+| 无需 tmux | 混用 **cursor / codex / gemini** |
+| 同一 transcript 快速反馈 | 长时并行实现与编排隔离 |
 
-参见 `scripts/openclaw-gateway-demo.mjs`，这是一个将 OpenClaw 有效载荷转发到自定义 HTTPS 自动化端点的参考网关。
-
----
-
-## 文档
-
-- **[完整参考](docs/REFERENCE.md)** - 完整功能文档
-- **[CLI 参考](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference)** - 所有 `omg` 命令、标志和工具
-- **[通知指南](https://yeachan-heo.github.io/oh-my-grok-website/docs/#notifications)** - Discord、Telegram、Slack 和 webhook 设置
-- **[推荐工作流](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows)** - 常见任务的经过实战检验的技能链
-- **[发布说明](https://yeachan-heo.github.io/oh-my-grok-website/docs/#release-notes)** - 每个版本的新内容
-- **[网站](https://yeachan-heo.github.io/oh-my-grok-website)** - 交互式指南和示例
-- **[迁移指南](docs/MIGRATION.md)** - 从 v2.x 升级
-- **[架构](docs/ARCHITECTURE.md)** - 底层工作原理
-- **[性能监控](docs/PERFORMANCE-MONITORING.md)** - 智能体追踪、调试和优化
+**默认建议：除非已用 tmux 或需要多 CLI 隔离，否则用 **solo**。**
 
 ---
 
-## 环境要求
+## 你将获得
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Claude Max/Pro 订阅 或 Anthropic API 密钥
+| 表面 | 数量 | 说明 |
+|---------|------:|-------|
+| Agents | 20 | OMC 集合 + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | 经 `.mcp.json` 的 `omg-tools` |
+| State | `.omg/` | specs、plans、artifacts、模式状态 |
 
-### 可选：多 AI 编排
+### Grok 专属
 
-OMG 可以选择性地调用外部 AI 提供商进行交叉验证和设计一致性检查。**非必需** — 没有它们 OMG 也能完整运行。
+- **`/web-research`** — 实时文档/发布/议题/X → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → 批准 → Vision 简报 → 代码 → Vision QA
+- **Search-on-fail** — 失败时优先 `web_search` 再盲重试
 
-| 提供商 | 安装 | 功能 |
-|--------|------|------|
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | 设计审查、UI 一致性（1M token 上下文）|
-| [Codex CLI](https://github.com/openai/codex) | `npm install -g @openai/codex` | 架构验证、代码审查交叉检查 |
+### 审查模式
 
-**费用：** 3 个 Pro 计划（Claude + Gemini + ChatGPT）每月约 $60 即可覆盖所有功能。
+- **`/security-review`** — 或说 security review
+- **`/code-review`** — 或说 code review / review this PR
+
+### 核心技能
+
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+
+### 钩子 (Layer B)
+
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
+
+### MCP（`omg-tools`）
+
+插件默认 id **`omg-tools`** → `mcp/run-tools-server.mjs` → 约 54 工具（LSP、AST、wiki、notepad、`state_*` …）。
+
+```bash
+npm run build && npm run build:bridge
+npm run mcp:probe
+```
+
+无 bridge 时：`dist/mcp/standalone-server.js`。精简：`mcp/omg-state-server.mjs`（调试用）。
+
+### 本地 CLI
+
+```bash
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
+```
 
 ---
 
-## 开源协议
+## 项目布局
 
-MIT
+```text
+agents/           # subagent definitions
+skills/*/SKILL.md # slash skills
+hooks/            # hooks.json + scripts
+src/              # TypeScript runtime (OMC-scale port)
+dist/             # tsc output
+bridge/           # esbuild CJS bundles
+mcp/              # MCP launchers
+bin/omg.js        # CLI (omg, omc, oh-my-grok)
+docs/
+parity-review/
+plugin.json
+```
 
 ---
 
-<div align="center">
+## 开发
 
-**灵感来源：** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/obra/superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code) • [Ouroboros](https://github.com/Q00/ouroboros)
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
 
-**零学习曲线。最强大能。**
+刷新 OMC 缓存后的 re-port 辅助：
 
-</div>
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
 
-## Star 历史
+**产品质量线：** core vitest + smoke + MCP。**全量 residual：** 2026-07 起 **0 fail**。**Grok「完成」vs 主机克隆：** [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md)。
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
+### 文档地图
 
-## 💖 支持本项目
+| 文档 | 用途 |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | 上游钉选 |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | 各表面状态 |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Grok 完成定义 |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | 钩子 vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | 首次运行 |
+| [docs/settings-schema.md](docs/settings-schema.md) | 配置键 |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | 层级清单 |
+| [parity-review/](parity-review/) | 证据笔记 |
 
-如果 Oh-My-Grok 帮助了你的工作流，请考虑赞助：
+---
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
+## 许可证
 
-### 为什么赞助？
+MIT。包含 oh-my-claudecode 原版权与 oh-my-grok 贡献者。见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
 
-- 保持项目活跃开发
-- 赞助者获得优先支持
-- 影响路线图和功能
-- 帮助维护自由开源
+## 致谢
 
-### 其他帮助方式
-
-- ⭐ 为仓库加星
-- 🐛 报告问题
-- 💡 提出功能建议
-- 📝 贡献代码
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — 编排设计、agents、skills、运行时协议
+- xAI Grok Build — plugin / skills / hooks / MCP 主机运行时

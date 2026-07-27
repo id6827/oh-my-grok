@@ -1,383 +1,273 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**Мультиагентная оркестрация для [Grok Build](https://x.ai) / Grok CLI.**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-**Мультиагентная оркестрация для Grok Build. Нулевой порог вхождения.**
-
-_Не изучайте Grok Build. Просто используйте OMG._
-
-[Начать](#быстрый-старт) • [Документация](https://yeachan-heo.github.io/oh-my-grok-website) • [Руководство по миграции](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## Статус (2026-07)
+Порт [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) на Grok с нативными расширениями: **realtime web/X search**, **Image Gen UI mockups**, **Vision UI QA**.
 
 | | |
 |--|--|
 | **Версия OMG** | `0.9.0-rc.1` |
 | **Корень состояния** | `.omg/` (не `.omc/`) |
-| **Пин OMC** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **Паритет** | **Near-complete** перенос продукта (не 100% клон хоста Claude) |
-| **Модули** | **100%** touched vs OMC (`node scripts/port-inventory.mjs`) |
-| **Продуктовые гейты** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Подмножество Grok** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **Канонический README** | [`README.md`](README.md) |
+| **Пин OMC** | `4.15.7` @ `41a4c0f` |
+| **Продуктовые гейты** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **Паритет** | **Near-complete** (не 100% клон хоста Claude) |
 
-> Локально: `grok plugin install <path-or-repo> --trust` · состояние в **`.omg/`**.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> Не учите harness. Просто используйте OMG.
 
+### Статус (2026-07)
 
-## Быстрый старт
+| Ось | Статус |
+|------|--------|
+| Инвентарь модулей | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Подмножество Grok | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | тот же протокол, что у OMC; инструменты переименованы под Grok |
 
-**Шаг 1: Установка**
+Опциональные проверки: `npm run test:optional`.
+
+---
+
+## Пин исходников OMC
+
+OMG отслеживает **зафиксированный commit OMC** для re-diff. Подробности: [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+
+| Поле | Значение |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm** | `oh-my-claude-sisyphus` |
+| **Версия пина** | **`4.15.7`** |
+| **Commit пина** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **Тема** | `chore: promote dev to main for v4.15.7 release` |
+| **Дата** | 2026-07-23 04:44:59 +0000 |
+| **Кратко** | `4.15.7` @ `41a4c0f` |
+
+При намеренном обновлении OMC:
+
+1. Checkout/cache нового upstream-дерева.
+2. Записать `version` + HEAD в `docs/OMC-SOURCE.md`.
+3. Перезапустить `port-inventory.mjs` и обновить `docs/OMC-PORT-STATUS.md`.
+4. Diff OMG относительно **старого пина** (`41a4c0f…`), затем сдвинуть пин.
+
+Локальный cache: `~/.grok/marketplace-cache/*` с `oh-my-claude-sisyphus@4.15.7`.
+
+---
+
+## Установка
 
 ```bash
+# GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# or local checkout:
-# grok plugin install /path/to/oh-my-grok --trust
-# See English README.md for full install & pipeline
+grok plugin enable oh-my-grok
+
+# Local checkout
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
 ```
 
-**Шаг 2: Настройка**
+Проверка:
 
 ```bash
-/oh-my-grok:omg-setup
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-Если вы запускаете OMG через `omg --plugin-dir <path>` или `claude --plugin-dir <path>`, добавьте `--plugin-dir-mode` к `omg setup` (или экспортируйте `OMC_PLUGIN_ROOT` заранее) чтобы избежать дублирования умений/агентов, которые плагин уже предоставляет во время выполнения. Полную матрицу решений и все доступные флаги см. в [разделе Plugin directory flags в REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags).
+В сессии Grok:
 
-<!-- TODO(i18n): verify translation -->
-
-**Шаг 3: Создайте что-нибудь**
-
-```
-autopilot: build a REST API for managing tasks
-```
-
-Вот и всё. Всё остальное происходит автоматически.
-
-## Team Mode (Рекомендуется)
-
-Начиная с **v4.1.7**, **Team** — это каноническая поверхность оркестрации в OMG. Устаревшие точки входа, такие как **swarm** и **ultrapilot**, по-прежнему поддерживаются, но теперь **направляются в Team под капотом**.
-
-```bash
-/oh-my-grok:team 3:executor "fix all TypeScript errors"
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
 ```
 
-Team работает как поэтапный pipeline:
+---
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+## Рекомендуемый pipeline
 
-Включите нативные команды Grok Build в `~/.grok/settings.json`:
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
 
-```json
+Отмена: `/cancel`. Состояние в **`.omg/`**. Смутные идеи → `/deep-interview`. Спека готова → `/ralplan` и явное одобрение.
+
+---
+
+## Выполнение Autopilot: `solo` vs `team`
+
+`/autopilot` всегда оркестрирует **agents + skills**. Меняется только **фаза реализации**.
+
+| Режим | Config | Как бежит | Что видно |
+|------|--------|---------------|--------------|
+| **`solo`** (по умолчанию) | omit / `"solo"` | `spawn_subagent` в сессии + skills | Тот же чат Grok; **без tmux** |
+| **`team`** | `"execution": "team"` | CLI-воркеры `omg team` | **tmux** (`omg-omg-team-…`); HUD `team:…` |
+
+### Настройка (проект или пользователь)
+
+**Проект**: `.grok/omg.jsonc` · **Пользователь**: `~/.config/grok-omg/config.jsonc` · проект важнее.
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": { "execution": "solo" }
+}
+```
+
+```jsonc
+// .grok/omg.jsonc — team + tmux
+{
+  "autopilot": {
+    "execution": "team",
+    "team": { "agentTypes": ["grok"] }
   }
 }
 ```
 
-> Если teams отключены, OMG предупредит вас и переключится на выполнение без Team, если это возможно.
+### Наблюдение за воркерами (`execution: "team"`)
 
-> **Примечание: Название пакета** — Проект использует бренд **oh-my-grok** (репозиторий, плагин, команды), но npm-пакет публикуется как [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok). Если вы устанавливаете CLI-инструменты через npm/bun, используйте `npm install -g oh-my-grok`.
-
-### Обновление
+UI Grok **не** открывает боковые панели как OMC. Процессные команды — через **tmux**.
 
 ```bash
-# 1. Обновите плагин
-/plugin install oh-my-grok
-
-# 2. Перезапустите setup для обновления конфигурации
-/oh-my-grok:omg-setup
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
 ```
 
-Если после обновления возникли проблемы, очистите старый кэш плагина:
+Ручная команда без полного autopilot:
 
 ```bash
-/oh-my-grok:omg-doctor
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
 ```
 
-<h1 align="center">Ваш Claude только что получил суперсилу.</h1>
+| Выбирайте **solo**, если… | Выбирайте **team**, если… |
+|----------------------|------------------------|
+| Ежедневный coding в одном окне Grok | CLI-воркеры видны в **tmux** |
+| Не нужен tmux | Смешивать **cursor / codex / gemini** |
+| Быстрый feedback в одном transcript | Долгие параллельные implementers изолированы |
 
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
-
----
-
-## Почему oh-my-grok?
-
-- **Настройка не требуется** — Работает сразу из коробки с умными значениями по умолчанию
-- **Team-first оркестрация** — Team является каноническим мультиагентным интерфейсом (swarm/ultrapilot — фасады совместимости)
-- **Интерфейс на естественном языке** — Не нужно запоминать команды, просто описывайте, что вам нужно
-- **Автоматическая параллелизация** — Сложные задачи распределяются между специализированными агентами
-- **Настойчивое выполнение** — Не сдаётся, пока работа не будет проверена и завершена
-- **Оптимизация затрат** — Умная маршрутизация моделей экономит 30-50% токенов
-- **Обучение на опыте** — Автоматически извлекает и переиспользует паттерны решения задач
-- **Видимость в реальном времени** — HUD statusline показывает, что происходит под капотом
+**По умолчанию: **solo**, если вы не живёте в tmux и не нужен multi-CLI.**
 
 ---
 
-## Возможности
+## Что вы получаете
 
-### Режимы оркестрации
+| Поверхность | Кол-во | Заметки |
+|---------|------:|-------|
+| Agents | 20 | OMC + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | `omg-tools` |
+| State | `.omg/` | specs, plans, artifacts, modes |
 
-Множество стратегий для разных сценариев — от оркестрации через Team до рефакторинга с экономией токенов. [Подробнее →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
+### Эксклюзивы Grok
 
-| Режим                               | Описание                                                                                      | Применение                                                                        |
-| ----------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **Team (рекомендуется)**            | Канонический поэтапный pipeline (`team-plan → team-prd → team-exec → team-verify → team-fix`) | Координированные агенты, работающие над общим списком задач                       |
-| **Autopilot**                       | Автономное выполнение (один ведущий агент)                                                    | Сквозная разработка фич с минимальной церемонией                                  |
-| **Ultrawork**                       | Максимальный параллелизм (без Team)                                                           | Параллельные исправления/рефакторинг, когда Team не нужен                         |
-| **Ralph**                           | Режим настойчивости с циклами verify/fix                                                      | Задачи, которые должны быть полностью завершены (без тихих частичных результатов) |
-| **Ecomode**                         | Токен-эффективная маршрутизация                                                               | Бюджетно-ориентированная итерация                                                 |
-| **Pipeline**                        | Последовательная поэтапная обработка                                                          | Многоступенчатые трансформации со строгим порядком                                |
-| **Swarm / Ultrapilot (устаревшие)** | Фасады совместимости, направляющие в **Team**                                                 | Существующие рабочие процессы и старая документация                               |
+- **`/web-research`** — live docs → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → approval → Vision → code → Vision QA
+- **Search-on-fail** — предпочитать `web_search` до слепых retry
 
-### Интеллектуальная оркестрация
+### Режимы review
 
-- **32 специализированных агента** для архитектуры, исследований, дизайна, тестирования, data science
-- **Умная маршрутизация моделей** — Haiku для простых задач, Opus для сложных рассуждений
-- **Автоматическое делегирование** — Правильный агент для правильной задачи, каждый раз
+- **`/security-review`**
+- **`/code-review`**
 
-### Опыт разработчика
+### Основные skills
 
-- **Магические ключевые слова** — `ralph`, `ulw`, `eco`, `plan` для явного управления
-- **HUD statusline** — Метрики оркестрации в реальном времени в строке состояния
-  - Если вы запускаете Grok Build напрямую с `claude --plugin-dir <path>` (минуя shim `omg`), экспортируйте `OMC_PLUGIN_ROOT=<path>` в своей оболочке, чтобы пакет HUD разрешался в то же место, что и загрузчик плагина. Подробнее см. [раздел Plugin directory flags в REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags).
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
-  <!-- TODO(i18n): verify translation -->
-- **Обучение навыкам** — Извлечение переиспользуемых паттернов из сессий
-- **Аналитика и отслеживание затрат** — Понимание использования токенов по всем сессиям
+### Hooks (Layer B)
 
-### Внесение вклада
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
 
-Хотите внести вклад в OMG? См. [CONTRIBUTING.md](./CONTRIBUTING.md) для полного руководства разработчика, включая как форкировать, настроить локальный checkout, связать его как активный плагин, запустить тесты и отправить PR.
+### MCP (`omg-tools`)
 
-<!-- TODO(i18n): verify translation -->
-
-### Пользовательские навыки
-
-Выучите один раз — используйте всегда. OMG извлекает ценные знания отладки в портативные файлы навыков, которые автоматически внедряются при необходимости.
-
-| | Область проекта | Область пользователя |
-|---|---|---|
-| **Путь** | `.omg/skills/` | `~/.omg/skills/` |
-| **Доступно** | Команде (под контролем версий) | Всем вашим проектам |
-| **Приоритет** | Выше (переопределяет пользовательскую область) | Ниже (резервный) |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-Оберните обработчик в server.py:42 в try/except ClientDisconnectedError...
-```
-
-**Управление навыками:** `/skill list | add | remove | edit | search`
-**Автообучение:** `/skillify` извлекает переиспользуемые паттерны со строгими критериями качества
-**Автовнедрение:** Подходящие навыки автоматически загружаются в контекст — ручной вызов не требуется
-
-[Полный список возможностей →](docs/REFERENCE.md)
-
----
-
-## Магические ключевые слова
-
-Опциональные ярлыки для опытных пользователей. Естественный язык работает без них.
-
-| Ключевое слово | Эффект                                          | Пример                                                          |
-| -------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| `team`         | Каноническая Team-оркестрация                   | `/oh-my-grok:team 3:executor "fix all TypeScript errors"` |
-| `autopilot`    | Полностью автономное выполнение                 | `autopilot: build a todo app`                                   |
-| `ralph`        | Режим настойчивости                             | `ralph: refactor auth`                                          |
-| `ulw`          | Максимальный параллелизм                        | `ulw fix all errors`                                            |
-| `eco`          | Токен-эффективное выполнение                    | `eco: migrate database`                                         |
-| `plan`         | Интервью для планирования                       | `plan the API`                                                  |
-| `ralplan`      | Итеративный консенсус планирования              | `ralplan this feature`                                          |
-| `swarm`        | Устаревшее ключевое слово (направляется в Team) | `swarm 5 agents: fix lint errors`                               |
-| `ultrapilot`   | Устаревшее ключевое слово (направляется в Team) | `ultrapilot: build a fullstack app`                             |
-
-**Примечания:**
-
-- **ralph включает ultrawork**: при активации ralph mode автоматически включается параллельное выполнение ultrawork.
-- Синтаксис `swarm N agents` по-прежнему распознаётся для определения количества агентов, но в v4.1.7+ среда выполнения основана на Team.
-
-## Утилиты
-
-### Ожидание Rate Limit
-
-Автоматическое возобновление сессий Grok Build при сбросе rate limit.
+Id сервера по умолчанию **`omg-tools`** → `mcp/run-tools-server.mjs` → ~54 tools.
 
 ```bash
-omg wait          # Проверить статус, получить рекомендации
-omg wait --start  # Включить демон автовозобновления
-omg wait --stop   # Отключить демон
+npm run build && npm run build:bridge
+npm run mcp:probe
 ```
 
-**Требуется:** tmux (для обнаружения сессии)
+Без bridge: `dist/mcp/standalone-server.js`. Thin: `mcp/omg-state-server.mjs`.
 
-### Теги уведомлений (Telegram/Discord)
-
-Вы можете настроить, кого отмечать, когда stop-коллбэки отправляют сводку сессии.
+### Локальный CLI
 
 ```bash
-# Установить/заменить список тегов
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-
-# Инкрементальные обновления
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
 ```
-
-Поведение тегов:
-
-- Telegram: `alice` нормализуется в `@alice`
-- Discord: поддерживает `@here`, `@everyone`, числовые ID пользователей и `role:<id>`
-- Коллбэки типа `file` игнорируют параметры тегов
-
-### Интеграция с OpenClaw
-
-Пересылайте события сессий Grok Build на шлюз [OpenClaw](https://openclaw.ai/), чтобы обеспечить автоматические ответы и рабочие процессы через вашего агента OpenClaw.
-
-**Быстрая настройка (рекомендуется):**
-
-```bash
-/oh-my-grok:configure-notifications
-# → При запросе введите "openclaw" → выберите "OpenClaw Gateway"
-```
-
-**Ручная настройка:** создайте `~/.grok/omc_config.openclaw.json`:
-
-```json
-{
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
-    }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
-  }
-}
-```
-
-**Переменные окружения:**
-
-| Переменная | Описание |
-|-----------|----------|
-| `OMC_OPENCLAW=1` | Включить OpenClaw |
-| `OMC_OPENCLAW_DEBUG=1` | Включить отладочное логирование |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | Переопределить путь к файлу конфигурации |
-
-**Поддерживаемые события хуков (6 активных в bridge.ts):**
-
-| Событие | Триггер | Основные переменные шаблона |
-|---------|---------|----------------------------|
-| `session-start` | Начало сессии | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | Завершение ответа Claude | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | При каждой отправке промпта | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude запрашивает ввод пользователя | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | Перед вызовом инструмента (высокая частота) | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | После вызова инструмента (высокая частота) | `{{toolName}}`, `{{sessionId}}` |
-
-**Переменные окружения канала ответа:**
-
-| Переменная | Описание |
-|-----------|----------|
-| `OPENCLAW_REPLY_CHANNEL` | Канал ответа (напр. `discord`) |
-| `OPENCLAW_REPLY_TARGET` | ID канала |
-| `OPENCLAW_REPLY_THREAD` | ID потока |
-
-См. `scripts/openclaw-gateway-demo.mjs` — эталонный шлюз, который пересылает полезные данные OpenClaw в пользовательский HTTPS-эндпоинт автоматизации.
 
 ---
 
-## Документация
+## Структура проекта
 
-- **[Полный справочник](docs/REFERENCE.md)** — Полная документация по функциям
-- **[Мониторинг производительности](docs/PERFORMANCE-MONITORING.md)** — Отслеживание агентов, отладка и оптимизация
-- **[Веб-сайт](https://yeachan-heo.github.io/oh-my-grok-website)** — Интерактивные руководства и примеры
-- **[Руководство по миграции](docs/MIGRATION.md)** — Обновление с v2.x
-- **[Архитектура](docs/ARCHITECTURE.md)** — Как это работает под капотом
+```text
+agents/  skills/  hooks/  src/  dist/  bridge/  mcp/  bin/omg.js  docs/  parity-review/  plugin.json
+```
 
 ---
 
-## Требования
+## Разработка
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Подписка Claude Max/Pro ИЛИ API-ключ Anthropic
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
 
-### Опционально: Мульти-AI оркестрация
+Хелперы re-port после обновления cache OMC:
 
-OMG может опционально использовать внешних AI-провайдеров для перекрёстной валидации и единообразия дизайна. Они **не обязательны** — OMG полностью работает без них.
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
 
-| Провайдер                                                 | Установка                           | Что даёт                                                 |
-| --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------- |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | Ревью дизайна, единообразие UI (контекст 1M токенов)     |
-| [Codex CLI](https://github.com/openai/codex)              | `npm install -g @openai/codex`      | Валидация архитектуры, перекрёстная проверка code review |
+**Планка качества:** core + smoke + MCP. **Full residual: 0 fail**. См. `docs/GROK-PRODUCT-SUBSET.md`.
 
-**Стоимость:** 3 плана Pro (Claude + Gemini + ChatGPT) покрывают всё за ~$60/месяц.
+### Карта документов
+
+| Док | Назначение |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | Upstream pin |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | Статус поверхностей |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Определение “done” Grok |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | Hooks vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | Первый запуск |
+| [docs/settings-schema.md](docs/settings-schema.md) | Ключи config |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | Чеклист слоёв |
+| [parity-review/](parity-review/) | Заметки-доказательства |
 
 ---
 
 ## Лицензия
 
-MIT
+MIT. Исходный copyright oh-my-claudecode и вкладчики oh-my-grok. См. [LICENSE](LICENSE) и [NOTICE](NOTICE).
 
----
+## Благодарности
 
-<div align="center">
-
-**Вдохновлено:** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/NexTechFusion/Superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code)
-
-**Нулевой порог вхождения. Максимальная мощность.**
-
-</div>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
-
-## 💖 Поддержите этот проект
-
-Если Oh-My-Grok помогает вашему рабочему процессу, рассмотрите спонсорство:
-
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-
-### Зачем спонсировать?
-
-- Поддержание активной разработки
-- Приоритетная поддержка для спонсоров
-- Влияние на дорожную карту и функции
-- Помощь в поддержании свободного и открытого исходного кода
-
-### Другие способы помочь
-
-- ⭐ Поставьте звезду репозиторию
-- 🐛 Сообщайте об ошибках
-- 💡 Предлагайте функции
-- 📝 Вносите вклад в код
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — дизайн оркестрации, agents, skills, протоколы
+- xAI Grok Build — plugin / skills / hooks / MCP host

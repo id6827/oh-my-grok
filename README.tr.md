@@ -1,383 +1,273 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**[Grok Build](https://x.ai) / Grok CLI için çoklu ajan orkestrasyonu.**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-**Grok Build için çoklu ajan orkestrasyonu. Sıfır öğrenme eğrisi.**
-
-_Grok Build'u öğrenmeyin. Sadece OMG kullanın._
-
-[Başlangıç](#hızlı-başlangıç) • [Dokümantasyon](https://yeachan-heo.github.io/oh-my-grok-website) • [Geçiş Rehberi](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## Durum (2026-07)
+[oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) Grok portu; Grok yerli eklentiler: **gerçek zamanlı web/X arama**, **Image Gen UI mockup**, **Vision UI QA**.
 
 | | |
 |--|--|
 | **OMG sürümü** | `0.9.0-rc.1` |
 | **Durum kökü** | `.omg/` (`.omc/` kullanma) |
-| **OMC pini** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **Parite** | **Near-complete** ürün aktarımı (Claude host %100 klon değil) |
-| **Modüller** | OMC'ye göre **%100** touched (`node scripts/port-inventory.mjs`) |
-| **Ürün kapıları** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Grok alt kümesi** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **Kanoni README** | [`README.md`](README.md) |
+| **OMC pini** | `4.15.7` @ `41a4c0f` |
+| **Ürün kapıları** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **Parite** | **Near-complete** (Claude host %100 klon değil) |
 
-> Yerel: `grok plugin install <path-or-repo> --trust` · durum **`.omg/`** altında.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> Harness öğrenme. OMG kullan.
 
+### Durum (2026-07)
 
-## Hızlı Başlangıç
+| Eksen | Durum |
+|------|--------|
+| Modül envanteri | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Grok alt kümesi | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | OMC ile aynı protokol; araç adları Grok için |
 
-**Adım 1: Kurulum**
+İsteğe bağlı kontroller: `npm run test:optional`.
+
+---
+
+## OMC kaynak pini
+
+OMG gelecek re-diff için **sabit OMC commit** izler. Ayrıntı: [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+
+| Alan | Değer |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm** | `oh-my-claude-sisyphus` |
+| **Pin sürümü** | **`4.15.7`** |
+| **Pin commit** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **Konu** | `chore: promote dev to main for v4.15.7 release` |
+| **Tarih** | 2026-07-23 04:44:59 +0000 |
+| **Kısa form** | `4.15.7` @ `41a4c0f` |
+
+OMC’yi bilerek yükseltirken:
+
+1. Yeni upstream ağacını checkout/cache et.
+2. `version` + HEAD’i `docs/OMC-SOURCE.md` içine yaz.
+3. `port-inventory.mjs` çalıştır ve `docs/OMC-PORT-STATUS.md` güncelle.
+4. OMG’yi **eski pine** (`41a4c0f…`) göre diff’le, sonra pini ilerlet.
+
+Yerel cache: `~/.grok/marketplace-cache/*` içinde `oh-my-claude-sisyphus@4.15.7`.
+
+---
+
+## Kurulum
 
 ```bash
+# GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# or local checkout:
-# grok plugin install /path/to/oh-my-grok --trust
-# See English README.md for full install & pipeline
+grok plugin enable oh-my-grok
+
+# Local checkout
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
 ```
 
-**Adım 2: Yapılandırma**
+Doğrula:
 
 ```bash
-/oh-my-grok:omg-setup
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-OMG'yi `omg --plugin-dir <path>` veya `claude --plugin-dir <path>` aracılığıyla çalıştırıyorsanız, `omg setup`'a `--plugin-dir-mode` ekleyin (veya `OMC_PLUGIN_ROOT`'u önceden dışa aktarın) böylece plugin zaten çalışma zamanında sağlayan beceri/ajanları duplike etmez. Tam karar matrisi ve mevcut tüm bayraklar için [REFERENCE.md'deki Plugin directory flags bölümüne](./docs/REFERENCE.md#plugin-directory-flags) bakın.
+Grok oturumunda dene:
 
-<!-- TODO(i18n): verify translation -->
-
-**Adım 3: Bir şey oluşturun**
-
-```
-autopilot: build a REST API for managing tasks
-```
-
-Bu kadar. Geri kalan her şey otomatik.
-
-## Team Mode (Önerilen)
-
-**v4.1.7** sürümünden itibaren, **Team** OMG'deki kanonik orkestrasyon yüzeyidir. **swarm** ve **ultrapilot** gibi eski giriş noktaları hâlâ desteklenmektedir, ancak artık **arka planda Team'e yönlendirilmektedir**.
-
-```bash
-/oh-my-grok:team 3:executor "fix all TypeScript errors"
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
 ```
 
-Team aşamalı bir pipeline olarak çalışır:
+---
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+## Önerilen pipeline
 
-Grok Build native teams'i `~/.grok/settings.json` dosyasında etkinleştirin:
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
 
-```json
+`/cancel` ile iptal. Durum **`.omg/`** altında. Belirsiz fikir → `/deep-interview`. Spec hazır → `/ralplan` ve açık onay.
+
+---
+
+## Autopilot çalıştırma: `solo` vs `team`
+
+`/autopilot` her zaman **agents + skills** orkestre eder. Yalnızca **uygulama aşaması** config’e bağlıdır.
+
+| Mod | Config | Nasıl çalışır | Ne görürsün |
+|------|--------|---------------|--------------|
+| **`solo`** (varsayılan) | omit / `"solo"` | Oturum içi `spawn_subagent` + skills | Aynı Grok sohbeti; **tmux yok** |
+| **`team`** | `"execution": "team"` | `omg team` CLI worker’ları | **tmux** (`omg-omg-team-…`); HUD `team:…` |
+
+### Yapılandır (proje veya kullanıcı)
+
+**Proje**: `.grok/omg.jsonc` · **Kullanıcı**: `~/.config/grok-omg/config.jsonc` · proje kazanır.
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": { "execution": "solo" }
+}
+```
+
+```jsonc
+// .grok/omg.jsonc — team + tmux
+{
+  "autopilot": {
+    "execution": "team",
+    "team": { "agentTypes": ["grok"] }
   }
 }
 ```
 
-> Teams devre dışıysa, OMG sizi uyaracak ve mümkün olduğunda Team olmadan çalışmaya geçecektir.
+### Worker’ları izle (`execution: "team"`)
 
-> **Not: Paket adlandırması** — Proje **oh-my-grok** markasını kullanır (repo, plugin, komutlar), ancak npm paketi [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok) olarak yayınlanmaktadır. CLI araçlarını npm/bun ile kuruyorsanız, `npm install -g oh-my-grok` kullanın.
-
-### Güncelleme
+Grok sohbet UI’si OMC tarzı yan panelleri **otomatik açmaz**. Süreç ekipleri **tmux** tabanlıdır.
 
 ```bash
-# 1. Plugin'i güncelleyin
-/plugin install oh-my-grok
-
-# 2. Yapılandırmayı yenilemek için setup'ı tekrar çalıştırın
-/oh-my-grok:omg-setup
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
 ```
 
-Güncellemeden sonra sorun yaşarsanız, eski plugin önbelleğini temizleyin:
+Tam autopilot olmadan manuel ekip:
 
 ```bash
-/oh-my-grok:omg-doctor
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
 ```
 
-<h1 align="center">Claude'unuz süper güçlere kavuştu.</h1>
+| **solo** tercih et… | **team** tercih et… |
+|----------------------|------------------------|
+| Tek Grok penceresinde günlük kod | **tmux**’ta görünen CLI worker’lar |
+| tmux gerekmez | **cursor / codex / gemini** karışımı |
+| Aynı transcript’te hızlı geri bildirim | Uzun paralel implementer’lar izole |
 
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
-
----
-
-## Neden oh-my-grok?
-
-- **Sıfır yapılandırma** — Akıllı varsayılanlarla kutudan çıktığı gibi çalışır
-- **Team-first orkestrasyon** — Team, kanonik çoklu ajan yüzeyidir (swarm/ultrapilot uyumluluk cephesidir)
-- **Doğal dil arayüzü** — Ezberlenecek komut yok, sadece ne istediğinizi tarif edin
-- **Otomatik paralelleştirme** — Karmaşık görevler uzmanlaşmış ajanlara dağıtılır
-- **Kalıcı yürütme** — İş doğrulanıp tamamlanana kadar vazgeçmez
-- **Maliyet optimizasyonu** — Akıllı model yönlendirme, tokenlarda %30-50 tasarruf sağlar
-- **Deneyimden öğrenme** — Problem çözme kalıplarını otomatik olarak çıkarır ve yeniden kullanır
-- **Gerçek zamanlı görünürlük** — HUD statusline, arka planda neler olduğunu gösterir
+**Varsayılan öneri: tmux kullanmıyorsan veya multi-CLI gerekmiyorsa **solo**.**
 
 ---
 
-## Özellikler
+## Ne alırsın
 
-### Orkestrasyon Modları
+| Yüzey | Adet | Notlar |
+|---------|------:|-------|
+| Agents | 20 | OMC + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | `omg-tools` |
+| State | `.omg/` | specs, plans, artifacts, modes |
 
-Farklı kullanım senaryoları için birden fazla strateji — Team destekli orkestrasyondan token-verimli yeniden düzenlemeye. [Daha fazla bilgi →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
+### Grok özel
 
-| Mod                           | Nedir                                                                                  | Kullanım Alanı                                                    |
-| ----------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **Team (önerilen)**           | Kanonik aşamalı pipeline (`team-plan → team-prd → team-exec → team-verify → team-fix`) | Paylaşılan görev listesinde çalışan koordineli ajanlar            |
-| **Autopilot**                 | Otonom yürütme (tek lider ajan)                                                        | Minimum törenle uçtan uca özellik geliştirme                      |
-| **Ultrawork**                 | Maksimum paralellik (Team olmadan)                                                     | Team gerekli olmadığında paralel düzeltme/yeniden düzenleme       |
-| **Ralph**                     | Verify/fix döngüleriyle kalıcı mod                                                     | Tamamen tamamlanması gereken görevler (sessiz kısmi sonuçlar yok) |
-| **Ecomode**                   | Token-verimli yönlendirme                                                              | Bütçe odaklı iterasyon                                            |
-| **Pipeline**                  | Sıralı, aşamalı işleme                                                                 | Sıkı sıralama ile çok adımlı dönüşümler                           |
-| **Swarm / Ultrapilot (eski)** | **Team**'e yönlendiren uyumluluk cepheleri                                             | Mevcut iş akışları ve eski belgeler                               |
+- **`/web-research`** — canlı docs → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → onay → Vision → kod → Vision QA
+- **Search-on-fail** — kör retry’dan önce `web_search`
 
-### Akıllı Orkestrasyon
+### Review modları
 
-- **32 uzmanlaşmış ajan** — mimari, araştırma, tasarım, test, veri bilimi
-- **Akıllı model yönlendirme** — Basit görevler için Haiku, karmaşık muhakeme için Opus
-- **Otomatik delegasyon** — Her zaman doğru iş için doğru ajan
+- **`/security-review`**
+- **`/code-review`**
 
-### Geliştirici Deneyimi
+### Ana skills
 
-- **Sihirli anahtar kelimeler** — Açık kontrol için `ralph`, `ulw`, `eco`, `plan`
-- **HUD statusline** — Durum çubuğunuzda gerçek zamanlı orkestrasyon metrikleri
-  - Grok Build'u doğrudan `claude --plugin-dir <path>` ile başlatıyorsanız (`omg` shim'i atlayarak), shell'de `OMC_PLUGIN_ROOT=<path>` dışa aktarın, böylece HUD paketi plugin yükleyici ile aynı checkout'a çözülür. Ayrıntılar için [REFERENCE.md'deki Plugin directory flags bölümüne](./docs/REFERENCE.md#plugin-directory-flags) bakın.
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
-  <!-- TODO(i18n): verify translation -->
-- **Beceri öğrenimi** — Oturumlarınızdan yeniden kullanılabilir kalıplar çıkarın
-- **Analitik ve maliyet takibi** — Tüm oturumlardaki token kullanımını anlayın
+### Hooks (Layer B)
 
-### Katkıda Bulunma
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
 
-OMG'ye katkıda bulunmak ister misiniz? Fork etme, yerel checkout kurma, etkin eklenti olarak bağlama, testleri çalıştırma ve PR gönderme dahil olmak üzere tam geliştirici kılavuzu için [CONTRIBUTING.md](./CONTRIBUTING.md)'ye bakın.
+### MCP (`omg-tools`)
 
-<!-- TODO(i18n): verify translation -->
-
-### Özel Beceriler
-
-Bir kez öğrenin, sonsuza kadar yeniden kullanın. OMG, hata ayıklama sürecinde kazanılan değerli bilgiyi taşınabilir beceri dosyalarına çıkarır ve ilgili durumlarda otomatik olarak enjekte eder.
-
-| | Proje Kapsamı | Kullanıcı Kapsamı |
-|---|---|---|
-| **Yol** | `.omg/skills/` | `~/.omg/skills/` |
-| **Paylaşım** | Takım (sürüm kontrollü) | Tüm projeleriniz |
-| **Öncelik** | Yüksek (kullanıcı kapsamını geçersiz kılar) | Düşük (yedek) |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-server.py:42'deki handler'ı try/except ClientDisconnectedError ile sarın...
-```
-
-**Beceri yönetimi:** `/skill list | add | remove | edit | search`
-**Otomatik öğrenme:** `/skillify` katı kalite standartlarıyla yeniden kullanılabilir kalıplar çıkarır
-**Otomatik enjeksiyon:** Eşleşen beceriler otomatik olarak bağlama yüklenir — manuel çağrı gerekmez
-
-[Tam özellik listesi →](docs/REFERENCE.md)
-
----
-
-## Sihirli Anahtar Kelimeler
-
-İleri düzey kullanıcılar için isteğe bağlı kısayollar. Doğal dil onlarsız da iyi çalışır.
-
-| Anahtar Kelime | Etki                                     | Örnek                                                           |
-| -------------- | ---------------------------------------- | --------------------------------------------------------------- |
-| `team`         | Kanonik Team orkestrasyonu               | `/oh-my-grok:team 3:executor "fix all TypeScript errors"` |
-| `autopilot`    | Tam otonom yürütme                       | `autopilot: build a todo app`                                   |
-| `ralph`        | Kalıcılık modu                           | `ralph: refactor auth`                                          |
-| `ulw`          | Maksimum paralellik                      | `ulw fix all errors`                                            |
-| `eco`          | Token-verimli yürütme                    | `eco: migrate database`                                         |
-| `plan`         | Planlama mülakatı                        | `plan the API`                                                  |
-| `ralplan`      | Yinelemeli planlama uzlaşısı             | `ralplan this feature`                                          |
-| `swarm`        | Eski anahtar kelime (Team'e yönlendirir) | `swarm 5 agents: fix lint errors`                               |
-| `ultrapilot`   | Eski anahtar kelime (Team'e yönlendirir) | `ultrapilot: build a fullstack app`                             |
-
-**Notlar:**
-
-- **ralph, ultrawork'ü içerir**: ralph modunu etkinleştirdiğinizde, ultrawork'ün paralel yürütmesini otomatik olarak içerir.
-- `swarm N agents` sözdizimi hâlâ ajan sayısı çıkarımı için tanınmaktadır, ancak çalışma zamanı v4.1.7+'da Team tabanlıdır.
-
-## Yardımcı Araçlar
-
-### Rate Limit Bekleme
-
-Rate limitler sıfırlandığında Grok Build oturumlarını otomatik olarak devam ettirir.
+Varsayılan sunucu id **`omg-tools`** → `mcp/run-tools-server.mjs` → ~54 tools.
 
 ```bash
-omg wait          # Durumu kontrol et, rehberlik al
-omg wait --start  # Otomatik devam daemon'ını etkinleştir
-omg wait --stop   # Daemon'ı devre dışı bırak
+npm run build && npm run build:bridge
+npm run mcp:probe
 ```
 
-**Gereklidir:** tmux (oturum algılama için)
+Bridge yoksa: `dist/mcp/standalone-server.js`. Thin: `mcp/omg-state-server.mjs`.
 
-### Bildirim Etiketleri (Telegram/Discord)
-
-Stop callback'leri oturum özetlerini gönderdiğinde kimin etiketleneceğini yapılandırabilirsiniz.
+### Yerel CLI
 
 ```bash
-# Etiket listesini ayarla/değiştir
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-
-# Artımlı güncellemeler
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
 ```
-
-Etiket davranışı:
-
-- Telegram: `alice`, `@alice` olarak normalleştirilir
-- Discord: `@here`, `@everyone`, sayısal kullanıcı kimlikleri ve `role:<id>` desteklenir
-- `file` callback'leri etiket seçeneklerini yok sayar
-
-### OpenClaw Entegrasyonu
-
-Grok Build oturum olaylarını bir [OpenClaw](https://openclaw.ai/) ağ geçidine ileterek OpenClaw ajanınız aracılığıyla otomatik yanıtlar ve iş akışları oluşturun.
-
-**Hızlı kurulum (önerilen):**
-
-```bash
-/oh-my-grok:configure-notifications
-# → İstendiğinde "openclaw" yazın → "OpenClaw Gateway" seçin
-```
-
-**Manuel kurulum:** `~/.grok/omc_config.openclaw.json` dosyasını oluşturun:
-
-```json
-{
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
-    }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
-  }
-}
-```
-
-**Ortam değişkenleri:**
-
-| Değişken | Açıklama |
-|----------|----------|
-| `OMC_OPENCLAW=1` | OpenClaw'ı etkinleştir |
-| `OMC_OPENCLAW_DEBUG=1` | Hata ayıklama günlüklemesini etkinleştir |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | Yapılandırma dosyası yolunu değiştir |
-
-**Desteklenen hook olayları (bridge.ts'de 6 aktif):**
-
-| Olay | Tetikleyici | Ana şablon değişkenleri |
-|------|------------|------------------------|
-| `session-start` | Oturum başladığında | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | Claude yanıtı tamamlandığında | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | Her prompt gönderiminde | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude kullanıcı girişi istediğinde | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | Araç çağrısından önce (yüksek sıklık) | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | Araç çağrısından sonra (yüksek sıklık) | `{{toolName}}`, `{{sessionId}}` |
-
-**Yanıt kanalı ortam değişkenleri:**
-
-| Değişken | Açıklama |
-|----------|----------|
-| `OPENCLAW_REPLY_CHANNEL` | Yanıt kanalı (ör. `discord`) |
-| `OPENCLAW_REPLY_TARGET` | Kanal ID'si |
-| `OPENCLAW_REPLY_THREAD` | Thread ID'si |
-
-OpenClaw yüklerini özel bir HTTPS otomasyon uç noktasına ileten bir referans gateway için `scripts/openclaw-gateway-demo.mjs` dosyasına bakın.
 
 ---
 
-## Dokümantasyon
+## Proje düzeni
 
-- **[Tam Referans](docs/REFERENCE.md)** — Kapsamlı özellik dokümantasyonu
-- **[Performans İzleme](docs/PERFORMANCE-MONITORING.md)** — Ajan takibi, hata ayıklama ve optimizasyon
-- **[Web Sitesi](https://yeachan-heo.github.io/oh-my-grok-website)** — İnteraktif rehberler ve örnekler
-- **[Geçiş Rehberi](docs/MIGRATION.md)** — v2.x'den yükseltme
-- **[Mimari](docs/ARCHITECTURE.md)** — Arka planda nasıl çalıştığı
+```text
+agents/  skills/  hooks/  src/  dist/  bridge/  mcp/  bin/omg.js  docs/  parity-review/  plugin.json
+```
 
 ---
 
-## Gereksinimler
+## Geliştirme
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Claude Max/Pro aboneliği VEYA Anthropic API anahtarı
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
 
-### İsteğe Bağlı: Çoklu AI Orkestrasyonu
+OMC cache yenilemeden sonra re-port yardımcıları:
 
-OMG, çapraz doğrulama ve tasarım tutarlılığı için isteğe bağlı olarak harici AI sağlayıcılarını kullanabilir. Bunlar **zorunlu değildir** — OMG onlarsız da tam olarak çalışır.
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
 
-| Sağlayıcı                                                 | Kurulum                             | Ne sağlar                                            |
-| --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------- |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | Tasarım incelemesi, UI tutarlılığı (1M token bağlam) |
-| [Codex CLI](https://github.com/openai/codex)              | `npm install -g @openai/codex`      | Mimari doğrulama, kod incelemesi çapraz kontrolü     |
+**Kalite çubuğu:** core + smoke + MCP. **Full residual: 0 fail**. `docs/GROK-PRODUCT-SUBSET.md`.
 
-**Maliyet:** 3 Pro plan (Claude + Gemini + ChatGPT) her şeyi aylık ~$60'a karşılar.
+### Doküman haritası
+
+| Dok | Amaç |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | Upstream pin |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | Yüzey durumu |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Grok “done” tanımı |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | Hooks vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | İlk çalıştırma |
+| [docs/settings-schema.md](docs/settings-schema.md) | Config anahtarları |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | Katman checklist |
+| [parity-review/](parity-review/) | Kanıt notları |
 
 ---
 
 ## Lisans
 
-MIT
+MIT. orijinal oh-my-claudecode telifi ve oh-my-grok katkıları. [LICENSE](LICENSE) ve [NOTICE](NOTICE).
 
----
+## Katkılar
 
-<div align="center">
-
-**İlham kaynakları:** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/NexTechFusion/Superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code)
-
-**Sıfır öğrenme eğrisi. Maksimum güç.**
-
-</div>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
-
-## 💖 Bu Projeyi Destekleyin
-
-Oh-My-Grok iş akışınıza yardımcı oluyorsa, sponsorluk yapmayı düşünün:
-
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-
-### Neden sponsor olmalı?
-
-- Aktif geliştirmeyi sürdürmek
-- Sponsorlar için öncelikli destek
-- Yol haritası ve özellikleri etkilemek
-- Ücretsiz ve açık kaynak olarak sürdürmeye yardım
-
-### Yardım etmenin diğer yolları
-
-- ⭐ Repoya yıldız verin
-- 🐛 Hata bildirin
-- 💡 Özellik önerin
-- 📝 Koda katkıda bulunun
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — orkestrasyon tasarımı, agents, skills, protokoller
+- xAI Grok Build — plugin / skills / hooks / MCP host

@@ -1,383 +1,273 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**Orchestration multi-agents pour [Grok Build](https://x.ai) / Grok CLI.**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-**Orchestration multi-agents pour Grok Build. Aucune courbe d'apprentissage.**
-
-_N'apprenez pas Grok Build. Utilisez simplement OMG._
-
-[Démarrer](#démarrage-rapide) • [Documentation](https://yeachan-heo.github.io/oh-my-grok-website) • [Guide de migration](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## État (2026-07)
+Port de [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) vers Grok, avec extensions natives : **recherche web/X temps réel**, **mockups Image Gen**, **Vision UI QA**.
 
 | | |
 |--|--|
 | **Version OMG** | `0.9.0-rc.1` |
-| **Racine d'état** | `.omg/` (jamais `.omc/`) |
-| **Pin OMC** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **Parité** | Transfert produit **quasi complet** (pas un clone 100% de l'hôte Claude) |
-| **Modules** | **100%** touched vs OMC (`node scripts/port-inventory.mjs`) |
-| **Portes produit** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Sous-ensemble Grok** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **README canonique** | [`README.md`](README.md) |
+| **Racine d’état** | `.omg/` (jamais `.omc/`) |
+| **Pin OMC** | `4.15.7` @ `41a4c0f` |
+| **Portes produit** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **Parité** | **Near-complete** (pas un clone 100 % de l’hôte Claude) |
 
-> Local: `grok plugin install <path-or-repo> --trust` · état sous **`.omg/`**.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> N’apprenez pas le harness. Utilisez OMG.
 
+### État (2026-07)
 
-## Démarrage rapide
+| Axe | État |
+|------|--------|
+| Inventaire modules | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Sous-ensemble Grok | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | même protocole qu’OMC ; outils renommés pour Grok |
 
-**Étape 1 : Installation**
+Contrôles optionnels : `npm run test:optional`.
+
+---
+
+## Pin source OMC (point de contrôle)
+
+OMG suit un **commit OMC figé** pour les re-diffs. Détail : [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md).
+
+| Champ | Valeur |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm** | `oh-my-claude-sisyphus` |
+| **Version épinglée** | **`4.15.7`** |
+| **Commit épinglé** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **Sujet** | `chore: promote dev to main for v4.15.7 release` |
+| **Date** | 2026-07-23 04:44:59 +0000 |
+| **Forme courte** | `4.15.7` @ `41a4c0f` |
+
+Pour monter OMC volontairement :
+
+1. Checkout/cache du nouvel arbre upstream.
+2. Enregistrer `version` + HEAD dans `docs/OMC-SOURCE.md`.
+3. Relancer `port-inventory.mjs` et mettre à jour `docs/OMC-PORT-STATUS.md`.
+4. Diff OMG contre l’**ancien pin** (`41a4c0f…`), puis avancer le pin.
+
+Cache local : `~/.grok/marketplace-cache/*` avec `oh-my-claude-sisyphus@4.15.7`.
+
+---
+
+## Installation
 
 ```bash
+# GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# or local checkout:
-# grok plugin install /path/to/oh-my-grok --trust
-# See English README.md for full install & pipeline
+grok plugin enable oh-my-grok
+
+# Local checkout
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
 ```
 
-**Étape 2 : Configuration**
+Vérifier:
 
 ```bash
-/oh-my-grok:omg-setup
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-Si vous exécutez OMG via `omg --plugin-dir <path>` ou `claude --plugin-dir <path>`, ajoutez `--plugin-dir-mode` à `omg setup` (ou exportez `OMC_PLUGIN_ROOT` auparavant) pour éviter de dupliquer les compétences/agents que le plugin fournit déjà au moment de l'exécution. Consultez la [section Plugin directory flags dans REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags) pour une matrice de décision complète et tous les indicateurs disponibles.
+Dans une session Grok :
 
-<!-- TODO(i18n): verify translation -->
-
-**Étape 3 : Construisez quelque chose**
-
-```
-autopilot: build a REST API for managing tasks
-```
-
-C'est tout. Le reste est automatique.
-
-## Team Mode (Recommandé)
-
-À partir de la **v4.1.7**, **Team** est la surface d'orchestration canonique dans OMG. Les anciens points d'entrée comme **swarm** et **ultrapilot** sont toujours supportés, mais **redirigent désormais vers Team en coulisses**.
-
-```bash
-/oh-my-grok:team 3:executor "fix all TypeScript errors"
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
 ```
 
-Team fonctionne comme un pipeline par étapes :
+---
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+## Pipeline recommandé
 
-Activez les teams natifs de Grok Build dans `~/.grok/settings.json` :
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
 
-```json
+Annulez avec `/cancel`. État sous **`.omg/`**. Idées floues → `/deep-interview`. Spec prête → `/ralplan` puis approbation explicite.
+
+---
+
+## Exécution Autopilot : `solo` vs `team`
+
+`/autopilot` orchestre toujours **agents + skills**. Seule la **phase d’implémentation** dépend de la config.
+
+| Mode | Config | Exécution | Ce que vous voyez |
+|------|--------|---------------|--------------|
+| **`solo`** (défaut) | omit / `"solo"` | `spawn_subagent` en session + skills | Même chat Grok ; **pas de tmux** |
+| **`team`** | `"execution": "team"` | workers CLI `omg team` | **tmux** (`omg-omg-team-…`) ; HUD `team:…` |
+
+### Configurer (projet ou utilisateur)
+
+**Projet** : `.grok/omg.jsonc` · **Utilisateur** : `~/.config/grok-omg/config.jsonc` · le projet gagne.
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": { "execution": "solo" }
+}
+```
+
+```jsonc
+// .grok/omg.jsonc — team + tmux
+{
+  "autopilot": {
+    "execution": "team",
+    "team": { "agentTypes": ["grok"] }
   }
 }
 ```
 
-> Si les teams sont désactivés, OMG vous avertira et basculera vers une exécution sans Team lorsque possible.
+### Observer les workers (`execution: "team"`)
 
-> **Note : Nom du package** — Le projet utilise la marque **oh-my-grok** (repo, plugin, commandes), mais le package npm est publié sous le nom [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok). Si vous installez les outils CLI via npm/bun, utilisez `npm install -g oh-my-grok`.
-
-### Mise à jour
+L’UI Grok **n’ouvre pas** de panneaux latéraux style OMC. Les équipes processus sont **tmux**.
 
 ```bash
-# 1. Mettre à jour le plugin
-/plugin install oh-my-grok
-
-# 2. Relancer le setup pour actualiser la configuration
-/oh-my-grok:omg-setup
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
 ```
 
-Si vous rencontrez des problèmes après la mise à jour, videz l'ancien cache du plugin :
+Équipe manuelle sans autopilot complet:
 
 ```bash
-/oh-my-grok:omg-doctor
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
 ```
 
-<h1 align="center">Votre Claude vient de recevoir des super-pouvoirs.</h1>
+| Préférez **solo** si… | Préférez **team** si… |
+|----------------------|------------------------|
+| Coding quotidien dans une fenêtre Grok | Workers CLI visibles dans **tmux** |
+| Pas besoin de tmux | Mélanger **cursor / codex / gemini** |
+| Feedback rapide dans le même transcript | Implémenteurs longs isolés |
 
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
-
----
-
-## Pourquoi oh-my-grok ?
-
-- **Aucune configuration requise** — Fonctionne directement avec des valeurs par défaut intelligentes
-- **Orchestration team-first** — Team est la surface multi-agents canonique (swarm/ultrapilot sont des façades de compatibilité)
-- **Interface en langage naturel** — Aucune commande à mémoriser, décrivez simplement ce que vous voulez
-- **Parallélisation automatique** — Les tâches complexes sont distribuées entre des agents spécialisés
-- **Exécution persistante** — N'abandonne pas tant que le travail n'est pas vérifié et terminé
-- **Optimisation des coûts** — Le routage intelligent des modèles économise 30 à 50 % sur les tokens
-- **Apprentissage par l'expérience** — Extrait et réutilise automatiquement les patterns de résolution de problèmes
-- **Visibilité en temps réel** — La HUD statusline montre ce qui se passe en coulisses
+**Recommandation par défaut : **solo**, sauf si vous vivez dans tmux ou multi-CLI.**
 
 ---
 
-## Fonctionnalités
+## Ce que vous obtenez
 
-### Modes d'orchestration
+| Surface | Nb | Notes |
+|---------|------:|-------|
+| Agents | 20 | OMC + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | `omg-tools` |
+| State | `.omg/` | specs, plans, artifacts, modes |
 
-Plusieurs stratégies pour différents cas d'utilisation — de l'orchestration Team au refactoring économe en tokens. [En savoir plus →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
+### Exclusifs Grok
 
-| Mode                            | Description                                                                                 | Utilisation                                                                      |
-| ------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| **Team (recommandé)**           | Pipeline canonique par étapes (`team-plan → team-prd → team-exec → team-verify → team-fix`) | Agents coordonnés travaillant sur une liste de tâches partagée                   |
-| **Autopilot**                   | Exécution autonome (un seul agent leader)                                                   | Développement de fonctionnalités de bout en bout avec un minimum de cérémonie    |
-| **Ultrawork**                   | Parallélisme maximal (sans Team)                                                            | Corrections/refactorings parallèles en rafale quand Team n'est pas nécessaire    |
-| **Ralph**                       | Mode persistant avec boucles verify/fix                                                     | Tâches devant être entièrement complétées (pas de résultats partiels silencieux) |
-| **Ecomode**                     | Routage économe en tokens                                                                   | Itération soucieuse du budget                                                    |
-| **Pipeline**                    | Traitement séquentiel par étapes                                                            | Transformations multi-étapes avec un ordre strict                                |
-| **Swarm / Ultrapilot (ancien)** | Façades de compatibilité redirigeant vers **Team**                                          | Workflows existants et ancienne documentation                                    |
+- **`/web-research`** — docs live → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → approbation → Vision → code → Vision QA
+- **Search-on-fail** — préférer `web_search` avant retries aveugles
 
-### Orchestration intelligente
+### Modes de review
 
-- **32 agents spécialisés** pour l'architecture, la recherche, le design, les tests, la data science
-- **Routage intelligent des modèles** — Haiku pour les tâches simples, Opus pour le raisonnement complexe
-- **Délégation automatique** — Le bon agent pour le bon travail, à chaque fois
+- **`/security-review`**
+- **`/code-review`**
 
-### Expérience développeur
+### Skills principaux
 
-- **Mots-clés magiques** — `ralph`, `ulw`, `eco`, `plan` pour un contrôle explicite
-- **HUD statusline** — Métriques d'orchestration en temps réel dans votre barre d'état
-  - Si vous lancez Grok Build directement avec `claude --plugin-dir <path>` (en contournant le shim `omg`), exportez `OMC_PLUGIN_ROOT=<path>` dans votre shell afin que le bundle HUD se résolve vers le même checkout que le chargeur de plugin. Voir [la section Plugin directory flags dans REFERENCE.md](./docs/REFERENCE.md#plugin-directory-flags) pour les détails.
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
-  <!-- TODO(i18n): verify translation -->
-- **Apprentissage de compétences** — Extraction de patterns réutilisables depuis vos sessions
-- **Analytique et suivi des coûts** — Compréhension de l'utilisation des tokens sur toutes les sessions
+### Hooks (Layer B)
 
-### Contribuer
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
 
-Vous souhaitez contribuer à OMG ? Voir [CONTRIBUTING.md](./CONTRIBUTING.md) pour le guide complet du développeur, incluant comment faire un fork, configurer un checkout local, le lier en tant que plugin actif, exécuter des tests et soumettre des PR.
+### MCP (`omg-tools`)
 
-<!-- TODO(i18n): verify translation -->
-
-### Compétences Personnalisées
-
-Apprenez une fois, réutilisez à jamais. OMG extrait les connaissances durement acquises lors du débogage en fichiers de compétences portables qui s'injectent automatiquement quand pertinent.
-
-| | Portée Projet | Portée Utilisateur |
-|---|---|---|
-| **Chemin** | `.omg/skills/` | `~/.omg/skills/` |
-| **Partagé avec** | Équipe (versionné) | Tous vos projets |
-| **Priorité** | Haute (écrase la portée utilisateur) | Basse (repli) |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-Enveloppez le handler à server.py:42 dans try/except ClientDisconnectedError...
-```
-
-**Gestion des compétences :** `/skill list | add | remove | edit | search`
-**Auto-apprentissage :** `/skillify` extrait des patterns réutilisables avec des critères de qualité stricts
-**Auto-injection :** Les compétences correspondantes se chargent automatiquement dans le contexte — aucun rappel manuel nécessaire
-
-[Liste complète des fonctionnalités →](docs/REFERENCE.md)
-
----
-
-## Mots-clés magiques
-
-Raccourcis optionnels pour les utilisateurs avancés. Le langage naturel fonctionne très bien sans eux.
-
-| Mot-clé      | Effet                               | Exemple                                                         |
-| ------------ | ----------------------------------- | --------------------------------------------------------------- |
-| `team`       | Orchestration Team canonique        | `/oh-my-grok:team 3:executor "fix all TypeScript errors"` |
-| `autopilot`  | Exécution entièrement autonome      | `autopilot: build a todo app`                                   |
-| `ralph`      | Mode persistant                     | `ralph: refactor auth`                                          |
-| `ulw`        | Parallélisme maximal                | `ulw fix all errors`                                            |
-| `eco`        | Exécution économe en tokens         | `eco: migrate database`                                         |
-| `plan`       | Entretien de planification          | `plan the API`                                                  |
-| `ralplan`    | Consensus de planification itératif | `ralplan this feature`                                          |
-| `swarm`      | Ancien mot-clé (redirige vers Team) | `swarm 5 agents: fix lint errors`                               |
-| `ultrapilot` | Ancien mot-clé (redirige vers Team) | `ultrapilot: build a fullstack app`                             |
-
-**Notes :**
-
-- **ralph inclut ultrawork** : lorsque vous activez le mode ralph, il inclut automatiquement l'exécution parallèle d'ultrawork.
-- La syntaxe `swarm N agents` est toujours reconnue pour l'extraction du nombre d'agents, mais le runtime est basé sur Team dans v4.1.7+.
-
-## Utilitaires
-
-### Attente de rate limit
-
-Reprise automatique des sessions Grok Build lorsque les rate limits sont réinitialisés.
+Id serveur par défaut **`omg-tools`** → `mcp/run-tools-server.mjs` → ~54 tools.
 
 ```bash
-omg wait          # Vérifier le statut, obtenir des conseils
-omg wait --start  # Activer le daemon de reprise automatique
-omg wait --stop   # Désactiver le daemon
+npm run build && npm run build:bridge
+npm run mcp:probe
 ```
 
-**Prérequis :** tmux (pour la détection de session)
+Sans bridge : `dist/mcp/standalone-server.js`. Thin : `mcp/omg-state-server.mjs`.
 
-### Tags de notification (Telegram/Discord)
-
-Vous pouvez configurer qui est mentionné lorsque les callbacks d'arrêt envoient des résumés de session.
+### CLI local
 
 ```bash
-# Définir/remplacer la liste des tags
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-
-# Mises à jour incrémentales
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
 ```
-
-Comportement des tags :
-
-- Telegram : `alice` est normalisé en `@alice`
-- Discord : supporte `@here`, `@everyone`, les IDs utilisateur numériques et `role:<id>`
-- Les callbacks de type `file` ignorent les options de tags
-
-### Intégration OpenClaw
-
-Transmettez les événements de session Grok Build vers une passerelle [OpenClaw](https://openclaw.ai/) pour activer des réponses automatisées et des workflows via votre agent OpenClaw.
-
-**Configuration rapide (recommandé) :**
-
-```bash
-/oh-my-grok:configure-notifications
-# → Tapez "openclaw" quand demandé → choisir "OpenClaw Gateway"
-```
-
-**Configuration manuelle :** créez `~/.grok/omc_config.openclaw.json` :
-
-```json
-{
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
-    }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
-  }
-}
-```
-
-**Variables d'environnement :**
-
-| Variable | Description |
-|----------|-------------|
-| `OMC_OPENCLAW=1` | Activer OpenClaw |
-| `OMC_OPENCLAW_DEBUG=1` | Activer la journalisation de débogage |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | Chemin alternatif du fichier de configuration |
-
-**Événements hook pris en charge (6 actifs dans bridge.ts) :**
-
-| Événement | Déclencheur | Variables de template principales |
-|-----------|------------|----------------------------------|
-| `session-start` | La session démarre | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | La réponse de Claude est terminée | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | À chaque soumission de prompt | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude demande une saisie utilisateur | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | Avant l'invocation d'outil (fréquence élevée) | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | Après l'invocation d'outil (fréquence élevée) | `{{toolName}}`, `{{sessionId}}` |
-
-**Variables d'environnement du canal de réponse :**
-
-| Variable | Description |
-|----------|-------------|
-| `OPENCLAW_REPLY_CHANNEL` | Canal de réponse (ex. `discord`) |
-| `OPENCLAW_REPLY_TARGET` | ID du canal |
-| `OPENCLAW_REPLY_THREAD` | ID du thread |
-
-Voir `scripts/openclaw-gateway-demo.mjs` pour un gateway de référence qui relaie les payloads OpenClaw vers un endpoint d'automatisation HTTPS personnalisé.
 
 ---
 
-## Documentation
+## Layout du projet
 
-- **[Référence complète](docs/REFERENCE.md)** — Documentation complète des fonctionnalités
-- **[Monitoring de performance](docs/PERFORMANCE-MONITORING.md)** — Suivi des agents, débogage et optimisation
-- **[Site web](https://yeachan-heo.github.io/oh-my-grok-website)** — Guides interactifs et exemples
-- **[Guide de migration](docs/MIGRATION.md)** — Mise à jour depuis v2.x
-- **[Architecture](docs/ARCHITECTURE.md)** — Comment ça fonctionne en coulisses
+```text
+agents/  skills/  hooks/  src/  dist/  bridge/  mcp/  bin/omg.js  docs/  parity-review/  plugin.json
+```
 
 ---
 
-## Prérequis
+## Développement
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Abonnement Claude Max/Pro OU clé API Anthropic
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
 
-### Optionnel : Orchestration Multi-AI
+Aides re-port après refresh du cache OMC :
 
-OMG peut optionnellement orchestrer des fournisseurs d'IA externes pour la validation croisée et la cohérence du design. Ils ne sont **pas requis** — OMG fonctionne pleinement sans eux.
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
 
-| Fournisseur                                               | Installation                        | Ce que ça apporte                                              |
-| --------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | Revue de design, cohérence UI (contexte de 1M tokens)          |
-| [Codex CLI](https://github.com/openai/codex)              | `npm install -g @openai/codex`      | Validation d'architecture, vérification croisée de code review |
+**Barre qualité :** core + smoke + MCP. **Residual full : 0 fail**. Voir `docs/GROK-PRODUCT-SUBSET.md`.
 
-**Coût :** 3 plans Pro (Claude + Gemini + ChatGPT) couvrent tout pour environ 60 $/mois.
+### Carte des docs
+
+| Doc | But |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | Pin upstream |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | État par surface |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Définition « done » Grok |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | Hooks vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | Premier lancement |
+| [docs/settings-schema.md](docs/settings-schema.md) | Clés de config |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | Checklist couches |
+| [parity-review/](parity-review/) | Notes d’évidence |
 
 ---
 
 ## Licence
 
-MIT
+MIT. Copyright original oh-my-claudecode et contributeurs oh-my-grok. Voir [LICENSE](LICENSE) et [NOTICE](NOTICE).
 
----
+## Crédits
 
-<div align="center">
-
-**Inspiré par :** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/NexTechFusion/Superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code)
-
-**Aucune courbe d'apprentissage. Puissance maximale.**
-
-</div>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
-
-## 💖 Soutenir ce projet
-
-Si Oh-My-Grok améliore votre workflow, envisagez de devenir sponsor :
-
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-
-### Pourquoi sponsoriser ?
-
-- Maintenir le développement actif
-- Support prioritaire pour les sponsors
-- Influencer la roadmap et les fonctionnalités
-- Aider à maintenir le logiciel libre et open source
-
-### Autres façons d'aider
-
-- ⭐ Mettre une étoile au dépôt
-- 🐛 Signaler des bugs
-- 💡 Suggérer des fonctionnalités
-- 📝 Contribuer au code
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — conception d’orchestration, agents, skills, protocoles
+- xAI Grok Build — plugin / skills / hooks / hôte MCP

@@ -1,429 +1,288 @@
-<!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
+# oh-my-grok (OMG)
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
-# oh-my-grok
+**[Grok Build](https://x.ai) / Grok CLI 向けマルチエージェント・オーケストレーション。**
 
-[![npm version](https://img.shields.io/npm/v/oh-my-grok?color=cb3837)](https://www.npmjs.com/package/oh-my-grok)
-[![npm downloads](https://img.shields.io/npm/dm/oh-my-grok?color=blue)](https://www.npmjs.com/package/oh-my-grok)
-[![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-grok?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-grok/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/jq6jnSGABY)
-
-> **Codex ユーザーの方へ:** [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) をチェックしてください — OpenAI Codex CLI 向けの同じオーケストレーション体験を提供します。
-
-**Grok Build のためのマルチエージェント・オーケストレーション。学習コストゼロ。**
-
-*Grok Build を学ぶ必要はありません。OMG を使うだけ。*
-
-[はじめる](#クイックスタート) • [ドキュメント](https://yeachan-heo.github.io/oh-my-grok-website) • [CLI リファレンス](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference) • [ワークフロー](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows) • [移行ガイド](docs/MIGRATION.md) • [Discord](https://discord.gg/jq6jnSGABY)
-
----
-
-<!-- OMG_STATUS_SNAPSHOT_START -->
-
-## ステータス（2026-07）
+[oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) の Grok 移植。Grok ネイティブ拡張: **リアルタイム web/X 検索**、**Image Gen UI モック**、**Vision UI QA**。
 
 | | |
 |--|--|
 | **OMG バージョン** | `0.9.0-rc.1` |
 | **状態ルート** | `.omg/` (`.omc/` は使わない) |
-| **OMC ピン** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
-| **パリティ** | **Near-complete** 製品移植（Claude ホスト 100% クローンではない） |
-| **モジュール** | OMC 比 **100%** touched (`node scripts/port-inventory.mjs`) |
-| **製品ゲート** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
-| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
-| **Grok 製品定義** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
-| **英語の正本** | [`README.md`](README.md)（インストール・開発コマンドの最新版） |
+| **OMC ピン** | `4.15.7` @ `41a4c0f` |
+| **製品ゲート** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **パリティ** | **Near-complete**（Claude ホスト 100% クローンではない） |
 
-> ローカル: `grok plugin install <path-or-repo> --trust` · 状態は **`.omg/`**.
-<!-- OMG_STATUS_SNAPSHOT_END -->
+> ハーネスを学ばない。OMG を使うだけ。
 
+### ステータス（2026-07）
 
-## クイックスタート
+| 軸 | 状態 |
+|------|--------|
+| モジュール棚卸し | **100%** touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** — [VITEST-RESIDUAL](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Grok 製品定義 | [GROK-PRODUCT-SUBSET](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` | OMC と同じプロトコル。ホスト用ツール名のみ Grok 向け |
 
-**ステップ 1: インストール**
+任意チェック: `npm run test:optional`（HUD `--preset`、release dry-run、skill/drift smokes）。
+
+---
+
+## OMC ソースピン（アップストリーム・チェックポイント）
+
+将来の re-diff のため **固定 OMC コミット** を追跡します。詳細: [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md)。
+
+| 項目 | 値 |
+|-------|--------|
+| **Upstream** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (MIT) |
+| **npm パッケージ** | `oh-my-claude-sisyphus` |
+| **ピン版** | **`4.15.7`** |
+| **ピンコミット** | **`41a4c0f77144c5beb5f5f000a89cff379c680606`** |
+| **件名** | `chore: promote dev to main for v4.15.7 release` |
+| **日付** | 2026-07-23 04:44:59 +0000 |
+| **短縮** | `4.15.7` @ `41a4c0f` |
+
+OMC を意図的に上げるとき:
+
+1. 新しい upstream を checkout / cache する。
+2. `version` と `git rev-parse HEAD` を [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) に記録。
+3. `node scripts/port-inventory.mjs` を再実行し [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md) を更新。
+4. **旧ピン**（`41a4c0f…`）を基準に OMG を re-diff してからピンを進める。
+
+ローカル cache: `~/.grok/marketplace-cache/*` で `oh-my-claude-sisyphus@4.15.7`（または新ピン）の `package.json` を選ぶ。
+
+---
+
+## インストール
+
 ```bash
-# Grok Build（推奨）
+# From GitHub (after publish)
 grok plugin install <owner>/oh-my-grok --trust
-# またはローカル
+grok plugin enable oh-my-grok
+
+# From a local checkout
 grok plugin install /path/to/oh-my-grok --trust
 grok plugin enable oh-my-grok
-# 詳細は英語正本 README.md
 ```
 
-**ステップ 2: セットアップ**
-```bash
-/omg-setup
-```
-
-`omg --plugin-dir <path>` または `claude --plugin-dir <path>` 経由で OMG を実行する場合、`omg setup` に `--plugin-dir-mode` を追加します (または事前に `OMC_PLUGIN_ROOT` をエクスポート) ので、プラグインが既に実行時に提供するスキル/エージェントが重複しません。完全な決定マトリックスと利用可能なすべてのフラグについては、[REFERENCE.md の Plugin directory flags セクション](./docs/REFERENCE.md#plugin-directory-flags) を参照してください。
-
-<!-- TODO(i18n): verify translation -->
-
-**ステップ 3: 何か作ってみる**
-```
-autopilot: build a REST API for managing tasks
-```
-
-以上です。あとは自動で進みます。
-
-### 何から始めればいいかわからない？
-
-要件が不明確だったり、漠然としたアイデアしかなかったり、設計を細かくコントロールしたい場合:
-
-```
-/deep-interview "I want to build a task management app"
-```
-
-ディープインタビューはソクラテス式質問法を使い、コードを書く前に思考を明確にします。隠れた前提を明らかにし、加重次元で明確さを測定することで、実行開始前に何を構築すべきかを正確に把握できます。
-
-## Team モード（推奨）
-
-**v4.1.7** から **Team** が OMG の標準オーケストレーション方式です。**swarm** や **ultrapilot** などのレガシーエントリポイントは引き続きサポートされていますが、**内部的に Team にルーティング**されます。
+確認:
 
 ```bash
-/team 3:executor "fix all TypeScript errors"
+grok plugin details oh-my-grok
+grok inspect
 ```
 
-Team はステージ型パイプラインで実行されます:
+Grok セッションで:
 
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
+```text
+/deep-interview "I want a habit tracker CLI with streaks"
+/ralplan
+/autopilot
+/web-research "Tailwind CSS v4 breaking changes"
+/ui-mockup "dark mode settings page with profile card"
+```
 
-`~/.grok/settings.json` で Grok Build ネイティブチームを有効化:
+---
 
-```json
+## 推奨パイプライン
+
+```text
+/deep-interview  →  clarity-gated spec (.omg/specs/)
+       ↓
+/ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
+       ↓
+/autopilot       →  implement → QA → multi-agent validation
+```
+
+いつでも `/cancel`。ランタイム状態は **`.omg/`**。曖昧なアイデア → `/deep-interview`。スペック準備 → `/ralplan` 合意のあと明示承認。UI なし → `/ui-mockup`。調査 → `/web-research`。
+
+---
+
+## Autopilot 実行: `solo` vs `team`
+
+`/autopilot` は常に **agents + skills** を編成します。**実装段階**の走らせ方だけ設定で変わります。
+
+| モード | 設定 | 実行 | 見えるもの |
+|------|--------|---------------|--------------|
+| **`solo`** (既定) | omit `execution` / `"solo"` | セッション内 `spawn_subagent` + skill ルーティング | 同じ Grok チャット; **tmux なし** |
+| **`team`** | `"execution": "team"` | `omg team` CLI ワーカー | **tmux** (`omg-omg-team-…`); HUD `team:…` |
+
+### 設定（プロジェクト / ユーザー）
+
+**プロジェクト**（推奨）: `.grok/omg.jsonc` · **ユーザー**: `~/.config/grok-omg/config.jsonc` · プロジェクト優先。スキーマ: [`docs/settings-schema.md`](docs/settings-schema.md)。
+
+```jsonc
+// .grok/omg.jsonc — solo
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "autopilot": {
+    "execution": "solo"
   }
 }
 ```
 
-> チームが無効の場合、OMG は警告を表示し、可能な場合は Team なしの実行にフォールバックします。
-
-### tmux CLI ワーカー — Codex & Gemini (v4.4.0+)
-
-**v4.4.0 で Codex/Gemini MCP サーバー**（`x`、`g` プロバイダー）が**削除されます**。代わりに `/omg-teams` を使って tmux 分割ペインで実際の CLI プロセスを起動してください:
-
-```bash
-/omg-teams 2:codex   "review auth module for security issues"
-/omg-teams 2:gemini  "redesign UI components for accessibility"
-/omg-teams 1:claude  "implement the payment flow"
-```
-
-Codex + Gemini を一つのコマンドで使うには **`/ccg`** スキルを使います:
-
-```bash
-/ccg Review this PR — architecture (Codex) and UI components (Gemini)
-```
-
-| スキル | ワーカー | 最適用途 |
-|-------|---------|----------|
-| `/omg-teams N:codex` | N 個の Codex CLI ペイン | コードレビュー、セキュリティ解析、アーキテクチャ |
-| `/omg-teams N:gemini` | N 個の Gemini CLI ペイン | UI/UX デザイン、ドキュメント、大規模コンテキスト |
-| `/omg-teams N:claude` | N 個の Claude CLI ペイン | tmux で Claude CLI を使う汎用タスク |
-| `/ccg` | Codex 1 個 + Gemini 1 個 | 並列トライモデルオーケストレーション |
-
-ワーカーはオンデマンドで起動し、タスク完了後に終了します — アイドルリソースの無駄なし。`codex` / `gemini` CLI のインストールとアクティブな tmux セッションが必要です。
-
-> **注意: パッケージ名について** — プロジェクトのブランド名は **oh-my-grok**（リポジトリ、プラグイン、コマンド）ですが、npmパッケージは [`oh-my-grok`](https://www.npmjs.com/package/oh-my-grok) として公開されています。npm/bunでCLIツールをインストールする場合は `npm install -g oh-my-grok` を使用してください。
-
-### アップデート
-
-```bash
-# 1. マーケットプレイスクローンを更新
-/plugin marketplace update omg
-
-# 2. セットアップを再実行して設定を更新
-/omg-setup
-```
-
-> **注意:** マーケットプレイスの自動更新が有効になっていない場合は、セットアップ実行前に `/plugin marketplace update omg` を手動で実行して最新バージョンを同期する必要があります。
-
-更新後に問題が発生した場合は、古いプラグインキャッシュをクリアしてください：
-
-```bash
-/omg-doctor
-```
-
-<h1 align="center">あなたの Claude がステロイド級にパワーアップ。</h1>
-
-<p align="center">
-  <img src="assets/omg-character.jpg" alt="oh-my-grok" width="400" />
-</p>
-
----
-
-## なぜ oh-my-grok なのか?
-
-- **設定不要** - 賢いデフォルト設定ですぐに使える
-- **Team ファースト・オーケストレーション** - Team が標準マルチエージェントサーフェス（swarm/ultrapilot は互換性ファサード）
-- **自然言語インターフェース** - コマンドを覚える必要なし、やりたいことを話すだけ
-- **自動並列化** - 複雑なタスクを専門エージェントに自動分散
-- **粘り強い実行** - 検証完了まで諦めない
-- **コスト最適化** - スマートなモデルルーティングでトークンを30〜50%節約
-- **経験から学習** - 問題解決パターンを自動抽出して再利用
-- **リアルタイム可視化** - HUD ステータスラインで裏側の動きが見える
-
----
-
-## 機能
-
-### 実行モード
-用途に応じた複数の戦略 - 完全自律ビルドからトークン効率の良いリファクタリングまで。[詳しくはこちら →](https://yeachan-heo.github.io/oh-my-grok-website/docs/#execution-modes)
-
-| モード | 特徴 | 用途 |
-|------|---------|------|
-| **Team（推奨）** | ステージ型パイプライン | 共有タスクリストで協力する Claude エージェント |
-| **omg-teams** | tmux CLI ワーカー | Codex/Gemini CLI タスク; オンデマンド起動、完了後終了 |
-| **ccg** | トライモデル並列 | Codex（分析）+ Gemini（デザイン）、Claude が統合 |
-| **Autopilot** | 自律実行 | 最小限のセレモニーで end-to-end 機能開発 |
-| **Ultrawork** | 最大並列 | Team 不要な並列修正/リファクタリング |
-| **Ralph** | 粘り強いモード | 完全に完了させるべきタスク |
-| **Pipeline** | 逐次処理 | 厳密な順序が必要な多段階変換 |
-| **Swarm / Ultrapilot（レガシー）** | Team へルーティング | 既存ワークフローと古いドキュメント |
-
-### インテリジェント・オーケストレーション
-
-- **32の専門エージェント** - アーキテクチャ、リサーチ、デザイン、テスト、データサイエンス対応
-- **スマートモデルルーティング** - シンプルなタスクは Haiku、複雑な推論は Opus
-- **自動委譲** - 常に適材適所
-
-### 開発者体験
-
-- **マジックキーワード** - `ralph`、`ulw`、`plan` で明示的制御
-- **HUD ステータスライン** - ステータスバーでリアルタイムのオーケストレーション指標を表示
-  - `claude --plugin-dir <path>` で Grok Build を直接起動する場合 (`omg` shim をバイパス)、シェルで `OMC_PLUGIN_ROOT=<path>` をエクスポートして、HUD バンドルがプラグイン ローダーと同じ checkout に解決されるようにします。詳細については、[REFERENCE.md の Plugin directory flags セクション](./docs/REFERENCE.md#plugin-directory-flags) を参照してください。
-
-  <!-- TODO(i18n): verify translation -->
-- **スキル学習** - セッションから再利用可能なパターンを抽出
-- **分析とコスト追跡** - 全セッションのトークン使用状況を把握
-
-### 貢献
-
-OMG に貢献したいですか？フォーク、ローカル checkout の設定、アクティブ プラグインとしてのリンク、テスト実行、PR の送信方法など、完全な開発者ガイドについては [CONTRIBUTING.md](./CONTRIBUTING.md) を参照してください。
-
-<!-- TODO(i18n): verify translation -->
-
-### カスタムスキル
-
-一度学んだことを永遠に再利用。OMG はデバッグで得た実践的な知識をポータブルなスキルファイルに抽出し、関連する場面で自動的に注入します。
-
-| | プロジェクトスコープ | ユーザースコープ |
-|---|---|---|
-| **パス** | `.omg/skills/` | `~/.omg/skills/` |
-| **共有先** | チーム（バージョン管理対象） | すべてのプロジェクトで利用可能 |
-| **優先度** | 高（ユーザースコープを上書き） | 低（フォールバック） |
-
-```yaml
-# .omg/skills/fix-proxy-crash.md
----
-name: Fix Proxy Crash
-description: aiohttp proxy crashes on ClientDisconnectedError
-triggers: ["proxy", "aiohttp", "disconnected"]
-source: extracted
----
-server.py:42 のハンドラーを try/except ClientDisconnectedError で囲んでください...
-```
-
-**スキル管理：** `/skill list | add | remove | edit | search`
-**自動学習：** `/skillify` が厳格な品質基準で再利用可能なパターンを抽出します
-**自動注入：** マッチするスキルが自動的にコンテキストに読み込まれます — 手動呼び出し不要
-
-[全機能リスト →](docs/REFERENCE.md)
-
----
-
-## マジックキーワード
-
-パワーユーザー向けのオプション・ショートカット。自然言語でも問題なく動作します。
-
-| キーワード | 効果 | 例 |
-|---------|-----|-----|
-| `team` | 標準 Team オーケストレーション | `/team 3:executor "fix all TypeScript errors"` |
-| `omg-teams` | tmux CLI ワーカー (codex/gemini/claude) | `/omg-teams 2:codex "security review"` |
-| `ccg` | トライモデル Codex+Gemini オーケストレーション | `/ccg review this PR` |
-| `autopilot` | 完全自律実行 | `autopilot: build a todo app` |
-| `ralph` | 粘り強いモード | `ralph: refactor auth` |
-| `ulw` | 最大並列化 | `ulw fix all errors` |
-| `plan` | 計画インタビュー | `plan the API` |
-| `ralplan` | 反復的計画合意形成 | `ralplan this feature` |
-| `deep-interview` | ソクラテス式の要件明確化 | `deep-interview "vague idea"` |
-| `swarm` | **非推奨** — 代わりに `team` を使用 | `swarm 5 agents: fix lint errors` |
-| `ultrapilot` | **非推奨** — 代わりに `team` を使用 | `ultrapilot: build a fullstack app` |
-
-**注意:**
-- **ralph は ultrawork を含む:** ralph モードを有効にすると、ultrawork の並列実行が自動的に含まれます。キーワードを組み合わせる必要はありません。
-- `swarm N agents` 構文はエージェント数抽出のために引き続き認識されますが、v4.1.7+ ではランタイムは Team ベースです。
-
----
-
-## ユーティリティ
-
-### レート制限待機
-
-レート制限がリセットされたら Grok Build セッションを自動再開。
-
-```bash
-omg wait          # ステータス確認とガイダンス取得
-omg wait --start  # 自動再開デーモンを有効化
-omg wait --stop   # デーモンを無効化
-```
-
-**必要なもの:** tmux (セッション検出用)
-
-### 通知タグ設定 (Telegram/Discord/Slack)
-
-stop コールバックがセッション要約を送るときに、誰をタグ付けするか設定できます。
-
-```bash
-# タグ一覧を設定/置換
-omg config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omg config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-omg config-stop-callback slack --enable --webhook <url> --tag-list "<!here>,<@U1234567890>"
-
-# 追加・削除・クリア
-omg config-stop-callback telegram --add-tag charlie
-omg config-stop-callback discord --remove-tag @here
-omg config-stop-callback discord --clear-tags
-```
-
-タグの挙動:
-- Telegram: `alice` は `@alice` に正規化
-- Discord: `@here`、`@everyone`、数値ユーザーID、`role:<id>` をサポート
-- Slack: `<@MEMBER_ID>`、`<!channel>`、`<!here>`、`<!everyone>`、`<!subteam^GROUP_ID>` をサポート
-- `file` コールバックはタグオプションを無視
-
-### OpenClaw 連携
-
-Grok Build セッションイベントを [OpenClaw](https://openclaw.ai/) ゲートウェイに転送し、OpenClaw エージェントを通じた自動応答とワークフローを実現します。
-
-**クイックセットアップ（推奨）:**
-
-```bash
-/oh-my-grok:configure-notifications
-# → プロンプトで "openclaw" と入力 → "OpenClaw Gateway" を選択
-```
-
-**手動セットアップ:** `~/.grok/omc_config.openclaw.json` を作成します：
-
-```json
+```jsonc
+// .grok/omg.jsonc — team + tmux
 {
-  "enabled": true,
-  "gateways": {
-    "my-gateway": {
-      "url": "https://your-gateway.example.com/wake",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
-      "method": "POST",
-      "timeout": 10000
+  "autopilot": {
+    "execution": "team",
+    "team": {
+      // grok | cursor | codex | claude | gemini | antigravity | executor
+      "agentTypes": ["grok"]
     }
-  },
-  "hooks": {
-    "session-start": { "gateway": "my-gateway", "instruction": "Session started for {{projectName}}", "enabled": true },
-    "stop":          { "gateway": "my-gateway", "instruction": "Session stopping for {{projectName}}", "enabled": true }
   }
 }
 ```
 
-**環境変数:**
+### チームワーカーの観察（`execution: "team"`）
 
-| 変数 | 説明 |
-|------|------|
-| `OMC_OPENCLAW=1` | OpenClaw を有効化 |
-| `OMC_OPENCLAW_DEBUG=1` | デバッグログを有効化 |
-| `OMC_OPENCLAW_CONFIG=/path/to/config.json` | 設定ファイルパスを変更 |
+Grok チャットは OMC 風サイドパネルを自動表示しません。プロセスチームは **tmux ベース**です。
 
-**サポートされるフックイベント（bridge.ts で 6 つがアクティブ）:**
+```bash
+node bin/omg.js team status
+tmux ls
+tmux attach -t <tmux_session>
+node bin/omg.js hud
+cat .omg/state/team-state.json
+```
 
-| イベント | トリガー | 主要テンプレート変数 |
-|---------|---------|-------------------|
-| `session-start` | セッション開始時 | `{{sessionId}}`, `{{projectName}}`, `{{projectPath}}` |
-| `stop` | Claude のレスポンス完了時 | `{{sessionId}}`, `{{projectName}}` |
-| `keyword-detector` | プロンプト送信ごと | `{{prompt}}`, `{{sessionId}}` |
-| `ask-user-question` | Claude がユーザー入力を要求した時 | `{{question}}`, `{{sessionId}}` |
-| `pre-tool-use` | ツール呼び出し前（高頻度） | `{{toolName}}`, `{{sessionId}}` |
-| `post-tool-use` | ツール呼び出し後（高頻度） | `{{toolName}}`, `{{sessionId}}` |
+autopilot なしの手動チーム:
 
-**Reply Channel 環境変数:**
+```bash
+omg team 1:grok "implement the plan at .omg/plans/…"
+omg team 2:cursor "fix failing tests"
+omg team shutdown
+```
 
-| 変数 | 説明 |
-|------|------|
-| `OPENCLAW_REPLY_CHANNEL` | 応答チャンネル（例: `discord`） |
-| `OPENCLAW_REPLY_TARGET` | チャンネル ID |
-| `OPENCLAW_REPLY_THREAD` | スレッド ID |
+| **solo** が向くとき | **team** が向くとき |
+|----------------------|------------------------|
+| 1 つの Grok 窓での日常コーディング | **tmux** で見える CLI ワーカー |
+| tmux 不要 | **cursor / codex / gemini** 混在 |
+| 同一 transcript の速いフィードバック | 長い並列実装を分離 |
 
-OpenClaw ペイロードをカスタム HTTPS 自動化エンドポイントへリレーするリファレンスゲートウェイについては `scripts/openclaw-gateway-demo.mjs` を参照してください。
-
----
-
-## ドキュメント
-
-- **[完全リファレンス](docs/REFERENCE.md)** - 全機能の詳細ドキュメント
-- **[CLI リファレンス](https://yeachan-heo.github.io/oh-my-grok-website/docs/#cli-reference)** - すべての `omg` コマンド、フラグ、ツール
-- **[通知ガイド](https://yeachan-heo.github.io/oh-my-grok-website/docs/#notifications)** - Discord、Telegram、Slack、webhook のセットアップ
-- **[推奨ワークフロー](https://yeachan-heo.github.io/oh-my-grok-website/docs/#workflows)** - 一般的なタスクのための実績あるスキルチェーン
-- **[リリースノート](https://yeachan-heo.github.io/oh-my-grok-website/docs/#release-notes)** - 各バージョンの新機能
-- **[ウェブサイト](https://yeachan-heo.github.io/oh-my-grok-website)** - インタラクティブガイドと例
-- **[移行ガイド](docs/MIGRATION.md)** - v2.x からのアップグレード
-- **[アーキテクチャ](docs/ARCHITECTURE.md)** - 内部の仕組み
-- **[パフォーマンス監視](docs/PERFORMANCE-MONITORING.md)** - エージェント追跡、デバッグ、最適化
+**既定のおすすめ: tmux 運用やマルチ CLI 分離が要るまで **solo**。**
 
 ---
 
-## 動作環境
+## 構成
 
-- [Grok Build](https://docs.anthropic.com/claude-code) CLI
-- Claude Max/Pro サブスクリプション または Anthropic API キー
+| 面 | 数 | メモ |
+|---------|------:|-------|
+| Agents | 20 | OMC セット + `visual-designer` |
+| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| MCP tools | ~54 | `.mcp.json` 経由 `omg-tools` |
+| State | `.omg/` | specs / plans / artifacts / modes |
 
-### オプション：マルチ AI オーケストレーション
+### Grok 専用
 
-OMG はクロスバリデーションとデザイン一貫性のために、外部 AI プロバイダーをオプションで活用できます。**必須ではありません** — これらがなくても OMG は完全に動作します。
+- **`/web-research`** — ライブ docs / releases / issues / X → `.omg/artifacts/research/`
+- **`/ui-mockup`** — Image Gen → 承認 → Vision brief → コード → Vision QA
+- **Search-on-fail** — 失敗時は盲再試行の前に `web_search` を優先
 
-| プロバイダー | インストール | 機能 |
-|-------------|-------------|------|
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | デザインレビュー、UI 一貫性（1M トークンコンテキスト）|
-| [Codex CLI](https://github.com/openai/codex) | `npm install -g @openai/codex` | アーキテクチャ検証、コードレビュークロスチェック |
+### レビューモード
 
-**コスト：** 3つの Pro プラン（Claude + Gemini + ChatGPT）で月額約 $60 ですべてをカバーできます。
+- **`/security-review`** — `security review` など
+- **`/code-review`** — `code review` / PR レビュー
+
+### 主要スキル
+
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+
+### フック (Layer B)
+
+`SessionStart` · `UserPromptSubmit` · `PreToolUse` · `PostToolUse` · `SubagentStart/Stop` · `PreCompact` · `Stop` · `SessionEnd` · cancel → `.omg/state`
+
+### MCP (`omg-tools`)
+
+プラグイン既定 id **`omg-tools`** → `mcp/run-tools-server.mjs` → 約 54 tools（LSP / AST / wiki / notepad / `state_*` …）。
+
+```bash
+npm run build && npm run build:bridge
+npm run mcp:probe
+```
+
+bridge 無し時: `dist/mcp/standalone-server.js`。thin: `mcp/omg-state-server.mjs`（デバッグ用）。
+
+### ローカル CLI
+
+```bash
+node bin/omg.js version
+node bin/omg.js status
+node bin/omg.js hud --preset focused
+node bin/omg.js state list
+node bin/omg.js doctor
+node bin/omg.js team status
+npm test
+npm run test:vitest:core
+npm run test:optional
+```
+
+---
+
+## レイアウト
+
+```text
+agents/           # subagent definitions
+skills/*/SKILL.md # slash skills
+hooks/            # hooks.json + scripts
+src/              # TypeScript runtime (OMC-scale port)
+dist/             # tsc output
+bridge/           # esbuild CJS bundles
+mcp/              # MCP launchers
+bin/omg.js        # CLI (omg, omc, oh-my-grok)
+docs/
+parity-review/
+plugin.json
+```
+
+---
+
+## 開発
+
+```bash
+npm run build
+npm run build:bridge
+npm run test:vitest:core
+npm run test:smoke
+npm run test:optional
+npm run mcp:probe
+node scripts/validate-parity.mjs
+node scripts/port-inventory.mjs
+node bin/omg.js doctor
+grok plugin validate .
+```
+
+OMC キャッシュ更新後の re-port ヘルパ:
+
+```bash
+# node scripts/port-from-omc.mjs
+# node scripts/validate-parity.mjs
+```
+
+**製品品質バー:** core vitest + smoke + MCP。**Full suite residual:** 2026-07 時点 **0 fail**。**Grok “done” vs ホストクローン:** [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md)。
+
+### ドキュメント地図
+
+| 文書 | 用途 |
+|-----|---------|
+| [docs/OMC-SOURCE.md](docs/OMC-SOURCE.md) | アップストリーム・ピン |
+| [docs/OMC-PORT-STATUS.md](docs/OMC-PORT-STATUS.md) | 面ごとの状態 |
+| [docs/GROK-PRODUCT-SUBSET.md](docs/GROK-PRODUCT-SUBSET.md) | Grok 完了定義 |
+| [docs/HOOKS-PARITY.md](docs/HOOKS-PARITY.md) | フック vs OMC |
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | 初回 |
+| [docs/settings-schema.md](docs/settings-schema.md) | 設定キー |
+| [docs/PARITY-MATRIX.md](docs/PARITY-MATRIX.md) | レイヤー一覧 |
+| [parity-review/](parity-review/) | 証拠ノート |
 
 ---
 
 ## ライセンス
 
-MIT
+MIT。oh-my-claudecode 原著作者と oh-my-grok 貢献者。 [LICENSE](LICENSE) / [NOTICE](NOTICE)。
 
----
+## クレジット
 
-<div align="center">
-
-**インスピレーション元:** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) • [claude-hud](https://github.com/ryanjoachim/claude-hud) • [Superpowers](https://github.com/obra/superpowers) • [everything-claude-code](https://github.com/affaan-m/everything-claude-code) • [Ouroboros](https://github.com/Q00/ouroboros)
-
-**学習コストゼロ。最大パワー。**
-
-</div>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-grok&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-grok&type=date&legend=top-left)
-
-## 💖 このプロジェクトを支援
-
-Oh-My-Grok があなたのワークフローに役立っているなら、スポンサーをご検討ください:
-
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
-
-### スポンサーになる理由は?
-
-- 開発を活発に保つ
-- スポンサー向け優先サポート
-- ロードマップと機能に影響力
-- 無料オープンソースの維持を支援
-
-### その他の協力方法
-
-- ⭐ リポジトリにスター
-- 🐛 バグ報告
-- 💡 機能提案
-- 📝 コード貢献
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) @ **`41a4c0f`** (`4.15.7`) — オーケストレーション設計・agents・skills・プロトコル
+- xAI Grok Build — plugin / skills / hooks / MCP ホスト
