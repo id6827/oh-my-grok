@@ -1,5 +1,7 @@
 # oh-my-grok (OMG)
 
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
+
 **Multi-agent orchestration for [Grok Build](https://x.ai) / Grok CLI.**
 
 Port of [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode) onto Grok, with Grok-native upgrades: **real-time web/X search**, **Image Gen UI mockups**, and **Vision UI QA**.
@@ -8,9 +10,24 @@ Port of [oh-my-claudecode (OMC)](https://github.com/Yeachan-Heo/oh-my-claudecode
 |--|--|
 | **OMG version** | `0.9.0-rc.1` |
 | **State root** | `.omg/` (never `.omc/`) |
+| **OMC pin** | `4.15.7` @ `41a4c0f` (see below) |
 | **Product gates** | `npm run test:vitest:core` · `npm run test:smoke` · `npm run mcp:probe` |
+| **Parity label** | **Near-complete** product transfer (not 100% Claude host clone) |
 
 > Don't learn the harness. Just use OMG.
+
+### Status snapshot (2026-07)
+
+| Axis | Status |
+|------|--------|
+| Module inventory vs OMC pin | **100%** modules touched (`node scripts/port-inventory.mjs`) |
+| Core vitest | **217/217** |
+| Full vitest residual | **0 fail** / ~11225 pass — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| Smoke + MCP | green · ~54 `omg-tools` |
+| Grok product subset | frozen — [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| `/ralplan` protocol | same as OMC (Planner/Architect/Critic + gate); host tools renamed for Grok |
+
+Optional checks: `npm run test:optional` (HUD `--preset`, release-pack dry-run, skill + drift-guard smokes).
 
 ---
 
@@ -198,11 +215,13 @@ Thin state-only server: `mcp/omg-state-server.mjs` (manual/debug, not default).
 ```bash
 node bin/omg.js version
 node bin/omg.js status      # file HUD + threshold
+node bin/omg.js hud --preset focused   # persist omcHud.preset then render
 node bin/omg.js state list
 node bin/omg.js doctor
 node bin/omg.js team status
 npm test                    # smoke (build + foundation + hooks + team + hud)
 npm run test:vitest:core    # product vitest gate (217)
+npm run test:optional       # release dry-run + feature/drift smokes
 ```
 
 ---
@@ -229,9 +248,10 @@ plugin.json       # Grok plugin manifest
 
 ```bash
 npm run build
-npm run build:bridge          # optional; needed for preferred MCP CJS path
-npm run test:vitest:core      # product unit gate
+npm run build:bridge          # mcp/cli/runtime/team + team-bridge + skill-bridge + coordinator
+npm run test:vitest:core      # product unit gate (217)
 npm run test:smoke            # build + foundation + hooks + team + hud
+npm run test:optional         # release pack dry-run + skill/drift smokes
 npm run mcp:probe
 node scripts/validate-parity.mjs
 node scripts/port-inventory.mjs
@@ -246,7 +266,9 @@ Re-port helpers after refreshing the OMC cache (see pin above):
 # node scripts/validate-parity.mjs
 ```
 
-**Product quality bar:** core vitest + smoke + MCP probe. Full `npm run test:vitest` is a residual suite (OMC lag + intentional platform partials) — see [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) and [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md).
+**Product quality bar:** core vitest + smoke + MCP probe.  
+**Full suite:** `npm run test:vitest` residual is **closed (0 fail)** as of 2026-07 — see [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md).  
+**Grok “done” vs Claude host clone:** [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) · surface matrix: [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md).
 
 ### Docs map
 
@@ -254,10 +276,12 @@ Re-port helpers after refreshing the OMC cache (see pin above):
 |-----|---------|
 | [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) | **Upstream pin / re-pin checklist** |
 | [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md) | Surface-by-surface port status + intentional 🟡 |
+| [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) | What “done on Grok” means (not full host clone) |
+| [`docs/HOOKS-PARITY.md`](docs/HOOKS-PARITY.md) | Hooks registration vs OMC |
 | [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md) | First-run guide |
 | [`docs/settings-schema.md`](docs/settings-schema.md) | Config keys (`autopilot.execution`, team, …) |
 | [`docs/PARITY-MATRIX.md`](docs/PARITY-MATRIX.md) | Layer checklist |
-| [`parity-review/`](parity-review/) | 100% product-port evidence notes |
+| [`parity-review/`](parity-review/) | Evidence notes, residual close, optional wave 1–4 |
 
 ---
 

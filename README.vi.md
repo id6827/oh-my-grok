@@ -1,6 +1,6 @@
 <!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
 
-[English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [Español](README.es.md) | Tiếng Việt | [Português](README.pt.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -21,12 +21,34 @@
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## Trạng thái (2026-07)
+
+| | |
+|--|--|
+| **Phiên bản OMG** | `0.9.0-rc.1` |
+| **Thư mục state** | `.omg/` (không dùng `.omc/`) |
+| **Pin OMC** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **Parity** | Chuyển giao sản phẩm **gần hoàn chỉnh** (không clone 100% host Claude) |
+| **Module** | **100%** touched so với OMC (`node scripts/port-inventory.mjs`) |
+| **Cổng sản phẩm** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Tập con Grok** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **README chuẩn (EN)** | [`README.md`](README.md) |
+
+> Cài local: `grok plugin install <path-or-repo> --trust` · state tại **`.omg/`**.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## Bắt đầu nhanh
 
 **Bước 1: Cài đặt**
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+grok plugin install <owner>/oh-my-grok --trust
+# or local checkout:
+# grok plugin install /path/to/oh-my-grok --trust
+# See English README.md for full install & pipeline
 ```
 
 **Bước 2: Thiết lập**

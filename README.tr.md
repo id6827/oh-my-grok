@@ -1,6 +1,6 @@
 <!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
 
-[English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md) | [Русский](README.ru.md) | Türkçe | [Deutsch](README.de.md) | [Français](README.fr.md) | [Italiano](README.it.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -19,13 +19,35 @@ _Grok Build'u öğrenmeyin. Sadece OMG kullanın._
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## Durum (2026-07)
+
+| | |
+|--|--|
+| **OMG sürümü** | `0.9.0-rc.1` |
+| **Durum kökü** | `.omg/` (`.omc/` kullanma) |
+| **OMC pini** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **Parite** | **Near-complete** ürün aktarımı (Claude host %100 klon değil) |
+| **Modüller** | OMC'ye göre **%100** touched (`node scripts/port-inventory.mjs`) |
+| **Ürün kapıları** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Grok alt kümesi** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **Kanoni README** | [`README.md`](README.md) |
+
+> Yerel: `grok plugin install <path-or-repo> --trust` · durum **`.omg/`** altında.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## Hızlı Başlangıç
 
 **Adım 1: Kurulum**
 
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+grok plugin install <owner>/oh-my-grok --trust
+# or local checkout:
+# grok plugin install /path/to/oh-my-grok --trust
+# See English README.md for full install & pipeline
 ```
 
 **Adım 2: Yapılandırma**

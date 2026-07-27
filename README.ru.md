@@ -1,6 +1,6 @@
 <!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
 
-[English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md) | Русский | [Türkçe](README.tr.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Italiano](README.it.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -19,13 +19,35 @@ _Не изучайте Grok Build. Просто используйте OMG._
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## Статус (2026-07)
+
+| | |
+|--|--|
+| **Версия OMG** | `0.9.0-rc.1` |
+| **Корень состояния** | `.omg/` (не `.omc/`) |
+| **Пин OMC** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **Паритет** | **Near-complete** перенос продукта (не 100% клон хоста Claude) |
+| **Модули** | **100%** touched vs OMC (`node scripts/port-inventory.mjs`) |
+| **Продуктовые гейты** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Подмножество Grok** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **Канонический README** | [`README.md`](README.md) |
+
+> Локально: `grok plugin install <path-or-repo> --trust` · состояние в **`.omg/`**.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## Быстрый старт
 
 **Шаг 1: Установка**
 
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+grok plugin install <owner>/oh-my-grok --trust
+# or local checkout:
+# grok plugin install /path/to/oh-my-grok --trust
+# See English README.md for full install & pipeline
 ```
 
 **Шаг 2: Настройка**

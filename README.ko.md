@@ -1,5 +1,5 @@
 <!-- Ported/adapted from OMC MIT; see NOTICE -->
-[English](README.md) | 한국어 | [中文](README.zh.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -20,26 +20,50 @@
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## 상태 스냅샷 (2026-07)
+
+| | |
+|--|--|
+| **OMG 버전** | `0.9.0-rc.1` |
+| **상태 루트** | `.omg/` (`.omc/` 사용 안 함) |
+| **OMC 핀** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **패리티** | **Near-complete** 제품 이관 (Claude 호스트 100% 복제 아님) |
+| **모듈 커버리지** | OMC 대비 **100%** touched (`node scripts/port-inventory.mjs`) |
+| **제품 게이트** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Grok 제품 정의** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **영문 정본 README** | [`README.md`](README.md) (설치·autopilot·개발 명령의 최신 기준) |
+
+> 로컬 설치: `grok plugin install <path-or-repo> --trust` · 런타임 상태는 **`.omg/`**.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## 빠른 시작
 
 **Step 1: 설치**
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+# Grok Build (권장)
+grok plugin install <owner>/oh-my-grok --trust
+# 또는 로컬 체크아웃
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
 ```
+
+자세한 설치·파이프라인·개발 명령은 영문 정본 [`README.md`](README.md)를 보세요.
 
 **Step 2: 설정**
 ```bash
 /omg-setup
+# 또는: node bin/omg.js setup
 ```
-
-`omg --plugin-dir <path>` 또는 `claude --plugin-dir <path>`를 통해 OMG를 실행하는 경우 `omg setup`에 `--plugin-dir-mode`를 추가합니다(또는 미리 `OMC_PLUGIN_ROOT` 내보내기). 이렇게 하면 플러그인이 이미 런타임에 제공하는 스킬/에이전트가 중복되지 않습니다. 완전한 결정 매트릭스 및 사용 가능한 모든 플래그는 [REFERENCE.md의 Plugin directory flags 섹션](./docs/REFERENCE.md#plugin-directory-flags)을 참조하세요.
-
-<!-- TODO(i18n): verify translation -->
 
 **Step 3: 무언가 만들기**
 ```
-autopilot: build a REST API for managing tasks
+/deep-interview "habit tracker CLI"
+/ralplan
+/autopilot
 ```
 
 끝입니다. 나머지는 모두 자동입니다.

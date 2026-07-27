@@ -1,6 +1,6 @@
 <!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
 
-[English](README.md) | [한국어](README.ko.md) | 中文 | [日本語](README.ja.md) | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -21,12 +21,36 @@
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## 状态快照（2026-07）
+
+| | |
+|--|--|
+| **OMG 版本** | `0.9.0-rc.1` |
+| **状态目录** | `.omg/`（不要用 `.omc/`） |
+| **OMC 钉选** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **对等程度** | **Near-complete** 产品移植（不是 Claude 主机 100% 克隆） |
+| **模块覆盖** | 相对 OMC **100%** touched (`node scripts/port-inventory.mjs`) |
+| **产品门禁** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Grok 产品定义** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **英文正本** | [`README.md`](README.md)（安装与开发命令以英文为准） |
+
+> 本地安装: `grok plugin install <path-or-repo> --trust` · 运行时状态在 **`.omg/`**.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## 快速开始
 
 **第一步：安装**
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+# Grok Build（推荐）
+grok plugin install <owner>/oh-my-grok --trust
+# 或本地检出
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
+# 完整说明见英文 README.md
 ```
 
 **第二步：配置**

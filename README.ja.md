@@ -1,6 +1,6 @@
 <!-- Ported from oh-my-claudecode (MIT) — see NOTICE. -->
 
-[English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | 日本語 | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md)
+[English](README.md) · [한국어](README.ko.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [Español](README.es.md) · [Tiếng Việt](README.vi.md) · [Português](README.pt.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Русский](README.ru.md) · [Türkçe](README.tr.md)
 
 # oh-my-grok
 
@@ -21,12 +21,36 @@
 
 ---
 
+<!-- OMG_STATUS_SNAPSHOT_START -->
+
+## ステータス（2026-07）
+
+| | |
+|--|--|
+| **OMG バージョン** | `0.9.0-rc.1` |
+| **状態ルート** | `.omg/` (`.omc/` は使わない) |
+| **OMC ピン** | `4.15.7` @ `41a4c0f` — [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) |
+| **パリティ** | **Near-complete** 製品移植（Claude ホスト 100% クローンではない） |
+| **モジュール** | OMC 比 **100%** touched (`node scripts/port-inventory.mjs`) |
+| **製品ゲート** | `npm run test:vitest:core` (217) · `npm run test:smoke` · `npm run mcp:probe` |
+| **Full vitest residual** | **0 fail** — [`parity-review/VITEST-RESIDUAL-2026-07-25.md`](parity-review/VITEST-RESIDUAL-2026-07-25.md) |
+| **Grok 製品定義** | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) |
+| **英語の正本** | [`README.md`](README.md)（インストール・開発コマンドの最新版） |
+
+> ローカル: `grok plugin install <path-or-repo> --trust` · 状態は **`.omg/`**.
+<!-- OMG_STATUS_SNAPSHOT_END -->
+
+
 ## クイックスタート
 
 **ステップ 1: インストール**
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-grok
-/plugin install oh-my-grok
+# Grok Build（推奨）
+grok plugin install <owner>/oh-my-grok --trust
+# またはローカル
+grok plugin install /path/to/oh-my-grok --trust
+grok plugin enable oh-my-grok
+# 詳細は英語正本 README.md
 ```
 
 **ステップ 2: セットアップ**
