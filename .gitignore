@@ -10,6 +10,22 @@ node_modules/
 !.omg/skills/
 !.omg/skills/**
 
+# Local Grok / plugin config (machine-specific)
+.grok/
+
+# Test / hook temp dirs
+.tmp/
+.tmp-*/
+tmp/
+
+# Shellmark captured sessions (runtime dumps, not product source)
+shellmark/sessions/
+
+# Generated / binary seminar artifacts (source is seminar/slides.md)
+seminar/*.pdf
+seminar/screenshots/*
+!seminar/screenshots/README.md
+
 # Editor / local
 .idea/
 .vscode/
