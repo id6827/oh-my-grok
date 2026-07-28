@@ -26,7 +26,7 @@
     "build:all": "npm run build && npm run build:bridge",
     "test:vitest:core": "vitest run src/utils src/config/__tests__/models.test.ts src/config/__tests__/plan-output.test.ts src/lib/__tests__/session-id.test.ts src/lib/__tests__/payload-limits.test.ts src/lib/__tests__/swallowed-error.test.ts",
     "test:all": "npm run test:smoke && npm run test:vitest",
-    "test:optional": "node scripts/tests/test-release-pack-dry-run.mjs && node scripts/tests/test-feature-skill-smoke.mjs && node scripts/tests/test-workflow-drift-guard-smoke.mjs",
+    "test:optional": "node scripts/tests/test-release-pack-dry-run.mjs && node scripts/tests/test-feature-skill-smoke.mjs && node scripts/tests/test-workflow-drift-guard-smoke.mjs && node scripts/tests/test-video-gen-readiness.mjs",
     "lint": "echo \"eslint optional; run npx eslint src when configured\"",
     "plugin:shipping:verify": "node scripts/plugin-shipping-surface.mjs verify",
     "plugin:shipping:stage": "node scripts/plugin-shipping-surface.mjs stage",

@@ -274,6 +274,8 @@ Re-port helpers after refreshing the OMC cache (see pin above):
 
 | Doc | Purpose |
 |-----|---------|
+| [`docs/IMAGINE-VIDEO-ZDR.md`](docs/IMAGINE-VIDEO-ZDR.md) | ZDR video gen matrix + agent sink params |
+| [`docs/design/imagine-video-zdr-host-contract.md`](docs/design/imagine-video-zdr-host-contract.md) | Host tool contract for platform P0 |
 | [`docs/OMC-SOURCE.md`](docs/OMC-SOURCE.md) | **Upstream pin / re-pin checklist** |
 | [`docs/OMC-PORT-STATUS.md`](docs/OMC-PORT-STATUS.md) | Surface-by-surface port status + intentional 🟡 |
 | [`docs/GROK-PRODUCT-SUBSET.md`](docs/GROK-PRODUCT-SUBSET.md) | What “done on Grok” means (not full host clone) |

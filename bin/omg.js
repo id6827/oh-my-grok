@@ -275,6 +275,20 @@ async function doctor() {
   const t = spawnSync("tmux", ["-V"], { encoding: "utf8" });
   if (t.status === 0) console.log(`ok: ${String(t.stdout || t.stderr).trim()}`);
   else console.log("tmux not found — omg team will force dry-run");
+  console.log("== video_gen ==");
+  try {
+    const { formatVideoGenDoctorLines } = await import(
+      pathToFileURL(join(root, "scripts/lib/video-gen-readiness.mjs")).href
+    );
+    for (const line of formatVideoGenDoctorLines(process.env)) {
+      // first line is section header already printed
+      if (line === "== video_gen ==") continue;
+      console.log(line);
+    }
+  } catch (e) {
+    console.log("video_gen: unknown");
+    console.log(`  - readiness probe failed: ${e?.message || e}`);
+  }
   console.log("== status ==");
   await status();
 }

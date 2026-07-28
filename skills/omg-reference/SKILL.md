@@ -151,3 +151,4 @@ Not-tested: End-to-end plugin marketplace install in a fresh Claude profile
 - Prefer `spawn_subagent` with `isolation: "worktree"` for parallel executors when mutating code.
 - Persist orchestration state under `.omg/` only (never `.omc/`).
 - Use `ask_user_question` for structured one-at-a-time questions (not multi-question dumps).
+- **Imagine video + ZDR:** Zero Data Retention teams need a video byte sink (`output_path` / `output_upload_url` once the host supports them). Until then `image_to_video` may 400. See `docs/IMAGINE-VIDEO-ZDR.md` and host contract `docs/design/imagine-video-zdr-host-contract.md`. Content-studio / IF peaks should land under `public/videos/` when shipping product assets.
