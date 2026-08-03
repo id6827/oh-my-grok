@@ -182,6 +182,7 @@ omg team shutdown
 ### Grok exclusives
 
 - **`/web-research`** — live docs, releases, issues, X signal → `.omg/artifacts/research/`
+- **`/insane-search`** — blocked **public URL** read (Phase 0–1 public APIs / archives); not a full WAF-bypass port; not a substitute for `/web-research`
 - **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
 - **Search-on-fail** — core skills prefer `web_search` before blind retries
 

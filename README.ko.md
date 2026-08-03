@@ -182,6 +182,7 @@ omg team shutdown
 ### Grok 전용
 
 - **`/web-research`** — 라이브 문서, 릴리스, 이슈, X 신호 → `.omg/artifacts/research/`
+- **`/insane-search`** — **막힌 공개 URL** 읽기 (Phase 0–1 공개 API/아카이브). 전체 WAF 우회 엔진 포팅 아님. 주제 리서치는 `/web-research`
 - **`/ui-mockup`** — Image Gen → 승인 → Vision 브리프 → 코드 → Vision QA
 - **Search-on-fail** — 핵심 스킬이 맹목 재시도 전에 `web_search` 우선
 

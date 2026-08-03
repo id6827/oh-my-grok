@@ -103,6 +103,7 @@ Write `.omg/artifacts/research/{slug}.md`:
 - Stop if tools are disabled; report offline limitation.
 - Stop if sources conflict irreconcilably — present both sides and recommend a verification experiment.
 - Never invent version numbers; if unknown, say so.
+- **Blocked primary URL (403/timeout/challenge HTML):** do not invent content. Escalate that URL only via **`/insane-search`** (Phase 0–1 public-path read). Do not pull the full research brief into stealth-fetch tooling.
 
 ## Final Checklist
 

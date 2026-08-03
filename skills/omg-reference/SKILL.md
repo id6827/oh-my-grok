@@ -81,12 +81,14 @@ Invoke built-in workflows via `/<name>`.
 - `ralplan` — consensus planning workflow
 - `sciomc` — science/research workflow
 - `external-context` — external docs/research workflow
+- `web-research` — topic research brief (Grok web/X)
+- `insane-search` — blocked **URL** public-path read (not topic research; not full stealth engine)
 - `deepinit` — hierarchical AGENTS.md generation
 - `deep-interview` — Socratic ambiguity-gated requirements workflow
 - `ai-slop-cleaner` — regression-safe cleanup workflow
 
 ### Utility skills
-- `ask`, `cancel`, `note`, `skillify`, `learner` (deprecated alias), `omg-setup`, `mcp-setup`, `hud`, `omg-doctor`, `trace`, `release`, `project-session-manager`, `skill`, `writer-memory`, `configure-notifications`
+- `ask`, `cancel`, `note`, `skillify`, `learner` (deprecated alias), `omg-setup`, `mcp-setup`, `hud`, `omg-doctor`, `trace`, `release`, `project-session-manager`, `skill`, `writer-memory`, `configure-notifications`, `insane-search` (blocked public URL Phase 0–1 read; not full WAF-bypass engine)
 
 ### Keyword triggers kept compact in CLAUDE.md
 - `"autopilot"→autopilot`
