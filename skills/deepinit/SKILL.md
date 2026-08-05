@@ -84,7 +84,8 @@ This creates a navigable hierarchy:
 ### Step 1: Map Directory Structure
 
 ```
-spawn_subagent(subagent_type="explore", model="haiku",
+// LOW complexity explore — prefer omit model (inherit) or model="grok-4.5"
+spawn_subagent(subagent_type="explore",
   prompt="List all directories recursively. Exclude: node_modules, .git, dist, build, __pycache__, .venv, coverage, .next, .nuxt")
 ```
 

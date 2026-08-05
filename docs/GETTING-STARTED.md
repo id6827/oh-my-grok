@@ -289,11 +289,22 @@ Defaults → User config (~/.config/grok-omg/config.jsonc)
 
 ```jsonc
 {
-  // Per-agent model assignments
+  // Per-agent model assignments (Grok Build default is grok-4.5 for all tiers)
   "agents": {
-    "explore": { "model": "haiku" },
-    "executor": { "model": "sonnet" },
-    "architect": { "model": "opus" }
+    "explore": { "model": "grok-4.5" },
+    "executor": { "model": "grok-4.5" },
+    "architect": { "model": "grok-4.5" }
+  },
+
+  // Complexity-tier → host model (all grok-4.5 until more slugs exist)
+  "routing": {
+    "enabled": true,
+    "defaultTier": "MEDIUM",
+    "tierModels": {
+      "LOW": "grok-4.5",
+      "MEDIUM": "grok-4.5",
+      "HIGH": "grok-4.5"
+    }
   },
 
   // Feature toggles
@@ -340,46 +351,51 @@ This is an advisory workflow contract, not runtime enforcement. See [company-con
 
 ### Overriding agent models
 
-You can change the AI model used by each agent:
+On Grok Build the host coding model is **`grok-4.5`** for every agent by default. Complexity tiers (LOW / MEDIUM / HIGH) still select agent variants and routing intent; they do not imply Claude Sonnet/Opus/Haiku IDs. When more host slugs exist, override via `agents.*.model`, `routing.tierModels`, or `OMG_MODEL_LOW` / `OMG_MODEL_MEDIUM` / `OMG_MODEL_HIGH` (also `OMC_MODEL_*`).
 
 ```jsonc
 {
   "agents": {
-    // Upgrade explore agent to a stronger model
-    "explore": { "model": "sonnet" },
-
-    // Upgrade executor to opus for complex projects
-    "executor": { "model": "opus" },
-
-    // Cost saving: use haiku for documentation writing
-    "writer": { "model": "haiku" }
+    // Explicit host slug (or "inherit" for parent session model)
+    "explore": { "model": "grok-4.5" },
+    "executor": { "model": "grok-4.5" },
+    "writer": { "model": "inherit" }
+  },
+  "routing": {
+    "tierModels": {
+      "LOW": "grok-4.5",
+      "MEDIUM": "grok-4.5",
+      "HIGH": "grok-4.5"
+    }
   }
 }
 ```
 
-#### Default model mapping
+Legacy tier aliases (`haiku` / `sonnet` / `opus`) still resolve through the adapter to the configured tier model (default `grok-4.5`); prefer `grok-4.5`, `inherit`, or LOW/MEDIUM/HIGH in new config.
 
-| Agent | Default model | Role |
-|-------|--------------|------|
-| `explore` | haiku | Codebase discovery |
-| `writer` | haiku | Documentation writing |
-| `executor` | sonnet | Code implementation |
-| `debugger` | sonnet | Debugging |
-| `designer` | sonnet | UI/UX design |
-| `verifier` | sonnet | Verification |
-| `tracer` | sonnet | Evidence-driven causal tracing |
-| `security-reviewer` | sonnet | Security vulnerabilities and trust boundaries |
-| `test-engineer` | sonnet | Test strategy and coverage |
-| `qa-tester` | sonnet | Interactive CLI/service runtime validation |
-| `scientist` | sonnet | Data and statistical analysis |
-| `git-master` | sonnet | Git operations and history management |
-| `document-specialist` | sonnet | External documentation and API reference lookup |
-| `architect` | opus | System design |
-| `planner` | opus | Strategic planning |
-| `critic` | opus | Plan review |
-| `analyst` | opus | Requirements analysis |
-| `code-reviewer` | opus | Comprehensive code review |
-| `code-simplifier` | opus | Code clarity and simplification |
+#### Default model mapping (Grok Build)
+
+| Agent | Default model | Complexity tier | Role |
+|-------|--------------|-----------------|------|
+| `explore` | `grok-4.5` | LOW | Codebase discovery |
+| `writer` | `grok-4.5` | LOW | Documentation writing |
+| `executor` | `grok-4.5` | MEDIUM | Code implementation |
+| `debugger` | `grok-4.5` | MEDIUM | Debugging |
+| `designer` | `grok-4.5` | MEDIUM | UI/UX design |
+| `verifier` | `grok-4.5` | MEDIUM | Verification |
+| `tracer` | `grok-4.5` | MEDIUM | Evidence-driven causal tracing |
+| `security-reviewer` | `grok-4.5` | HIGH | Security vulnerabilities and trust boundaries |
+| `test-engineer` | `grok-4.5` | MEDIUM | Test strategy and coverage |
+| `qa-tester` | `grok-4.5` | MEDIUM | Interactive CLI/service runtime validation |
+| `scientist` | `grok-4.5` | MEDIUM | Data and statistical analysis |
+| `git-master` | `grok-4.5` | MEDIUM | Git operations and history management |
+| `document-specialist` | `grok-4.5` | MEDIUM | External documentation and API reference lookup |
+| `architect` | `grok-4.5` | HIGH | System design |
+| `planner` | `grok-4.5` | HIGH | Strategic planning |
+| `critic` | `grok-4.5` | HIGH | Plan review |
+| `analyst` | `grok-4.5` | HIGH | Requirements analysis |
+| `code-reviewer` | `grok-4.5` | HIGH | Comprehensive code review |
+| `code-simplifier` | `grok-4.5` | HIGH | Code clarity and simplification |
 
 ### Customizing magic keywords
 
@@ -407,25 +423,31 @@ You can change keywords in four categories via the `magicKeywords` section of `c
 
 ### Model routing configuration
 
-OMG automatically selects a model tier based on task complexity:
+OMG selects a **complexity tier** based on task intent. On Grok Build every tier defaults to the host model `grok-4.5` (configurable when more slugs exist).
 
 ```jsonc
 {
   "routing": {
     "enabled": true,
     "defaultTier": "MEDIUM",
+    "tierModels": {
+      "LOW": "grok-4.5",
+      "MEDIUM": "grok-4.5",
+      "HIGH": "grok-4.5"
+    },
     // Force all agents to inherit the parent model
-    // (auto-activated when using CC Switch, Bedrock, or Vertex AI)
     "forceInherit": false
   }
 }
 ```
 
-| Tier | Model | Use case |
-|------|-------|----------|
-| LOW | haiku | Quick lookups, simple tasks |
-| MEDIUM | sonnet | Standard implementation, general tasks |
-| HIGH | opus | Architecture, deep analysis |
+| Tier | Host model (default) | Use case |
+|------|----------------------|----------|
+| LOW | `grok-4.5` (configurable) | Quick lookups, simple tasks |
+| MEDIUM | `grok-4.5` (configurable) | Standard implementation, general tasks |
+| HIGH | `grok-4.5` (configurable) | Architecture, deep analysis |
+
+Env overrides: `OMG_MODEL_LOW` / `OMG_MODEL_MEDIUM` / `OMG_MODEL_HIGH` (also `OMC_MODEL_*`). See [agent-tiers](./shared/agent-tiers.md) and [model-compatibility](./agents/model-compatibility.md).
 
 ### CLAUDE.md configuration
 

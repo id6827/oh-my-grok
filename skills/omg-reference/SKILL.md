@@ -12,31 +12,37 @@ Use this built-in reference when you need detailed OMG catalog information that 
 
 Prefix: `oh-my-grok:`. See `agents/*.md` for full prompts.
 
-- `explore` (haiku) — fast codebase search and mapping
-- `analyst` (opus) — requirements clarity and hidden constraints
-- `planner` (opus) — sequencing and execution plans
-- `architect` (opus) — system design, boundaries, and long-horizon tradeoffs
-- `debugger` (sonnet) — root-cause analysis and failure diagnosis
-- `executor` (sonnet) — implementation and refactoring
-- `verifier` (sonnet) — completion evidence and validation
-- `tracer` (sonnet) — trace gathering and evidence capture
-- `security-reviewer` (sonnet) — trust boundaries and vulnerabilities
-- `code-reviewer` (opus) — comprehensive code review
-- `test-engineer` (sonnet) — testing strategy and regression coverage
-- `designer` (sonnet) — UX and interaction design
-- `writer` (haiku) — documentation and concise content work
-- `qa-tester` (sonnet) — runtime/manual validation
-- `scientist` (sonnet) — data analysis and statistical reasoning
-- `document-specialist` (sonnet) — SDK/API/framework documentation lookup
-- `git-master` (sonnet) — commit strategy and history hygiene
-- `code-simplifier` (opus) — behavior-preserving simplification
-- `critic` (opus) — plan/design challenge and review
+- `explore` (LOW) — fast codebase search and mapping
+- `analyst` (HIGH) — requirements clarity and hidden constraints
+- `planner` (HIGH) — sequencing and execution plans
+- `architect` (HIGH) — system design, boundaries, and long-horizon tradeoffs
+- `debugger` (MEDIUM) — root-cause analysis and failure diagnosis
+- `executor` (MEDIUM) — implementation and refactoring
+- `verifier` (MEDIUM) — completion evidence and validation
+- `tracer` (MEDIUM) — trace gathering and evidence capture
+- `security-reviewer` (MEDIUM) — trust boundaries and vulnerabilities
+- `code-reviewer` (HIGH) — comprehensive code review
+- `test-engineer` (MEDIUM) — testing strategy and regression coverage
+- `designer` (MEDIUM) — UX and interaction design
+- `writer` (LOW) — documentation and concise content work
+- `qa-tester` (MEDIUM) — runtime/manual validation
+- `scientist` (MEDIUM) — data analysis and statistical reasoning
+- `document-specialist` (MEDIUM) — SDK/API/framework documentation lookup
+- `git-master` (MEDIUM) — commit strategy and history hygiene
+- `code-simplifier` (HIGH) — behavior-preserving simplification
+- `critic` (HIGH) — plan/design challenge and review
 
-## Model Routing
+## Model Routing (Grok Build)
 
-- `haiku` — quick lookups, lightweight inspection, narrow docs work
-- `sonnet` — standard implementation, debugging, and review
-- `opus` — architecture, deep analysis, consensus planning, and high-risk review
+Complexity tiers are **intent labels**, not Claude host slugs. Prefer omitting `model` on `spawn_subagent` (inherit host). Safe explicit slug today: **`grok-4.5` only**.
+
+| Complexity | When to use | Host today |
+|------------|-------------|------------|
+| LOW | Quick lookups, lightweight inspection, narrow docs work | omit or `grok-4.5` (`OMG_MODEL_LOW`) |
+| MEDIUM | Standard implementation, debugging, and review | omit or `grok-4.5` (`OMG_MODEL_MEDIUM`) |
+| HIGH | Architecture, deep analysis, consensus planning, high-risk review | omit or `grok-4.5` (`OMG_MODEL_HIGH`) |
+
+Claude-era aliases (`haiku`/`sonnet`/`opus`) map via `mapModel` in code if passed, but skills must not instruct agents to pass them as Grok host slugs.
 
 ## Tools Reference
 

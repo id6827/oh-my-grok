@@ -58,24 +58,138 @@ OMC를 의도적으로 올릴 때:
 
 ## 설치
 
-```bash
-# GitHub (게시 후)
-grok plugin install <owner>/oh-my-grok --trust
-grok plugin enable oh-my-grok
+**필요 조건:** [Grok Build / Grok CLI](https://x.ai/cli) 설치 및 로그인 (`grok --version`).
 
-# 로컬 체크아웃
-grok plugin install /path/to/oh-my-grok --trust
+> **중요:** `grok plugin details oh-my-grok` 는 **설치 후에만** 동작합니다. GitHub·마켓플레이스를 검색하지 않습니다.  
+> Grok Build 마켓에서 “omg”를 검색해도, [공식 marketplace 카탈로그](https://github.com/xai-org/plugin-marketplace)에 등록되기 전에는 **나오지 않습니다.** 그때까지는 아래처럼 GitHub에서 직접 설치하세요.
+
+### 권장 (공개 GitHub)
+
+```bash
+# GitHub shorthand (owner/repo) — 권장 원라인
+grok plugin install id6827/oh-my-grok --trust
+
+# 동일, 전체 URL
+grok plugin install https://github.com/id6827/oh-my-grok.git --trust
+
+# 태그·커밋 고정 (재현 가능 설치)
+# grok plugin install id6827/oh-my-grok@v0.9.0-rc.1 --trust
+# grok plugin install id6827/oh-my-grok@4cf6cd1 --trust
+
 grok plugin enable oh-my-grok
 ```
 
-설치 확인:
+`--trust` 는 신뢰 확인 프롬프트를 건너뜁니다 (플러그인은 코드 실행·머신 접근이 가능함).
+
+### 로컬 체크아웃 (기여자 / 개발)
 
 ```bash
+git clone https://github.com/id6827/oh-my-grok.git
+cd oh-my-grok
+# 선택: npm ci && npm run build   # dist / 로컬 CLI가 필요할 때
+
+grok plugin install "$(pwd)" --trust
+grok plugin enable oh-my-grok
+```
+
+### 확인 (설치 후에만)
+
+```bash
+grok plugin list
+# oh-my-grok 가 포함된 줄이 보여야 함
+
 grok plugin details oh-my-grok
-grok inspect
+# 버전, 경로, skills/agents/hooks/MCP 요약
+
+grok inspect   # 선택: 호스트/플러그인 개요
 ```
 
-Grok 세션에서:
+`details` 가 `Plugin "oh-my-grok" not found` 이면 **이 머신에 미설치**입니다. `details` 가 아니라 먼저 `install` 하세요.
+
+### 업데이트
+
+업데이트 방법은 **처음 어떻게 설치했는지**에 따라 다릅니다 (`grok plugin list` 로 확인).
+
+#### GitHub 설치 (일반 사용자)
+
+`grok plugin install id6827/oh-my-grok` (또는 전체 git URL) 로 설치했다면 **Git** 소스로 등록됩니다:
+
+```bash
+# 원격에서 최신 트리를 받아 로컬 플러그인 캐시를 갱신
+grok plugin update oh-my-grok
+
+# 설치된 플러그인 전부 업데이트
+grok plugin update
+```
+
+확인:
+
+```bash
+grok plugin list
+grok plugin details oh-my-grok
+```
+
+스킬·훅이 새 버전을 읽도록 **Grok 세션을 새로 열거나 재시작**하세요.
+
+#### 로컬 경로 설치 (기여자 / 개발)
+
+`grok plugin list` 에 `local: /path/to/oh-my-grok` 가 보이면, `plugin update` 는 **GitHub를 당기지 않습니다.** 체크아웃을 직접 갱신하세요:
+
+```bash
+cd /path/to/oh-my-grok
+git pull
+# 선택: npm ci && npm run build
+```
+
+로컬 설치를 공개 GitHub 설치로 바꾸려면:
+
+```bash
+grok plugin uninstall oh-my-grok
+grok plugin install id6827/oh-my-grok --trust
+grok plugin enable oh-my-grok
+```
+
+#### 재설치 (업데이트가 꼬였거나 깨끗이 받을 때)
+
+```bash
+grok plugin uninstall oh-my-grok
+grok plugin install id6827/oh-my-grok --trust
+grok plugin enable oh-my-grok
+```
+
+태그·커밋 고정:
+
+```bash
+grok plugin install id6827/oh-my-grok@v0.9.1 --trust
+# grok plugin install id6827/oh-my-grok@<full-sha> --trust
+```
+
+#### 버전을 올릴 때 배포 측에서 할 일
+
+1. [id6827/oh-my-grok](https://github.com/id6827/oh-my-grok) 에 커밋·푸시.
+2. `plugin.json` 의 **`version`** 을 올린다.
+3. (권장) git 태그 푸시, 예: `v0.9.1`.
+4. **Git** 으로 설치한 사용자는 `grok plugin update oh-my-grok`.
+
+별도 `plugin publish` 명령은 없습니다. GitHub(또는 마켓플레이스 카탈로그 SHA pin)가 배포 채널입니다.
+
+### 제거
+
+```bash
+grok plugin uninstall oh-my-grok       # 별칭: rm, remove
+```
+
+### 다른 사람에게 공유
+
+다음 한 줄을 전달하면 됩니다:
+
+```bash
+grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
+```
+
+저장소: [github.com/id6827/oh-my-grok](https://github.com/id6827/oh-my-grok)
+
+### 빠른 체험 (Grok 세션 안)
 
 ```text
 /deep-interview "스트릭 있는 습관 트래커 CLI를 만들고 싶어요"

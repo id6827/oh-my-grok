@@ -46,9 +46,10 @@ Given a query, decompose into 2-5 independent search facets:
 Fire independent facets in parallel via Task tool:
 
 ```
-spawn_subagent(subagent_type="document-specialist", model="sonnet", prompt="Search for: <facet 1 description>. Use web_search and web_fetch to find official documentation and examples. Cite all sources with URLs.")
+// Prefer omit model (inherit). Optional: model="grok-4.5". MEDIUM complexity → OMG_MODEL_MEDIUM when multi-model available
+spawn_subagent(subagent_type="document-specialist", model="grok-4.5", prompt="Search for: <facet 1 description>. Use web_search and web_fetch to find official documentation and examples. Cite all sources with URLs.")
 
-spawn_subagent(subagent_type="document-specialist", model="sonnet", prompt="Search for: <facet 2 description>. Use web_search and web_fetch to find official documentation and examples. Cite all sources with URLs.")
+spawn_subagent(subagent_type="document-specialist", model="grok-4.5", prompt="Search for: <facet 2 description>. Use web_search and web_fetch to find official documentation and examples. Cite all sources with URLs.")
 ```
 
 Maximum 5 parallel document-specialist agents.

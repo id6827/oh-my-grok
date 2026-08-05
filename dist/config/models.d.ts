@@ -5,7 +5,13 @@ export type ClaudeModelFamily = 'HAIKU' | 'SONNET' | 'OPUS' | 'FABLE';
  * Keep these date-less so version bumps are a one-line edit per family.
  */
 export declare const CLAUDE_FAMILY_DEFAULTS: Record<ClaudeModelFamily, string>;
-/** Canonical tier->model mapping used as built-in defaults */
+/**
+ * Canonical tier->model mapping used as built-in defaults.
+ * Grok Build currently exposes a single coding model (`grok-4.5`); all tiers
+ * share it until additional Build slugs ship. Override via OMC_MODEL_* /
+ * CLAUDE_CODE_BEDROCK_* / ANTHROPIC_DEFAULT_* env vars for multi-model or
+ * Claude/Bedrock setups.
+ */
 export declare const BUILTIN_TIER_MODEL_DEFAULTS: Record<ModelTier, string>;
 /** Canonical Claude high-reasoning variants by family */
 export declare const CLAUDE_FAMILY_HIGH_VARIANTS: Record<ClaudeModelFamily, string>;

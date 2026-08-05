@@ -44,7 +44,8 @@ If no structured goal provided, interpret the argument as a custom goal.
    - `--custom`: Run appropriate command and check for pattern
    - `--interactive`: Use qa-tester for interactive CLI/service testing:
      ```
-     spawn_subagent(subagent_type="qa-tester", model="sonnet", prompt="TEST:
+     // Prefer omit model (inherit). Optional: model="grok-4.5". MEDIUM complexity intent.
+     spawn_subagent(subagent_type="qa-tester", model="grok-4.5", prompt="TEST:
      Goal: [describe what to verify]
      Service: [how to start]
      Test cases: [specific scenarios to verify]")
@@ -57,7 +58,8 @@ If no structured goal provided, interpret the argument as a custom goal.
 3. **ARCHITECT DIAGNOSIS**: Spawn architect to analyze failure
 
    ```
-   spawn_subagent(subagent_type="architect", model="opus", prompt="DIAGNOSE FAILURE:
+   // HIGH complexity intent — omit model or model="grok-4.5" (not opus as host slug)
+   spawn_subagent(subagent_type="architect", model="grok-4.5", prompt="DIAGNOSE FAILURE:
    Goal: [goal type]
    Output: [test/build output]
    Provide root cause and specific fix recommendations.")
@@ -66,7 +68,8 @@ If no structured goal provided, interpret the argument as a custom goal.
 4. **FIX ISSUES**: Apply architect's recommendations
 
    ```
-   spawn_subagent(subagent_type="executor", model="sonnet", prompt="FIX:
+   // MEDIUM complexity — omit model or model="grok-4.5"
+   spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="FIX:
    Issue: [architect diagnosis]
    Files: [affected files]
    Apply the fix precisely as recommended.")

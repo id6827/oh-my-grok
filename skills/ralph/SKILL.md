@@ -52,7 +52,7 @@ By default, ralph operates in PRD mode. A scaffold `prd.json` is auto-generated 
 
 - Fire independent agent calls simultaneously -- never wait sequentially for independent work
 - Use `run_in_background: true` for long operations (installs, builds, test suites)
-- Always pass the `model` parameter explicitly when delegating to agents
+- Prefer omitting `model` on spawn_subagent (inherit host); if explicit, use only `model="grok-4.5"`. Do not pass Claude aliases as host slugs
 - Read `docs/shared/agent-tiers.md` before first delegation to select correct agent tiers
 - Deliver the full implementation: no scope reduction, no partial completion, no deleting tests to make them pass
 - If a Grok Build `/goal` is mentioned, treat it as a native session-loop handoff/evidence source only and use the deterministic conflict policies `refuse`, `adopt_existing`, and `artifact_only` rather than non-deterministic warning handling. Ralph remains the OMG loop authority for this run; do not claim `/goal` independently ran tests or read files, and do not treat evaluator success as a substitute for Ralph reviewer verification.
@@ -74,10 +74,10 @@ By default, ralph operates in PRD mode. A scaffold `prd.json` is auto-generated 
 2. **Pick next story**: Read the active PRD file and select the highest-priority story with `passes: false`. This is your current focus.
 
 3. **Implement the current story**:
-   - Delegate to specialist agents at appropriate tiers:
-     - Simple lookups: LOW tier (Haiku) -- "What does this function return?"
-     - Standard work: MEDIUM tier (Sonnet) -- "Add error handling to this module"
-     - Complex analysis: HIGH tier (Opus) -- "Debug this race condition"
+   - Delegate to specialist agents at appropriate complexity (LOW/MEDIUM/HIGH → mapModel / OMG_MODEL_* / `grok-4.5` today):
+     - Simple lookups: LOW complexity -- "What does this function return?"
+     - Standard work: MEDIUM complexity -- "Add error handling to this module"
+     - Complex analysis: HIGH complexity -- "Debug this race condition"
    - If during implementation you discover sub-tasks, add them as new stories to the active PRD file
    - Run long operations in background: Builds, installs, test suites use `run_in_background: true`
 
@@ -97,9 +97,9 @@ By default, ralph operates in PRD mode. A scaffold `prd.json` is auto-generated 
    c. If ALL complete, proceed to Step 7 (architect verification)
 
 7. **Reviewer verification** (tiered, against acceptance criteria):
-   - <5 files, <100 lines with full tests: STANDARD tier minimum (architect-medium / Sonnet)
-   - Standard changes: STANDARD tier (architect-medium / Sonnet)
-   - > 20 files or security/architectural changes: THOROUGH tier (architect / Opus)
+   - <5 files, <100 lines with full tests: STANDARD depth minimum (architect-medium / MEDIUM complexity)
+   - Standard changes: STANDARD depth (architect-medium / MEDIUM complexity)
+   - > 20 files or security/architectural changes: THOROUGH depth (architect / HIGH complexity)
    - If `--critic=critic`, use the Claude `critic` agent for the approval pass
    - If `--critic=codex`, run `omg ask codex --agent-prompt critic "..."` for the approval pass. The Codex critic prompt MUST include:
      1. The full list of acceptance criteria from prd.json for verification
@@ -162,12 +162,13 @@ Why good: Generic criteria replaced with specific, testable criteria.
 Correct parallel delegation:
 ```
 
-spawn_subagent(subagent_type="executor", model="haiku", prompt="Add type export for UserConfig")
-spawn_subagent(subagent_type="executor", model="sonnet", prompt="Implement the caching layer for API responses")
-spawn_subagent(subagent_type="executor", model="opus", prompt="Refactor auth module to support OAuth2 flow")
+// Prefer omit model (inherit). Optional: model="grok-4.5". LOW/MEDIUM/HIGH → OMG_MODEL_* when multi-model available
+spawn_subagent(subagent_type="executor", prompt="Add type export for UserConfig")
+spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="Implement the caching layer for API responses")
+spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="Refactor auth module to support OAuth2 flow")
 
 ```
-Why good: Three independent tasks fired simultaneously at appropriate tiers.
+Why good: Three independent tasks fired simultaneously with Grok-safe model guidance.
 </Good>
 
 <Good>

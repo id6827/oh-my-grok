@@ -1,16 +1,16 @@
 /**
  * Repro test for Bedrock model routing bug
  *
- * Bug: On Bedrock, workers get model ID "claude-sonnet-5" (bare builtin default)
- * instead of inheriting the parent model. On Bedrock, this bare ID is invalid
+ * Bug: On Bedrock, workers get a bare builtin default model ID (historically
+ * "claude-sonnet-5"; now "grok-4.5" on clean Grok installs) instead of
+ * inheriting the parent model. On Bedrock, bare Anthropic/Grok IDs are invalid
  * — Bedrock requires full IDs like "us.anthropic.claude-sonnet-4-6-v1:0".
  *
  * Root cause chain:
- * 1. buildDefaultConfig() → config.agents.executor.model = 'claude-sonnet-5'
- *    (from CLAUDE_FAMILY_DEFAULTS.SONNET, because no Bedrock env vars found)
- * 2. getAgentDefinitions() resolves executor.model = 'claude-sonnet-5'
- *    (configuredModel from config takes precedence over agent's defaultModel)
- * 3. enforceModel() injects 'claude-sonnet-5' into Task calls
+ * 1. buildDefaultConfig() → config.agents.executor.model = builtin default
+ *    (from BUILTIN_TIER_MODEL_DEFAULTS, because no Bedrock env vars found)
+ * 2. getAgentDefinitions() resolves executor.model from that config
+ * 3. enforceModel() injects a model into Task calls
  * 4. Claude Code passes it to Bedrock API → 400 invalid model
  *
  * The defense (forceInherit) works IF CLAUDE_CODE_USE_BEDROCK=1 is in the env.
@@ -103,10 +103,10 @@ describe('Bedrock model routing repro', () => {
       expect(getDefaultModelMedium()).toBe('global.anthropic.claude-sonnet-4-6-v1:0');
     });
 
-    it('falls back to bare "claude-sonnet-5" without env vars', async () => {
+    it('falls back to bare "grok-4.5" without env vars', async () => {
       const { getDefaultModelMedium } = await import('../config/models.js');
       // getDefaultModelMedium returns the raw config value (not normalized)
-      expect(getDefaultModelMedium()).toBe('claude-sonnet-5');
+      expect(getDefaultModelMedium()).toBe('grok-4.5');
     });
   });
 
@@ -129,47 +129,47 @@ describe('Bedrock model routing repro', () => {
       const config = loadConfig();
       expect(config.routing?.forceInherit).toBe(false);
 
-      // 3. Agent definitions use full builtin model IDs from config
+      // 3. Agent definitions use Grok builtin model IDs from config (all tiers)
       const { getAgentDefinitions } = await import('../agents/definitions.js');
       const defs = getAgentDefinitions({ config });
-      expect(defs['executor'].model).toBe('claude-sonnet-5');
-      expect(defs['explore'].model).toBe('claude-haiku-4-5');
-      expect(defs['architect'].model).toBe('claude-opus-4-8');
+      expect(defs['executor'].model).toBe('grok-4.5');
+      expect(defs['explore'].model).toBe('grok-4.5');
+      expect(defs['architect'].model).toBe('grok-4.5');
 
-      // 4. enforceModel normalizes to bare CC-supported aliases (FIX)
+      // 4. enforceModel injects the configured model (Grok slug or alias)
       const { enforceModel } = await import('../features/delegation-enforcer.js');
 
-      // 4a. executor → 'sonnet' (normalized from config's full model ID)
+      // 4a. executor — MEDIUM tier → grok-4.5 builtin
       const executorResult = enforceModel({
         description: 'Implement feature',
         prompt: 'Write the code',
         subagent_type: 'oh-my-grok:executor',
       });
       expect(executorResult.injected).toBe(true);
-      expect(executorResult.modifiedInput.model).toBe('sonnet');
+      expect(executorResult.modifiedInput.model).toBe('grok-4.5');
 
-      // 4b. explore → 'haiku'
+      // 4b. explore — LOW tier → grok-4.5 builtin
       const exploreResult = enforceModel({
         description: 'Find files',
         prompt: 'Search codebase',
         subagent_type: 'oh-my-grok:explore',
       });
       expect(exploreResult.injected).toBe(true);
-      expect(exploreResult.modifiedInput.model).toBe('haiku');
+      expect(exploreResult.modifiedInput.model).toBe('grok-4.5');
 
-      // 4c. architect → 'opus'
+      // 4c. architect — HIGH tier → grok-4.5 builtin
       const architectResult = enforceModel({
         description: 'Design system',
         prompt: 'Analyze architecture',
         subagent_type: 'oh-my-grok:architect',
       });
       expect(architectResult.injected).toBe(true);
-      expect(architectResult.modifiedInput.model).toBe('opus');
+      expect(architectResult.modifiedInput.model).toBe('grok-4.5');
 
-      // 5. After fix: these are valid CC aliases that CC resolves on any provider
-      expect(['sonnet', 'opus', 'haiku'].includes(executorResult.modifiedInput.model!)).toBe(true);
-      expect(['sonnet', 'opus', 'haiku'].includes(exploreResult.modifiedInput.model!)).toBe(true);
-      expect(['sonnet', 'opus', 'haiku'].includes(architectResult.modifiedInput.model!)).toBe(true);
+      // 5. Clean Grok defaults: all tiers inject the shared Grok Build slug
+      expect(executorResult.modifiedInput.model).toBe('grok-4.5');
+      expect(exploreResult.modifiedInput.model).toBe('grok-4.5');
+      expect(architectResult.modifiedInput.model).toBe('grok-4.5');
     });
 
     it('the defense works when CLAUDE_CODE_USE_BEDROCK IS propagated', async () => {
@@ -344,7 +344,7 @@ describe('Bedrock model routing repro', () => {
   // ── Summary: which scenario matches the reported error? ────────────────────
 
   describe('DIAGNOSIS: matching error to scenario', () => {
-    it('reported error uses "claude-sonnet-4-6" → matches enforceModel injection path', async () => {
+    it('without env, enforceModel injects Grok builtin default (not Claude aliases)', async () => {
       const { enforceModel } = await import('../features/delegation-enforcer.js');
       const result = enforceModel({
         description: 'test',
@@ -352,8 +352,8 @@ describe('Bedrock model routing repro', () => {
         subagent_type: 'oh-my-grok:executor',
       });
 
-      // This is exactly the model ID from the error report
-      expect(result.modifiedInput.model).toBe('sonnet');
+      // Clean Grok install: MEDIUM tier resolves to shared Build slug
+      expect(result.modifiedInput.model).toBe('grok-4.5');
     });
   });
 

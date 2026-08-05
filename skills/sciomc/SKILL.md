@@ -59,28 +59,30 @@ When given a research goal, decompose into 3-7 independent stages:
 
 ### Parallel Scientist Invocation
 
-Fire independent stages in parallel via Task tool:
+Fire independent stages in parallel via spawn_subagent:
 
 ```
-// Stage 1 - Simple data gathering
-spawn_subagent(subagent_type="scientist", model="haiku", prompt="[RESEARCH_STAGE:1] Investigate...")
+// Prefer omit model (inherit). Optional explicit slug today: model="grok-4.5"
+// Complexity intent LOW/MEDIUM/HIGH → mapModel / OMG_MODEL_LOW|MEDIUM|HIGH when multi-model hosts exist
+// Stage 1 - Simple data gathering (LOW)
+spawn_subagent(subagent_type="scientist", prompt="[RESEARCH_STAGE:1] Investigate...")
 
-// Stage 2 - Standard analysis
-spawn_subagent(subagent_type="scientist", model="sonnet", prompt="[RESEARCH_STAGE:2] Analyze...")
+// Stage 2 - Standard analysis (MEDIUM)
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="[RESEARCH_STAGE:2] Analyze...")
 
-// Stage 3 - Complex reasoning
-spawn_subagent(subagent_type="scientist", model="opus", prompt="[RESEARCH_STAGE:3] Deep analysis of...")
+// Stage 3 - Complex reasoning (HIGH)
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="[RESEARCH_STAGE:3] Deep analysis of...")
 ```
 
 ### Smart Model Routing
 
-**CRITICAL: Always pass `model` parameter explicitly!**
+**Grok Build:** Prefer omitting `model` (inherit host). Safe explicit slug today is only `grok-4.5`. Do not pass `haiku`/`sonnet`/`opus` as host slugs.
 
-| Task Complexity | Agent | Model | Use For |
-|-----------------|-------|-------|---------|
-| Data gathering | `scientist` (model=haiku) | haiku | File enumeration, pattern counting, simple lookups |
-| Standard analysis | `scientist` | sonnet | Code analysis, pattern detection, documentation review |
-| Complex reasoning | `scientist` | opus | Architecture analysis, cross-cutting concerns, hypothesis validation |
+| Task Complexity | Agent | Host model today | Use For |
+|-----------------|-------|------------------|---------|
+| Data gathering (LOW) | `scientist` | omit or `grok-4.5` | File enumeration, pattern counting, simple lookups |
+| Standard analysis (MEDIUM) | `scientist` | omit or `grok-4.5` | Code analysis, pattern detection, documentation review |
+| Complex reasoning (HIGH) | `scientist` | omit or `grok-4.5` | Architecture analysis, cross-cutting concerns, hypothesis validation |
 
 ### Routing Decision Guide
 
@@ -98,8 +100,8 @@ spawn_subagent(subagent_type="scientist", model="opus", prompt="[RESEARCH_STAGE:
 After parallel execution completes, verify findings:
 
 ```
-// Cross-validation stage
-spawn_subagent(subagent_type="scientist", model="sonnet", prompt="
+// Cross-validation stage (MEDIUM complexity — omit model or model="grok-4.5")
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="
 [RESEARCH_VERIFICATION]
 Cross-validate these findings for consistency:
 
@@ -179,10 +181,10 @@ Generating report...
 When stages analyze different data sources:
 
 ```
-// All fire simultaneously
-spawn_subagent(subagent_type="scientist", model="haiku", prompt="[STAGE:1] Analyze src/api/...")
-spawn_subagent(subagent_type="scientist", model="haiku", prompt="[STAGE:2] Analyze src/utils/...")
-spawn_subagent(subagent_type="scientist", model="haiku", prompt="[STAGE:3] Analyze src/components/...")
+// All fire simultaneously (LOW complexity — omit model or model="grok-4.5")
+spawn_subagent(subagent_type="scientist", prompt="[STAGE:1] Analyze src/api/...")
+spawn_subagent(subagent_type="scientist", prompt="[STAGE:2] Analyze src/utils/...")
+spawn_subagent(subagent_type="scientist", prompt="[STAGE:3] Analyze src/components/...")
 ```
 
 ### Hypothesis Battery (Parallel)
@@ -190,10 +192,10 @@ spawn_subagent(subagent_type="scientist", model="haiku", prompt="[STAGE:3] Analy
 When testing multiple hypotheses:
 
 ```
-// Test hypotheses simultaneously
-spawn_subagent(subagent_type="scientist", model="sonnet", prompt="[HYPOTHESIS:A] Test if caching improves...")
-spawn_subagent(subagent_type="scientist", model="sonnet", prompt="[HYPOTHESIS:B] Test if batching reduces...")
-spawn_subagent(subagent_type="scientist", model="sonnet", prompt="[HYPOTHESIS:C] Test if lazy loading helps...")
+// Test hypotheses simultaneously (MEDIUM — model="grok-4.5" or omit)
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="[HYPOTHESIS:A] Test if caching improves...")
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="[HYPOTHESIS:B] Test if batching reduces...")
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="[HYPOTHESIS:C] Test if lazy loading helps...")
 ```
 
 ### Cross-Validation (Sequential)
@@ -204,8 +206,8 @@ When verification depends on all findings:
 // Wait for all parallel stages
 [stages complete]
 
-// Then sequential verification
-spawn_subagent(subagent_type="scientist", model="opus", prompt="
+// Then sequential verification (HIGH complexity — model="grok-4.5" or omit)
+spawn_subagent(subagent_type="scientist", model="grok-4.5", prompt="
 [CROSS_VALIDATION]
 Validate consistency across all findings:
 - Finding 1: ...

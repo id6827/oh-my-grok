@@ -83,19 +83,20 @@ V1 does not support `stageModels`, model routing, provider or role selection; in
    - **If ralplan consensus plan exists** (`.omg/plans/ralplan-*.md` or `.omg/plans/consensus-*.md` from the 3-stage pipeline): Skip BOTH Phase 0 and Phase 1 — jump directly to Phase 2 (Execution). The plan has already been Planner/Architect/Critic validated.
    - **If deep-interview spec exists** (`.omg/specs/deep-interview-*.md`): Skip analyst+architect expansion, use the pre-validated spec directly as Phase 0 output. Continue to Phase 1 (Planning).
    - **If input is vague** (no file paths, function names, or concrete anchors): Offer redirect to `/deep-interview` for Socratic clarification before expanding
-   - **Otherwise**: Analyst (Opus) extracts requirements, Architect (Opus) creates technical specification
+   - **Otherwise**: Analyst (HIGH) extracts requirements, Architect (HIGH) creates technical specification — prefer omit model on spawn or `model="grok-4.5"` (not Claude host slugs)
    - Output: `.omg/autopilot/spec.md`
 
 2. **Phase 1 - Planning**: Create an implementation plan from the spec
    - **If ralplan consensus plan exists**: Skip — already done in the 3-stage pipeline
-   - Architect (Opus): Create plan (direct mode, no interview)
-   - Critic (Opus): Validate plan
+   - Architect (HIGH): Create plan (direct mode, no interview)
+   - Critic (HIGH): Validate plan
    - Output: `.omg/plans/autopilot-impl.md`
 
 3. **Phase 2 - Execution**: Implement the plan using Ralph + Ultrawork
-   - Executor (Haiku): Simple tasks
-   - Executor (Sonnet): Standard tasks
-   - Executor (Opus): Complex tasks
+   - Executor (LOW complexity): Simple tasks
+   - Executor (MEDIUM complexity): Standard tasks
+   - Executor (HIGH complexity): Complex tasks
+   - Prefer omit `model` (inherit) or `model="grok-4.5"`; LOW/MEDIUM/HIGH map via `mapModel` / `OMG_MODEL_*` when multi-model hosts exist
    - Run independent tasks in parallel
 
 4. **Phase 3 - QA**: Cycle until all tests pass (UltraQA mode)

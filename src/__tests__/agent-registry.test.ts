@@ -159,7 +159,7 @@ describe('Agent Registry Validation', () => {
     const agents = getAgentDefinitions();
 
     expect(agents.architect?.model).toBe('glm-5.1:cloud');
-    expect(agents.executor?.model).toContain('claude-sonnet');
+    expect(agents.executor?.model).toBe('grok-4.5');
     expect(agents.executor?.model).not.toBe('glm-5.1:cloud');
   });
 

@@ -131,7 +131,7 @@ By default, OMG stores state in `{worktree}/.omg/`. This is lost when worktrees 
 
 ```bash
 # In your shell profile (~/.bashrc, ~/.zshrc, etc.)
-export OMC_STATE_DIR="$HOME/.claude/omg"
+export OMC_STATE_DIR="$HOME/.config/grok-omg"
 ```
 
 This resolves to `~/.grok/omg/{project-identifier}/` where the project identifier uses a hash of the git remote URL (stable across worktrees/clones) with a fallback to the directory path hash for local-only repos.

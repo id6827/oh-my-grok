@@ -6,10 +6,15 @@ import {
   isProviderSpecificModelId,
   resolveClaudeFamily,
   CLAUDE_FAMILY_DEFAULTS,
+  BUILTIN_TIER_MODEL_DEFAULTS,
   hasExtendedContextSuffix,
   isSubagentSafeModelId,
   resolveInheritedModelFromEnv,
   shouldAutoForceInherit,
+  getDefaultTierModels,
+  getDefaultModelLow,
+  getDefaultModelMedium,
+  getDefaultModelHigh,
 } from '../models.js';
 import { saveAndClear, restore } from './test-helpers.js';
 
@@ -35,6 +40,65 @@ const ALL_KEYS = [
   'OMC_ROUTING_FORCE_INHERIT',
   ...TIER_MODEL_ENV_KEYS,
 ] as const;
+
+// ---------------------------------------------------------------------------
+// getDefaultTierModels() / BUILTIN_TIER_MODEL_DEFAULTS — Grok-first defaults
+// ---------------------------------------------------------------------------
+describe('getDefaultTierModels()', () => {
+  let saved: Record<string, string | undefined>;
+
+  beforeEach(() => { saved = saveAndClear(ALL_KEYS); });
+  afterEach(() => { restore(saved); });
+
+  it('returns grok-4.5 for all tiers with no env set', () => {
+    expect(BUILTIN_TIER_MODEL_DEFAULTS).toEqual({
+      LOW: 'grok-4.5',
+      MEDIUM: 'grok-4.5',
+      HIGH: 'grok-4.5',
+    });
+    expect(getDefaultTierModels()).toEqual({
+      LOW: 'grok-4.5',
+      MEDIUM: 'grok-4.5',
+      HIGH: 'grok-4.5',
+    });
+  });
+
+  it('honors OMC_MODEL_* env overrides', () => {
+    process.env.OMC_MODEL_LOW = 'custom-low';
+    process.env.OMC_MODEL_MEDIUM = 'custom-medium';
+    process.env.OMC_MODEL_HIGH = 'custom-high';
+
+    expect(getDefaultModelLow()).toBe('custom-low');
+    expect(getDefaultModelMedium()).toBe('custom-medium');
+    expect(getDefaultModelHigh()).toBe('custom-high');
+  });
+
+  it('honors CLAUDE_CODE_BEDROCK_* env overrides', () => {
+    process.env.CLAUDE_CODE_BEDROCK_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-v1:0';
+    process.env.CLAUDE_CODE_BEDROCK_SONNET_MODEL = 'us.anthropic.claude-sonnet-4-6-v1:0';
+    process.env.CLAUDE_CODE_BEDROCK_OPUS_MODEL = 'us.anthropic.claude-opus-4-6-v1:0';
+
+    expect(getDefaultModelLow()).toBe('us.anthropic.claude-haiku-4-5-v1:0');
+    expect(getDefaultModelMedium()).toBe('us.anthropic.claude-sonnet-4-6-v1:0');
+    expect(getDefaultModelHigh()).toBe('us.anthropic.claude-opus-4-6-v1:0');
+  });
+
+  it('honors ANTHROPIC_DEFAULT_* env overrides', () => {
+    process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL = 'claude-haiku-custom';
+    process.env.ANTHROPIC_DEFAULT_SONNET_MODEL = 'claude-sonnet-custom';
+    process.env.ANTHROPIC_DEFAULT_OPUS_MODEL = 'claude-opus-custom';
+
+    expect(getDefaultModelLow()).toBe('claude-haiku-custom');
+    expect(getDefaultModelMedium()).toBe('claude-sonnet-custom');
+    expect(getDefaultModelHigh()).toBe('claude-opus-custom');
+  });
+
+  it('keeps CLAUDE_FAMILY_DEFAULTS as named Claude family constants', () => {
+    expect(CLAUDE_FAMILY_DEFAULTS.HAIKU).toMatch(/^claude-haiku/);
+    expect(CLAUDE_FAMILY_DEFAULTS.SONNET).toMatch(/^claude-sonnet/);
+    expect(CLAUDE_FAMILY_DEFAULTS.OPUS).toMatch(/^claude-opus/);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // isBedrock()

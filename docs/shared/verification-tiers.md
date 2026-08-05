@@ -6,11 +6,11 @@ Verification scales with task complexity to optimize cost while maintaining qual
 
 ## Tier Definitions
 
-| Tier | Criteria | Agent | Model | Evidence Required |
-|------|----------|-------|-------|-------------------|
-| **LIGHT** | <5 files, <100 lines, full test coverage | architect-low | haiku | lsp_diagnostics clean |
-| **STANDARD** | Default (not LIGHT or THOROUGH) | architect-medium | sonnet | diagnostics + build pass |
-| **THOROUGH** | >20 files OR architectural/security changes | architect | opus | Full review + all tests |
+| Tier | Criteria | Agent | Complexity | Host model (default) | Evidence Required |
+|------|----------|-------|------------|----------------------|-------------------|
+| **LIGHT** | <5 files, <100 lines, full test coverage | architect-low | LOW | `grok-4.5` | lsp_diagnostics clean |
+| **STANDARD** | Default (not LIGHT or THOROUGH) | architect-medium | MEDIUM | `grok-4.5` | diagnostics + build pass |
+| **THOROUGH** | >20 files OR architectural/security changes | architect | HIGH | `grok-4.5` | Full review + all tests |
 
 ## Selection Interface
 

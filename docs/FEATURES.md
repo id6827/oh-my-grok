@@ -345,9 +345,9 @@ if (result.success && result.context) {
   console.log(`Resuming session with ${result.context.toolCallCount} prior tool calls`);
 
   // Continue with Task delegation
-  Task({
+  spawn_subagent({
     subagent_type: "oh-my-grok:executor",
-    model: "sonnet",
+    model: "grok-4.5", // or omit / "inherit"
     prompt: result.context.continuationPrompt
   });
 }

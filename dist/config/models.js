@@ -33,11 +33,17 @@ export const CLAUDE_FAMILY_DEFAULTS = {
     OPUS: 'claude-opus-4-8',
     FABLE: 'claude-fable-5',
 };
-/** Canonical tier->model mapping used as built-in defaults */
+/**
+ * Canonical tier->model mapping used as built-in defaults.
+ * Grok Build currently exposes a single coding model (`grok-4.5`); all tiers
+ * share it until additional Build slugs ship. Override via OMC_MODEL_* /
+ * CLAUDE_CODE_BEDROCK_* / ANTHROPIC_DEFAULT_* env vars for multi-model or
+ * Claude/Bedrock setups.
+ */
 export const BUILTIN_TIER_MODEL_DEFAULTS = {
-    LOW: CLAUDE_FAMILY_DEFAULTS.HAIKU,
-    MEDIUM: CLAUDE_FAMILY_DEFAULTS.SONNET,
-    HIGH: CLAUDE_FAMILY_DEFAULTS.OPUS,
+    LOW: 'grok-4.5',
+    MEDIUM: 'grok-4.5',
+    HIGH: 'grok-4.5',
 };
 /** Canonical Claude high-reasoning variants by family */
 export const CLAUDE_FAMILY_HIGH_VARIANTS = {
@@ -63,7 +69,7 @@ export const BUILTIN_EXTERNAL_MODEL_DEFAULTS = {
  *   OMC_MODEL_MEDIUM  - Model ID for MEDIUM tier (sonnet-class)
  *   OMC_MODEL_LOW     - Model ID for LOW tier (haiku-class)
  *
- * User config (~/.config/claude-omg/config.jsonc) can also override
+ * User config (~/.config/grok-omg/config.jsonc) can also override
  * via `routing.tierModels` or per-agent `agents.<name>.model`.
  */
 /**

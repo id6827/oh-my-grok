@@ -1,13 +1,27 @@
 <!-- Ported from oh-my-claudecode docs (MIT) — see NOTICE. Adapted for oh-my-grok / Grok Build. -->
 
-# Agent Tiers Reference
+# Agent Complexity Tiers Reference
 
-This is the single source of truth for all agent tier information. All skill files and documentation should reference this file instead of duplicating the table.
+This is the single source of truth for agent complexity tiers. All skill files and documentation should reference this file instead of duplicating the table.
+
+## Host reality (Grok Build)
+
+Grok Build currently exposes a **single coding model**: `grok-4.5` (default). Complexity tiers (LOW / MEDIUM / HIGH) still express **routing intent** — how hard the task is and which agent variant to prefer — not distinct host model IDs.
+
+Legacy Claude-era aliases (`haiku` / `sonnet` / `opus`) map to the same tiers and resolve to `grok-4.5` by default via `src/adapters/grok/models.ts`. When more Grok slugs exist, override per tier without code changes:
+
+| Override | Also accepted |
+|----------|---------------|
+| `OMG_MODEL_LOW` | `OMC_MODEL_LOW` |
+| `OMG_MODEL_MEDIUM` | `OMC_MODEL_MEDIUM` |
+| `OMG_MODEL_HIGH` | `OMC_MODEL_HIGH` |
+
+Config: `.grok/omg.jsonc` or `~/.config/grok-omg/config.jsonc` → `routing.tierModels`. Set a tier to `inherit` to use the parent session model.
 
 ## Tier Matrix
 
-| Domain | LOW (Haiku) | MEDIUM (Sonnet) | HIGH (Opus) |
-|--------|-------------|-----------------|-------------|
+| Domain | LOW | MEDIUM | HIGH |
+|--------|-----|--------|------|
 | **Analysis** | architect-low | architect-medium | architect |
 | **Execution** | executor-low | executor | executor-high |
 | **Search** | explore | - | explore-high |
@@ -20,17 +34,19 @@ This is the single source of truth for all agent tier information. All skill fil
 | **Pre-Planning** | - | - | analyst |
 | **Testing** | - | qa-tester | - |
 | **Security** | security-reviewer-low | - | security-reviewer |
-| **TDD** | test-engineer (model=haiku) | test-engineer | - |
+| **TDD** | test-engineer (LOW) | test-engineer | - |
 | **Code Review** | - | - | code-reviewer |
 | **Data Science** | - | scientist | scientist-high |
 
 ## Model Routing Guide
 
-| Task Complexity | Tier | Model | When to Use |
-|-----------------|------|-------|-------------|
-| Simple | LOW | haiku | Quick lookups, simple fixes, "What does X return?" |
-| Standard | MEDIUM | sonnet | Feature implementation, standard debugging, "Add validation" |
-| Complex | HIGH | opus | Architecture decisions, complex debugging, "Refactor system" |
+| Task Complexity | Tier | Host model (default) | When to Use |
+|-----------------|------|----------------------|-------------|
+| Simple | LOW | `grok-4.5` (configurable) | Quick lookups, simple fixes, "What does X return?" |
+| Standard | MEDIUM | `grok-4.5` (configurable) | Feature implementation, standard debugging, "Add validation" |
+| Complex | HIGH | `grok-4.5` (configurable) | Architecture decisions, complex debugging, "Refactor system" |
+
+Tier aliases accepted by the adapter: `low`/`haiku`, `medium`/`sonnet`, `high`/`opus` → same tier map (all default to `grok-4.5` today). Prefer naming tiers as LOW/MEDIUM/HIGH in new docs.
 
 ## Agent Selection by Task Type
 
@@ -56,13 +72,13 @@ This is the single source of truth for all agent tier information. All skill fil
 | Security review | security-reviewer | HIGH |
 | Quick security scan | security-reviewer-low | LOW |
 | Fix build errors | debugger | MEDIUM |
-| Simple build fix | debugger (model=haiku) | LOW |
+| Simple build fix | debugger (LOW) | LOW |
 | TDD workflow | test-engineer | MEDIUM |
-| Quick test suggestions | test-engineer (model=haiku) | LOW |
+| Quick test suggestions | test-engineer (LOW) | LOW |
 | Code review | code-reviewer | HIGH |
-| Quick code check | code-reviewer (model=haiku) | LOW |
+| Quick code check | code-reviewer (LOW) | LOW |
 | Data analysis/stats | scientist | MEDIUM |
-| Quick data inspection | scientist (model=haiku) | LOW |
+| Quick data inspection | scientist (LOW) | LOW |
 | Complex ML/hypothesis | scientist-high | HIGH |
 | Find symbol references | explore-high | HIGH |
 | Get file/workspace symbol outline | explore | LOW |
@@ -76,18 +92,25 @@ This is the single source of truth for all agent tier information. All skill fil
 
 ## Usage
 
-When delegating, always specify the model explicitly:
+On Grok Build, omit `model` (inherit parent) or pass `grok-4.5`. Complexity intent is mainly expressed by **which agent** you spawn (`executor-low` vs `executor` vs `executor-high`), not by multi-Claude model IDs.
 
 ```
 spawn_subagent(subagent_type="oh-my-grok:executor",
-     model="sonnet",
      prompt="...")
 ```
 
-For token savings, prefer lower tiers when the task allows:
-- Use `haiku` for simple lookups and quick fixes
-- Use `sonnet` for standard implementation work
-- Reserve `opus` for complex reasoning tasks
+Optional explicit model / tier alias (all resolve to `grok-4.5` by default):
+
+```
+spawn_subagent(subagent_type="oh-my-grok:executor",
+     model="grok-4.5",   // or "inherit", or legacy "sonnet"/"MEDIUM"
+     prompt="...")
+```
+
+For lighter work, prefer lower-complexity **agents** when the task allows:
+- LOW agents (`explore`, `executor-low`, `writer`) for simple lookups and quick fixes
+- MEDIUM agents (`executor`, `debugger`) for standard implementation
+- HIGH agents (`executor-high`, `architect`, `planner`) for complex reasoning tasks
 
 ## MCP Tools & Agent Capabilities
 

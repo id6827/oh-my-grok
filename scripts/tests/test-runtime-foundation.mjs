@@ -13,7 +13,9 @@ const mod = await import(distIndex.href);
 assert.ok(mod.atomicWriteJson || mod.atomicWriteJsonSync, "atomic write export");
 assert.ok(typeof mod.writeMode === "function", "writeMode export");
 assert.ok(typeof mod.mapModel === "function", "Grok model adapter");
-assert.equal(mod.mapModel("opus"), "inherit");
+// Complexity aliases map to Grok Build slug (default grok-4.5; override via OMG_MODEL_*)
+assert.equal(mod.mapModel("opus"), "grok-4.5");
+assert.equal(mod.mapModel("inherit"), "inherit");
 assert.equal(mod.mapToolName("WebSearch"), "web_search");
 
 const ws = join(tmpdir(), `omg-foundation-${Date.now()}`);

@@ -118,20 +118,22 @@ Team execution follows a staged pipeline:
 
 Each pipeline stage uses **specialized agents** -- not just executors. The lead selects agents based on the stage and task characteristics.
 
-| Stage           | Required Agents                     | Optional Agents                                                                                         | Selection Criteria                                                                                                                                                                                |
-| --------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **team-plan**   | `explore` (haiku), `planner` (opus) | `analyst` (opus), `architect` (opus)                                                                    | Use `analyst` for unclear requirements. Use `architect` for systems with complex boundaries.                                                                                                      |
-| **team-prd**    | `analyst` (opus)                    | `critic` (opus)                                                                                         | Use `critic` to challenge scope.                                                                                                                                                                  |
-| **team-exec**   | `executor` (sonnet)                 | `executor` (opus), `debugger` (sonnet), `designer` (sonnet), `writer` (haiku), `test-engineer` (sonnet) | Match agent to subtask type. Use `executor` (model=opus) for complex autonomous work, `designer` for UI, `debugger` for compilation issues, `writer` for docs, `test-engineer` for test creation. |
-| **team-verify** | `verifier` (sonnet)                 | `test-engineer` (sonnet), `security-reviewer` (sonnet), `code-reviewer` (opus)                          | Always run `verifier`. Add `security-reviewer` for auth/crypto changes. Add `code-reviewer` for >20 files or architectural changes. `code-reviewer` also covers style/formatting checks.          |
-| **team-fix**    | `executor` (sonnet)                 | `debugger` (sonnet), `executor` (opus)                                                                  | Use `debugger` for type/build errors and regression isolation. Use `executor` (model=opus) for complex multi-file fixes.                                                                          |
+| Stage           | Required Agents                          | Optional Agents                                                                                                      | Selection Criteria                                                                                                                                                                                         |
+| --------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **team-plan**   | `explore` (LOW), `planner` (HIGH)        | `analyst` (HIGH), `architect` (HIGH)                                                                                 | Use `analyst` for unclear requirements. Use `architect` for systems with complex boundaries.                                                                                                               |
+| **team-prd**    | `analyst` (HIGH)                         | `critic` (HIGH)                                                                                                      | Use `critic` to challenge scope.                                                                                                                                                                           |
+| **team-exec**   | `executor` (MEDIUM)                      | `executor` (HIGH), `debugger` (MEDIUM), `designer` (MEDIUM), `writer` (LOW), `test-engineer` (MEDIUM)                | Match agent to subtask type. Use `executor` (HIGH) for complex autonomous work, `designer` for UI, `debugger` for compilation issues, `writer` for docs, `test-engineer` for test creation.              |
+| **team-verify** | `verifier` (MEDIUM)                      | `test-engineer` (MEDIUM), `security-reviewer` (MEDIUM), `code-reviewer` (HIGH)                                       | Always run `verifier`. Add `security-reviewer` for auth/crypto changes. Add `code-reviewer` for >20 files or architectural changes. `code-reviewer` also covers style/formatting checks.                   |
+| **team-fix**    | `executor` (MEDIUM)                      | `debugger` (MEDIUM), `executor` (HIGH)                                                                               | Use `debugger` for type/build errors and regression isolation. Use `executor` (HIGH) for complex multi-file fixes.                                                                                         |
+
+**Model note:** LOW/MEDIUM/HIGH are complexity tiers, not Claude host slugs. Prefer omitting `model` on spawn (inherit) or use only `model="grok-4.5"`. Multi-model tier envs: `OMG_MODEL_LOW` / `OMG_MODEL_MEDIUM` / `OMG_MODEL_HIGH`.
 
 **Routing rules:**
 
 1. **The lead picks agents per stage, not the user.** The user's `N:agent-type` parameter only overrides the `team-exec` stage worker type. All other stages use stage-appropriate specialists.
-2. **Specialist agents complement executor agents.** Route analysis/review to architect/critic Claude agents and UI work to designer agents. Tmux CLI workers are one-shot and don't participate in team communication.
-3. **Cost mode affects model tier.** In downgrade: `opus` agents to `sonnet`, `sonnet` to `haiku` where quality permits. `team-verify` always uses at least `sonnet`.
-4. **Risk level escalates review.** Security-sensitive or >20 file changes must include `security-reviewer` + `code-reviewer` (opus) in `team-verify`.
+2. **Specialist agents complement executor agents.** Route analysis/review to architect/critic agents and UI work to designer agents. Tmux CLI workers are one-shot and don't participate in team communication.
+3. **Cost mode affects complexity tier.** In downgrade: HIGH → MEDIUM → LOW where quality permits. `team-verify` always uses at least MEDIUM complexity intent.
+4. **Risk level escalates review.** Security-sensitive or >20 file changes must include `security-reviewer` + `code-reviewer` (HIGH) in `team-verify`.
 
 ### Stage Entry/Exit Criteria
 
@@ -931,16 +933,16 @@ Declare which provider (`claude`, `codex`, `gemini`, `antigravity`, `grok`, `cur
 }
 ```
 
-| Role            | Provider        | Model                     |
-| --------------- | --------------- | ------------------------- |
-| `orchestrator`  | claude (pinned) | inherits invoking session |
-| `planner`       | claude          | `HIGH` (opus)             |
-| `analyst`       | claude          | `HIGH` (opus)             |
-| `executor`      | claude          | `MEDIUM` (sonnet)         |
-| `debugger`      | cursor          | cursor-agent default      |
-| `critic`        | codex           | codex default             |
-| `code-reviewer` | gemini          | gemini default            |
-| `test-engineer` | antigravity     | antigravity default       |
+| Role            | Provider        | Model                                         |
+| --------------- | --------------- | --------------------------------------------- |
+| `orchestrator`  | claude (pinned) | inherits invoking session                     |
+| `planner`       | claude          | `HIGH` → `grok-4.5` / `OMG_MODEL_HIGH` today  |
+| `analyst`       | claude          | `HIGH` → `grok-4.5` / `OMG_MODEL_HIGH` today  |
+| `executor`      | claude          | `MEDIUM` → `grok-4.5` / `OMG_MODEL_MEDIUM`    |
+| `debugger`      | cursor          | cursor-agent default                          |
+| `critic`        | codex           | codex default                                 |
+| `code-reviewer` | gemini          | gemini default                                |
+| `test-engineer` | antigravity     | antigravity default                           |
 
 ### Canonical roles
 
@@ -976,7 +978,7 @@ Resolved routing is immutable per team. Editing config mid-team-lifetime does no
 
 ### Zero-config behavior
 
-An empty `team.roleRouting` preserves pre-patch behavior: every worker is Claude, model tiers follow `routing.tierModels`, and `/team 3:executor ...` still spawns three Claude Sonnet executors.
+An empty `team.roleRouting` preserves pre-patch behavior: every worker is Claude/Grok-session default, model tiers follow `routing.tierModels` / `mapModel` (all default to `grok-4.5` on Grok Build today), and `/team 3:executor ...` spawns three MEDIUM-complexity executors.
 
 ## State Cleanup
 

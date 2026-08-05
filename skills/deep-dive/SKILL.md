@@ -56,7 +56,7 @@ The name "deep dive" naturally implies this flow: first dig deep into the proble
 1. **Parse the user's idea** from `{{ARGUMENTS}}`
 2. **Generate slug**: kebab-case from first 5 words of ARGUMENTS, lowercased, special characters stripped. Example: "Why does the auth token expire early?" becomes `why-does-the-auth-token`
 3. **Detect brownfield vs greenfield**:
-   - Run `explore` agent (haiku): check if cwd has existing source code, package files, or git history
+   - Run `explore` agent (LOW complexity; omit model or `model="grok-4.5"`): check if cwd has existing source code, package files, or git history
    - If source files exist AND the user's idea references modifying/extending something: **brownfield**
    - Otherwise: **greenfield**
 4. **Generate 3 trace lane hypotheses**:
@@ -360,7 +360,7 @@ Output: spec.md            Output: consensus-plan.md        Output: working code
 
 <Tool_Usage>
 - Use `ask_user_question` for lane confirmation (Phase 2) and each interview question (Phase 4)
-- Use `Agent(subagent_type="oh-my-grok:explore", model="haiku")` for brownfield codebase exploration (Phase 1)
+- Use `spawn_subagent(subagent_type="explore")` (omit model or `model="grok-4.5"`) for brownfield codebase exploration (Phase 1)
 - Use Claude built-in team mode for 3 parallel tracer lanes (Phase 3)
 - Use `state_write(mode="deep-interview")` with `state.source = "deep-dive"` for all state persistence
 - Use `state_read(mode="deep-interview")` for resume — check `state.source === "deep-dive"` to distinguish

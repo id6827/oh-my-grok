@@ -107,7 +107,7 @@ Includes the active mode name and whether dependent modes exist.
 When `OMC_STATE_DIR` is set, state is stored at `$OMC_STATE_DIR/{project-id}/`.
 
 ```bash
-export OMC_STATE_DIR="$HOME/.claude/omg"
+export OMC_STATE_DIR="$HOME/.config/grok-omg"
 ```
 
 ### Usage Patterns

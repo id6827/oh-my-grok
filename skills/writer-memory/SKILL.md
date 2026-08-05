@@ -232,10 +232,10 @@ Writer Memory integrates with `.omg/notepad.md`:
 - Cross-reference between notepad and memory
 
 ### With Architect Agent
-For complex character analysis:
+For complex character analysis (HIGH complexity — omit model or `model="grok-4.5"`; not `opus` as host slug):
 ```
 spawn_subagent(subagent_type="architect",
-     model="opus",
+     model="grok-4.5",
      prompt="Analyze 새랑's arc across all scenes...")
 ```
 

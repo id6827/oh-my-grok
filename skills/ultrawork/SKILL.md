@@ -28,7 +28,7 @@ Sequential task execution wastes time when tasks are independent. Ultrawork enab
 
 <Execution_Policy>
 - Fire all independent agent calls simultaneously -- never serialize independent work
-- Always pass the `model` parameter explicitly when delegating
+- Prefer omitting `model` (inherit host) on spawn_subagent; when illustrating tiers, use `model="grok-4.5"` only (safe Grok Build slug today). Do not pass Claude aliases (`haiku`/`sonnet`/`opus`) as host slugs
 - Read `docs/shared/agent-tiers.md` before first delegation for agent selection guidance
 - Use `run_in_background: true` for operations over ~30 seconds (installs, builds, tests)
 - Run quick commands (git status, file reads, simple checks) in the foreground
@@ -49,10 +49,10 @@ Sequential task execution wastes time when tasks are independent. Ultrawork enab
    - Parallel Execution Waves
    - Dependency Matrix
    - acceptance criteria and verification steps per task
-6. **Route to correct tiers**:
-   - Simple lookups/definitions: LOW tier (Haiku)
-   - Standard implementation: MEDIUM tier (Sonnet)
-   - Complex analysis/refactoring: HIGH tier (Opus)
+6. **Route to correct complexity tiers** (intent only; host slug is `grok-4.5` today via mapModel / OMG_MODEL_LOW|MEDIUM|HIGH):
+   - Simple lookups/definitions: LOW complexity
+   - Standard implementation: MEDIUM complexity
+   - Complex analysis/refactoring: HIGH complexity
 7. **Fire independent tasks simultaneously**: Launch all parallel-safe tasks at once
 8. **Run dependent tasks sequentially**: Wait for prerequisites before launching dependent work
 9. **Background long operations**: Builds, installs, and test suites use `run_in_background: true`
@@ -64,9 +64,9 @@ Sequential task execution wastes time when tasks are independent. Ultrawork enab
 </Steps>
 
 <Tool_Usage>
-- Use `spawn_subagent(subagent_type="executor", model="haiku", ...)` for simple changes
-- Use `spawn_subagent(subagent_type="executor", model="sonnet", ...)` for standard work
-- Use `spawn_subagent(subagent_type="executor", model="opus", ...)` for complex work
+- Prefer `spawn_subagent(subagent_type="executor", prompt=...)` (omit model → inherit host)
+- When an explicit slug is needed: `model="grok-4.5"` only (Grok Build host slug today)
+- Complexity intent (LOW / MEDIUM / HIGH) maps via `mapModel` and env overrides `OMG_MODEL_LOW` / `OMG_MODEL_MEDIUM` / `OMG_MODEL_HIGH` when multi-model hosts exist; never pass `haiku`/`sonnet`/`opus` as host slugs
 - Use `run_in_background: true` for package installs, builds, and test suites
 - Use foreground execution for quick status checks and file operations
 </Tool_Usage>
@@ -75,18 +75,20 @@ Sequential task execution wastes time when tasks are independent. Ultrawork enab
 <Good>
 Three independent tasks fired simultaneously:
 ```
-spawn_subagent(subagent_type="executor", model="haiku", prompt="Add missing type export for Config interface")
-spawn_subagent(subagent_type="executor", model="sonnet", prompt="Implement the /api/users endpoint with validation")
-spawn_subagent(subagent_type="executor", model="sonnet", prompt="Add integration tests for the auth middleware")
+// Prefer omit model (inherit). Optional explicit slug today: model="grok-4.5"
+// Complexity intent: LOW / MEDIUM / HIGH → mapModel / OMG_MODEL_* when multi-model available
+spawn_subagent(subagent_type="executor", prompt="Add missing type export for Config interface")
+spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="Implement the /api/users endpoint with validation")
+spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="Add integration tests for the auth middleware")
 ```
-Why good: Independent tasks at appropriate tiers, all fired at once.
+Why good: Independent tasks fired at once; safe Grok slugs only (or inherit).
 </Good>
 
 <Good>
 Correct use of background execution:
 ```
-spawn_subagent(subagent_type="executor", model="sonnet", prompt="npm install && npm run build", run_in_background=true)
-spawn_subagent(subagent_type="executor", model="haiku", prompt="Update the README with new API endpoints")
+spawn_subagent(subagent_type="executor", model="grok-4.5", prompt="npm install && npm run build", run_in_background=true)
+spawn_subagent(subagent_type="executor", prompt="Update the README with new API endpoints")
 ```
 Why good: Long build runs in background while short task runs in foreground.
 </Good>
@@ -102,11 +104,11 @@ Why bad: These tasks are independent. Running them sequentially wastes time.
 </Bad>
 
 <Bad>
-Wrong tier selection:
+Claude-era host slugs:
 ```
 spawn_subagent(subagent_type="executor", model="opus", prompt="Add a missing semicolon")
 ```
-Why bad: Opus is expensive overkill for a trivial fix. Use executor with Haiku instead.
+Why bad: `opus`/`sonnet`/`haiku` are not Grok Build host slugs. Omit model or use `model="grok-4.5"`; express LOW/MEDIUM/HIGH complexity via mapModel envs when available.
 </Bad>
 </Examples>
 

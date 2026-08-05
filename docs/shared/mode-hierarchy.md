@@ -14,7 +14,7 @@ autopilot (autonomous end-to-end)
 └── includes: plan (strategic thinking)
 
  (token efficiency ONLY)
-└── modifies: agent tier selection (prefer haiku/sonnet)
+└── modifies: agent complexity tier selection (prefer LOW/MEDIUM agents)
     (does NOT include persistence - that's ralph's job)
 
 ralph (persistence wrapper)

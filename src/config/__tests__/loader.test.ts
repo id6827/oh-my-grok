@@ -120,6 +120,18 @@ describe("loadConfig() — auto-forceInherit for non-standard providers", () => 
     expect(config.routing?.forceInherit).toBe(false);
   });
 
+  it("uses grok-4.5 for all agent tiers with no model env vars set", () => {
+    const config = loadConfig();
+    expect(config.agents?.architect?.model).toBe("grok-4.5");
+    expect(config.agents?.executor?.model).toBe("grok-4.5");
+    expect(config.agents?.explore?.model).toBe("grok-4.5");
+    expect(config.routing?.tierModels).toEqual({
+      LOW: "grok-4.5",
+      MEDIUM: "grok-4.5",
+      HIGH: "grok-4.5",
+    });
+  });
+
   it("respects explicit OMC_ROUTING_FORCE_INHERIT=false even on Bedrock", () => {
     // When user explicitly sets the var (even to false), auto-detection is skipped.
     // This matches the guard: process.env.OMC_ROUTING_FORCE_INHERIT === undefined

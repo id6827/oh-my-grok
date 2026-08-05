@@ -31,14 +31,16 @@ spawn_subagent(subagent_type="oh-my-grok:executor",
 
 // After enforcement (automatic)
 spawn_subagent(subagent_type="oh-my-grok:executor",
-  model="sonnet",  // ← Automatically injected
+  model="grok-4.5",  // ← Injected from agent default / tier map
   prompt="Implement feature X"
 )
 ```
 
+On Grok Build, agent defaults resolve to **`grok-4.5`** for every complexity tier unless `OMG_MODEL_*` or `routing.tierModels` overrides them. Legacy aliases (`haiku`/`sonnet`/`opus`) map to LOW/MEDIUM/HIGH then to the same host slug.
+
 ### 2. Agent Definition Lookup
 
-Each agent has a default model in its definition:
+Each agent has a default model (or tier alias) in its definition:
 
 ```typescript
 export const executorAgent: AgentConfig = {
@@ -46,7 +48,7 @@ export const executorAgent: AgentConfig = {
   description: '...',
   prompt: '...',
   tools: [...],
-  model: 'sonnet'  // ← Default model
+  model: 'grok-4.5'  // ← Default host model (or legacy tier alias → adapter)
 };
 ```
 
@@ -59,7 +61,7 @@ If you explicitly specify a model, it's always preserved:
 ```typescript
 // Explicit model is never overridden
 spawn_subagent(subagent_type="oh-my-grok:executor",
-  model="haiku",  // ← Explicitly using haiku instead of default sonnet
+  model="inherit",  // ← Explicit override (or "grok-4.5" / future slugs)
   prompt="Quick lookup"
 )
 ```
@@ -82,20 +84,20 @@ const input = {
 };
 
 const result = enforceModel(input);
-console.log(result.modifiedInput.model); // 'sonnet'
+console.log(result.modifiedInput.model); // 'grok-4.5'
 console.log(result.injected); // true
 ```
 
 #### `getModelForAgent(agentType: string): ModelType`
 
-Get the default model for an agent type.
+Get the default model for an agent type (resolved through the Grok tier map).
 
 ```typescript
 import { getModelForAgent } from 'oh-my-grok';
 
-getModelForAgent('executor'); // 'sonnet'
-getModelForAgent('executor-low'); // 'haiku'
-getModelForAgent('executor-high'); // 'opus'
+getModelForAgent('executor'); // 'grok-4.5' (MEDIUM tier default)
+getModelForAgent('executor-low'); // 'grok-4.5' (LOW tier default)
+getModelForAgent('executor-high'); // 'grok-4.5' (HIGH tier default)
 ```
 
 #### `isAgentCall(toolName: string, toolInput: unknown): boolean`
@@ -126,32 +128,34 @@ const hookInput = {
 };
 
 const result = await processHook('pre-tool-use', hookInput);
-console.log(result.modifiedInput.model); // 'sonnet'
+console.log(result.modifiedInput.model); // 'grok-4.5'
 ```
 
-## Agent Model Mapping
+## Agent Model Mapping (Grok Build)
 
-| Agent Type | Default Model | Use Case |
-|------------|---------------|----------|
-| `architect` | opus | Complex analysis, debugging |
-| `architect-medium` | sonnet | Standard analysis |
-| `architect-low` | haiku | Quick questions |
-| `executor` | sonnet | Standard implementation |
-| `executor-high` | opus | Complex refactoring |
-| `executor-low` | haiku | Simple changes |
-| `explore` | haiku | Fast code search |
-| `designer` | sonnet | UI implementation |
-| `designer-high` | opus | Complex UI architecture |
-| `designer-low` | haiku | Simple styling |
-| `document-specialist` | sonnet | Documentation lookup |
-| `writer` | haiku | Documentation writing |
-| `vision` | sonnet | Image analysis |
-| `planner` | opus | Strategic planning |
-| `critic` | opus | Plan review |
-| `analyst` | opus | Pre-planning analysis |
-| `qa-tester` | sonnet | CLI testing |
-| `scientist` | sonnet | Data analysis |
-| `scientist-high` | opus | Complex research |
+Host model is **`grok-4.5`** for all agents by default. Complexity column is routing intent (agent variant), not a distinct Claude SKU.
+
+| Agent Type | Complexity | Host model (default) | Use Case |
+|------------|------------|----------------------|----------|
+| `architect` | HIGH | `grok-4.5` | Complex analysis, debugging |
+| `architect-medium` | MEDIUM | `grok-4.5` | Standard analysis |
+| `architect-low` | LOW | `grok-4.5` | Quick questions |
+| `executor` | MEDIUM | `grok-4.5` | Standard implementation |
+| `executor-high` | HIGH | `grok-4.5` | Complex refactoring |
+| `executor-low` | LOW | `grok-4.5` | Simple changes |
+| `explore` | LOW | `grok-4.5` | Fast code search |
+| `designer` | MEDIUM | `grok-4.5` | UI implementation |
+| `designer-high` | HIGH | `grok-4.5` | Complex UI architecture |
+| `designer-low` | LOW | `grok-4.5` | Simple styling |
+| `document-specialist` | MEDIUM | `grok-4.5` | Documentation lookup |
+| `writer` | LOW | `grok-4.5` | Documentation writing |
+| `vision` | MEDIUM | `grok-4.5` | Image analysis |
+| `planner` | HIGH | `grok-4.5` | Strategic planning |
+| `critic` | HIGH | `grok-4.5` | Plan review |
+| `analyst` | HIGH | `grok-4.5` | Pre-planning analysis |
+| `qa-tester` | MEDIUM | `grok-4.5` | CLI testing |
+| `scientist` | MEDIUM | `grok-4.5` | Data analysis |
+| `scientist-high` | HIGH | `grok-4.5` | Complex research |
 
 ## Debug Mode
 
@@ -164,7 +168,7 @@ export OMC_DEBUG=true
 When enabled, you'll see warnings like:
 
 ```
-[OMG] Auto-injecting model: sonnet for executor
+[OMG] Auto-injecting model: grok-4.5 for executor
 ```
 
 **Important:** Warnings are ONLY shown when `OMC_DEBUG=true`. Without this flag, enforcement happens silently.
@@ -176,12 +180,12 @@ When enabled, you'll see warnings like:
 ```typescript
 // Every delegation needs explicit model
 spawn_subagent(subagent_type="oh-my-grok:executor",
-  model="sonnet",
+  model="grok-4.5",
   prompt="Implement X"
 )
 
 spawn_subagent(subagent_type="oh-my-grok:executor-low",
-  model="haiku",
+  model="grok-4.5",
   prompt="Quick lookup"
 )
 ```
@@ -202,9 +206,9 @@ spawn_subagent(subagent_type="oh-my-grok:executor-low",
 ### Override When Needed
 
 ```typescript
-// Use haiku for a simple executor task
+// Force parent session model, or a future host slug when available
 spawn_subagent(subagent_type="oh-my-grok:executor",
-  model="haiku",  // Override default sonnet
+  model="inherit",
   prompt="Find definition of X"
 )
 ```

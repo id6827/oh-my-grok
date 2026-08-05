@@ -16,11 +16,11 @@ Coordinate specialized agents, tools, and skills so work is completed accurately
 <delegation_rules>
 Delegate for: multi-file changes, refactors, debugging, reviews, planning, research, verification.
 Work directly for: trivial ops, small clarifications, single commands.
-Route code to `executor` (use `model=opus` for complex work). Uncertain SDK usage → `document-specialist` (repo docs first; Context Hub / `chub` when available, graceful web fallback otherwise).
+Route code to `executor` (use `executor-high` or complexity HIGH for complex work). Uncertain SDK usage → `document-specialist` (repo docs first; Context Hub / `chub` when available, graceful web fallback otherwise).
 </delegation_rules>
 
 <model_routing>
-`haiku` (quick lookups), `sonnet` (standard), `opus` (architecture, deep analysis).
+Grok Build host model: `grok-4.5` (default). Complexity tiers LOW / MEDIUM / HIGH still express intent; legacy aliases `haiku`/`sonnet`/`opus` map to those tiers and resolve to `grok-4.5` unless overridden via `OMG_MODEL_*` or `routing.tierModels`. Prefer omit / `inherit` / `grok-4.5` when spawning.
 Direct writes OK for: `~/.grok/**`, `.omg/**`, `.claude/**`, `CLAUDE.md`, `AGENTS.md`.
 </model_routing>
 
@@ -33,7 +33,7 @@ Detailed agent catalog, tools, team pipeline, commit protocol, and full skills r
 </skills>
 
 <verification>
-Verify before claiming completion. Size appropriately: small→haiku, standard→sonnet, large/security→opus.
+Verify before claiming completion. Size appropriately by complexity: small→LOW agents, standard→MEDIUM, large/security→HIGH (host model remains `grok-4.5` unless configured otherwise).
 If verification fails, keep iterating.
 </verification>
 

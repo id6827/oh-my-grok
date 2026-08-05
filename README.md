@@ -58,24 +58,138 @@ Local cache tip: marketplace trees under `~/.grok/marketplace-cache/*` — pick 
 
 ## Install
 
-```bash
-# From GitHub (after publish)
-grok plugin install <owner>/oh-my-grok --trust
-grok plugin enable oh-my-grok
+**Requirements:** [Grok Build / Grok CLI](https://x.ai/cli) installed and signed in (`grok --version`).
 
-# From a local checkout
-grok plugin install /path/to/oh-my-grok --trust
+> **Important:** `grok plugin details oh-my-grok` only works **after** install. It does **not** search GitHub or the marketplace.  
+> Searching “omg” in Grok Build marketplace will **not** find this plugin until it is listed in a marketplace catalog (e.g. [xai-org/plugin-marketplace](https://github.com/xai-org/plugin-marketplace)). Until then, install from GitHub as below.
+
+### Recommended (public GitHub)
+
+```bash
+# GitHub shorthand (owner/repo) — preferred one-liner
+grok plugin install id6827/oh-my-grok --trust
+
+# Same, full URL
+grok plugin install https://github.com/id6827/oh-my-grok.git --trust
+
+# Pin a tag or commit (reproducible)
+# grok plugin install id6827/oh-my-grok@v0.9.0-rc.1 --trust
+# grok plugin install id6827/oh-my-grok@4cf6cd1 --trust
+
 grok plugin enable oh-my-grok
 ```
 
-Verify discovery:
+`--trust` skips the interactive trust prompt (plugins can run code and access your machine).
+
+### From a local checkout (contributors / dev)
 
 ```bash
+git clone https://github.com/id6827/oh-my-grok.git
+cd oh-my-grok
+# optional: npm ci && npm run build   # if you need built dist / local CLI
+
+grok plugin install "$(pwd)" --trust
+grok plugin enable oh-my-grok
+```
+
+### Verify (only after install)
+
+```bash
+grok plugin list
+# expect a line mentioning oh-my-grok
+
 grok plugin details oh-my-grok
-grok inspect
+# shows version, path, skills/agents/hooks/MCP summary
+
+grok inspect   # optional host/plugin overview
 ```
 
-In a Grok session, try:
+If `details` prints `Plugin "oh-my-grok" not found`, the plugin is **not installed on this machine** — run `install` first, not `details`.
+
+### Update
+
+How you update depends on **how you installed** (check with `grok plugin list`).
+
+#### GitHub install (normal users)
+
+If you used `grok plugin install id6827/oh-my-grok` (or the full git URL), the plugin is tracked as a **Git** source:
+
+```bash
+# Pull the latest tree from the remote and refresh the local plugin cache
+grok plugin update oh-my-grok
+
+# Or update every installed plugin
+grok plugin update
+```
+
+Then confirm:
+
+```bash
+grok plugin list
+grok plugin details oh-my-grok
+```
+
+Start a **new Grok session** (or restart) so skills/hooks reload the new version.
+
+#### Local-path install (contributors / dev)
+
+If `grok plugin list` shows `local: /path/to/oh-my-grok`, `plugin update` does **not** fetch GitHub. Update the checkout yourself:
+
+```bash
+cd /path/to/oh-my-grok
+git pull
+# optional: npm ci && npm run build
+```
+
+To switch from a local install to the public GitHub install:
+
+```bash
+grok plugin uninstall oh-my-grok
+grok plugin install id6827/oh-my-grok --trust
+grok plugin enable oh-my-grok
+```
+
+#### Reinstall (when update is stuck or you want a clean tree)
+
+```bash
+grok plugin uninstall oh-my-grok
+grok plugin install id6827/oh-my-grok --trust
+grok plugin enable oh-my-grok
+```
+
+Pin a release tag or commit:
+
+```bash
+grok plugin install id6827/oh-my-grok@v0.9.1 --trust
+# grok plugin install id6827/oh-my-grok@<full-sha> --trust
+```
+
+#### What maintainers ship on a version bump
+
+1. Push commits to [id6827/oh-my-grok](https://github.com/id6827/oh-my-grok).
+2. Bump `version` in `plugin.json`.
+3. (Recommended) Push a git tag, e.g. `v0.9.1`.
+4. Users on a **Git** install run `grok plugin update oh-my-grok`.
+
+There is no separate “plugin publish” command. GitHub (or a marketplace catalog pin) is the distribution channel.
+
+### Remove
+
+```bash
+grok plugin uninstall oh-my-grok       # aliases: rm, remove
+```
+
+### Share with others
+
+Send this:
+
+```bash
+grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
+```
+
+Repo: [github.com/id6827/oh-my-grok](https://github.com/id6827/oh-my-grok)
+
+### Quick try (inside a Grok session)
 
 ```text
 /deep-interview "I want a habit tracker CLI with streaks"

@@ -2,14 +2,16 @@
 
 # Tier-Specific Instructions
 
-This document defines the behavioral differences between agent tiers (LOW/MEDIUM/HIGH).
+This document defines the behavioral differences between agent complexity tiers (LOW/MEDIUM/HIGH).
 
-## LOW Tier (Haiku)
-**Model**: claude-haiku-4-5
+On **Grok Build**, the host coding model is `grok-4.5` for all tiers by default. Tiers change **behavior and agent selection**, not a multi-Claude model lineup. Override later via `OMG_MODEL_LOW` / `OMG_MODEL_MEDIUM` / `OMG_MODEL_HIGH` (or `routing.tierModels` in `.grok/omg.jsonc` / `~/.config/grok-omg/config.jsonc`). Use `inherit` to keep the parent session model.
+
+## LOW Tier
+**Model**: `grok-4.5` (default) · or `inherit` / env override  
 **Focus**: Speed and efficiency for simple, well-defined tasks
 
 ```markdown
-**Tier: LOW (Haiku) - Speed-Focused Execution**
+**Tier: LOW - Speed-Focused Execution**
 
 - Focus on speed and direct execution
 - Handle simple, well-defined tasks only
@@ -22,12 +24,12 @@ This document defines the behavioral differences between agent tiers (LOW/MEDIUM
 - Skip deep investigation - implement what's asked
 ```
 
-## MEDIUM Tier (Sonnet)
-**Model**: claude-sonnet-4-5
+## MEDIUM Tier
+**Model**: `grok-4.5` (default) · or `inherit` / env override  
 **Focus**: Balance between thoroughness and efficiency
 
 ```markdown
-**Tier: MEDIUM (Sonnet) - Balanced Execution**
+**Tier: MEDIUM - Balanced Execution**
 
 - Balance thoroughness with efficiency
 - Can explore up to 20 files
@@ -41,12 +43,12 @@ This document defines the behavioral differences between agent tiers (LOW/MEDIUM
 - Document non-obvious decisions
 ```
 
-## HIGH Tier (Opus)
-**Model**: claude-opus-4-8
+## HIGH Tier
+**Model**: `grok-4.5` (default) · or `inherit` / env override  
 **Focus**: Correctness and quality for complex tasks
 
 ```markdown
-**Tier: HIGH (Opus) - Excellence-Focused Execution**
+**Tier: HIGH - Excellence-Focused Execution**
 
 - Prioritize correctness and code quality above all
 - Full codebase exploration allowed
@@ -86,7 +88,7 @@ Example for executor-low:
 You execute simple, well-defined code changes quickly and efficiently.
 
 ## Tier-Specific Instructions
-**Tier: LOW (Haiku) - Speed-Focused Execution**
+**Tier: LOW - Speed-Focused Execution**
 
 - Focus on speed and direct execution
 - Handle simple, well-defined tasks only

@@ -18,18 +18,18 @@ Coordinate specialized agents, tools, and skills so work is completed accurately
 <delegation_rules>
 Delegate for: multi-file changes, refactors, debugging, reviews, planning, research, verification.
 Work directly for: trivial ops, small clarifications, single commands.
-Route code to `executor` (use `model=opus` for complex work). Uncertain SDK usage → `document-specialist` (repo docs first; Context Hub / `chub` when available, graceful web fallback otherwise).
+Route code to `executor` (use `executor-high` or complexity HIGH for complex work). Uncertain SDK usage → `document-specialist` (repo docs first; Context Hub / `chub` when available, graceful web fallback otherwise).
 </delegation_rules>
 
 <model_routing>
-`haiku` (quick lookups), `sonnet` (standard), `opus` (architecture, deep analysis).
+Grok Build host model: `grok-4.5` (default). Complexity tiers LOW / MEDIUM / HIGH express intent; legacy aliases `haiku`/`sonnet`/`opus` map to tiers → `grok-4.5` unless overridden via `OMG_MODEL_*` or `routing.tierModels`. Prefer omit / `inherit` / `grok-4.5` when spawning.
 Direct writes OK for: `~/.grok/**`, `.omg/**`, `.claude/**`, `CLAUDE.md`, `AGENTS.md`.
 </model_routing>
 
 <agent_catalog>
-Prefix: `oh-my-grok:`. See `agents/*.md` for full prompts.
+Prefix: `oh-my-grok:`. See `agents/*.md` for full prompts. Host model is `grok-4.5` unless configured; labels below are complexity intent.
 
-explore (haiku), analyst (opus), planner (opus), architect (opus), debugger (sonnet), executor (sonnet), verifier (sonnet), tracer (sonnet), security-reviewer (sonnet), code-reviewer (opus), test-engineer (sonnet), designer (sonnet), writer (haiku), qa-tester (sonnet), scientist (sonnet), document-specialist (sonnet), git-master (sonnet), code-simplifier (opus), critic (opus)
+explore (LOW), analyst (HIGH), planner (HIGH), architect (HIGH), debugger (MEDIUM), executor (MEDIUM), verifier (MEDIUM), tracer (MEDIUM), security-reviewer (HIGH), code-reviewer (HIGH), test-engineer (MEDIUM), designer (MEDIUM), writer (LOW), qa-tester (MEDIUM), scientist (MEDIUM), document-specialist (MEDIUM), git-master (MEDIUM), code-simplifier (HIGH), critic (HIGH)
 </agent_catalog>
 
 <tools>
@@ -56,7 +56,7 @@ Fix loop bounded by max attempts. `team ralph` links both modes.
 </team_pipeline>
 
 <verification>
-Verify before claiming completion. Size appropriately: small→haiku, standard→sonnet, large/security→opus.
+Verify before claiming completion. Size appropriately by complexity: small→LOW agents, standard→MEDIUM, large/security→HIGH (host model remains `grok-4.5` unless configured otherwise).
 If verification fails, keep iterating.
 </verification>
 

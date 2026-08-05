@@ -82,7 +82,7 @@ Sequential agent chaining with data passing between stages.
 | `refactor` | explore -> architect-medium -> executor-high -> qa-tester |
 | `security` | explore -> security-reviewer -> executor -> security-reviewer-low |
 
-**Custom pipelines:** `/pipeline explore:haiku -> architect:opus -> executor:sonnet`
+**Custom pipelines:** `/pipeline explore -> architect -> executor` (host model `grok-4.5`; optional legacy tier suffixes still map via the adapter)
 
 ## Unified Cancel (v3.4)
 

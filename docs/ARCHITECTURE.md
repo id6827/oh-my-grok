@@ -57,71 +57,71 @@ OMG provides 19 specialized agents organized into 4 lanes. Each agent is invoked
 
 Covers the full development lifecycle from exploration to verification.
 
-| Agent | Default Model | Role |
-|-------|---------------|------|
-| `explore` | haiku | Codebase discovery, file/symbol mapping |
-| `analyst` | opus | Requirements analysis, hidden constraint discovery |
-| `planner` | opus | Task sequencing, execution plan creation |
-| `architect` | opus | System design, interface definition, trade-off analysis |
-| `debugger` | sonnet | Root-cause analysis, build error resolution |
-| `executor` | sonnet | Code implementation, refactoring |
-| `verifier` | sonnet | Completion verification, test adequacy confirmation |
-| `tracer` | sonnet | Evidence-driven causal tracing, competing hypothesis analysis |
+| Agent | Default model | Complexity | Role |
+|-------|---------------|------------|------|
+| `explore` | `grok-4.5` | LOW | Codebase discovery, file/symbol mapping |
+| `analyst` | `grok-4.5` | HIGH | Requirements analysis, hidden constraint discovery |
+| `planner` | `grok-4.5` | HIGH | Task sequencing, execution plan creation |
+| `architect` | `grok-4.5` | HIGH | System design, interface definition, trade-off analysis |
+| `debugger` | `grok-4.5` | MEDIUM | Root-cause analysis, build error resolution |
+| `executor` | `grok-4.5` | MEDIUM | Code implementation, refactoring |
+| `verifier` | `grok-4.5` | MEDIUM | Completion verification, test adequacy confirmation |
+| `tracer` | `grok-4.5` | MEDIUM | Evidence-driven causal tracing, competing hypothesis analysis |
 
 ### Review Lane
 
 Quality gates before handoff. Catches correctness and security issues.
 
-| Agent | Default Model | Role |
-|-------|---------------|------|
-| `security-reviewer` | sonnet | Security vulnerabilities, trust boundaries, authn/authz review |
-| `code-reviewer` | opus | Comprehensive code review, API contracts, backward compatibility |
+| Agent | Default model | Complexity | Role |
+|-------|---------------|------------|------|
+| `security-reviewer` | `grok-4.5` | HIGH | Security vulnerabilities, trust boundaries, authn/authz review |
+| `code-reviewer` | `grok-4.5` | HIGH | Comprehensive code review, API contracts, backward compatibility |
 
 ### Domain Lane
 
 Domain experts called in when needed.
 
-| Agent | Default Model | Role |
-|-------|---------------|------|
-| `test-engineer` | sonnet | Test strategy, coverage, flaky-test hardening |
-| `designer` | sonnet | UI/UX architecture, interaction design |
-| `writer` | haiku | Documentation, migration notes |
-| `qa-tester` | sonnet | Interactive CLI/service runtime validation via tmux |
-| `scientist` | sonnet | Data analysis, statistical research |
-| `git-master` | sonnet | Git operations, commits, rebase, history management |
-| `document-specialist` | sonnet | External documentation, API/SDK reference lookup |
-| `code-simplifier` | opus | Code clarity, simplification, maintainability improvement |
+| Agent | Default model | Complexity | Role |
+|-------|---------------|------------|------|
+| `test-engineer` | `grok-4.5` | MEDIUM | Test strategy, coverage, flaky-test hardening |
+| `designer` | `grok-4.5` | MEDIUM | UI/UX architecture, interaction design |
+| `writer` | `grok-4.5` | LOW | Documentation, migration notes |
+| `qa-tester` | `grok-4.5` | MEDIUM | Interactive CLI/service runtime validation via tmux |
+| `scientist` | `grok-4.5` | MEDIUM | Data analysis, statistical research |
+| `git-master` | `grok-4.5` | MEDIUM | Git operations, commits, rebase, history management |
+| `document-specialist` | `grok-4.5` | MEDIUM | External documentation, API/SDK reference lookup |
+| `code-simplifier` | `grok-4.5` | HIGH | Code clarity, simplification, maintainability improvement |
 
 ### Coordination Lane
 
 Challenges plans and designs made by other agents. A plan passes only when no gaps can be found.
 
-| Agent | Default Model | Role |
-|-------|---------------|------|
-| `critic` | opus | Gap analysis of plans and designs, multi-angle review |
+| Agent | Default model | Complexity | Role |
+|-------|---------------|------------|------|
+| `critic` | `grok-4.5` | HIGH | Gap analysis of plans and designs, multi-angle review |
 
 ### Model Routing
 
-OMG uses three model tiers:
+OMG uses three **complexity tiers**. On Grok Build the host coding model is **`grok-4.5`** for all tiers by default (not Claude Sonnet/Opus/Haiku). Legacy aliases map to tiers and still resolve to `grok-4.5` unless overridden via `OMG_MODEL_*` or `routing.tierModels`.
 
-| Tier | Model | Characteristics | Cost |
-|------|-------|-----------------|------|
-| LOW | haiku | Fast and inexpensive | Low |
-| MEDIUM | sonnet | Balanced performance and cost | Medium |
-| HIGH | opus | Highest-quality reasoning | High |
+| Tier | Host model (default) | Characteristics | Intent |
+|------|----------------------|-----------------|--------|
+| LOW | `grok-4.5` | Fast, narrow scope | Simple lookups and small fixes |
+| MEDIUM | `grok-4.5` | Balanced thoroughness | Standard implementation and debugging |
+| HIGH | `grok-4.5` | Deep reasoning | Architecture, planning, hard review |
 
-Default assignments by role:
-- **haiku**: Fast lookups and simple tasks (`explore`, `writer`)
-- **sonnet**: Code implementation, debugging, testing (`executor`, `debugger`, `test-engineer`)
-- **opus**: Architecture, strategic analysis, review (`architect`, `planner`, `critic`, `code-reviewer`)
+Default agent choices by complexity intent:
+- **LOW**: Fast lookups and simple tasks (`explore`, `writer`, `executor-low`)
+- **MEDIUM**: Code implementation, debugging, testing (`executor`, `debugger`, `test-engineer`)
+- **HIGH**: Architecture, strategic analysis, review (`architect`, `planner`, `critic`, `code-reviewer`, `executor-high`)
 
 ### Delegation
 
-Work is delegated through the Task tool with intelligent model routing:
+Work is delegated through `spawn_subagent` with complexity expressed mainly by agent choice. On Grok Build, omit `model` or pass `grok-4.5` / `inherit`:
 
 ```typescript
 spawn_subagent(subagent_type="oh-my-grok:executor",
-  model="sonnet",
+  model="grok-4.5",  // optional; default host model
   prompt="Implement feature..."
 )
 ```
@@ -140,19 +140,19 @@ spawn_subagent(subagent_type="oh-my-grok:executor",
 
 ### Agent Selection Guide
 
-| Task Type | Recommended Agent | Model |
-|-----------|-------------------|-------|
-| Quick code lookup | `explore` | haiku |
-| Feature implementation | `executor` | sonnet |
-| Complex refactoring | `executor` (model=opus) | opus |
-| Simple bug fix | `debugger` | sonnet |
-| Complex debugging | `architect` | opus |
-| UI component | `designer` | sonnet |
-| Documentation | `writer` | haiku |
-| Test strategy | `test-engineer` | sonnet |
-| Security review | `security-reviewer` | sonnet |
-| Code review | `code-reviewer` | opus |
-| Data analysis | `scientist` | sonnet |
+| Task Type | Recommended Agent | Complexity |
+|-----------|-------------------|------------|
+| Quick code lookup | `explore` | LOW |
+| Feature implementation | `executor` | MEDIUM |
+| Complex refactoring | `executor-high` | HIGH |
+| Simple bug fix | `debugger` | MEDIUM |
+| Complex debugging | `architect` | HIGH |
+| UI component | `designer` | MEDIUM |
+| Documentation | `writer` | LOW |
+| Test strategy | `test-engineer` | MEDIUM |
+| Security review | `security-reviewer` | HIGH |
+| Code review | `code-reviewer` | HIGH |
+| Data analysis | `scientist` | MEDIUM |
 
 ### Typical Agent Workflow
 
@@ -570,7 +570,7 @@ To preserve state across worktree deletions, set the `OMC_STATE_DIR` environment
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-export OMC_STATE_DIR="$HOME/.claude/omg"
+export OMC_STATE_DIR="$HOME/.config/grok-omg"
 ```
 
 State is then stored at `~/.grok/omg/{project-identifier}/`. The project identifier is a hash of the Git remote URL, so the same repository shares state across different worktrees.
