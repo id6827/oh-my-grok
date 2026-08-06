@@ -8,9 +8,11 @@ argument-hint: "[--interactive] [--max-parallel N] <mission or epic description>
 aliases: [orchestrate, orch]
 ---
 
-# Orchestration (Main Orchestrator) — v1.1
+# Orchestration (Main Orchestrator) — v1.2
 
 You are **not** an implementer. You are the **main orchestrator** for a multi-worktree delivery pipeline.
+
+**Lead session model:** use the **strongest available host model** (global judgment: decompose, deps, risk, gates). Do not downgrade the orchestrator to save tokens.
 
 ```text
 /orchestration "ship auth refresh + dashboard polish with PRs"
@@ -33,7 +35,7 @@ If Task JSON and Issue disagree on **runtime** fields (status, lock, prUrl) → 
 If they disagree on **contract** fields (scope, priority, ownership, deps) → **Issue wins**, and orchestrator **must sync Task JSON** to match (never the reverse via worker).  
 Board is derived; do not treat dashboard text as authority.
 
-## v1.1 capability tier (honest guarantees)
+## v1.2 capability tier (honest guarantees)
 
 | Guarantee | Strength |
 |-----------|----------|
@@ -51,6 +53,9 @@ Board is derived; do not treat dashboard text as authority.
 | `/goal` set by agent | **Absent** — handoff text only |
 | Canonical Issue before spawn | **Protocol-hard** (gh or board mirror) |
 | Issue Snapshot at impl start | **Soft** |
+| Task complexity classification | **Protocol-hard** (must classify before spawn) |
+| Worker model via `OMG_MODEL_*` tiers | **Soft** until host exposes multiple slugs (today often all → `grok-4.5`) |
+| Worker self-changes model | **Forbidden** — escalate only |
 
 ## Use / Do not use
 
@@ -70,16 +75,18 @@ Board is derived; do not treat dashboard text as authority.
 9. **Mode file:** `.omg/state/orchestration-state.json` only (Layer-B). No MCP orchestration mode.
 10. **Canonical Issue:** before spawn, orchestrator **creates or locates** exactly **one** tracking issue per task; workers **MUST** reference it; PRs **SHOULD** use `Fixes #<n>` (or `Refs: T00N` if offline mirror only).
 
-## Architecture (v1.1 flow)
+## Architecture (v1.2 flow)
 
 ```text
 Mission
-  → Orchestrator
+  → Orchestrator (strongest host model)
        ├── Task decompose (Task JSON = runtime)
+       ├── Complexity classify (LOW|MEDIUM|HIGH|CRITICAL)
+       ├── Model Selector → OMG_MODEL_* (no hard-coded vendor IDs in skill)
        ├── Ownership soft-lock
        ├── Dependency graph
        ├── Canonical Issue create/locate (contract shell)
-       └── Spawn Impl WT (after isolation probe)
+       └── Spawn Impl WT (after isolation probe; model from selector)
               │
               ├── Capture Issue Snapshot
               ├── Requirements
@@ -133,6 +140,8 @@ Terminal: `active: false` + `completed` | `cancelled`.
   "ownershipLock": "locked|free",
   "dependsOn": [],
   "priority": "P0|P1|P2",
+  "complexity": "LOW|MEDIUM|HIGH|CRITICAL",
+  "modelTier": "OMG_MODEL_LOW|OMG_MODEL_MEDIUM|OMG_MODEL_HIGH|OMG_MODEL_CRITICAL",
   "canonicalIssue": "#145|board:T001",
   "progress": 0,
   "blockers": [],
@@ -211,6 +220,93 @@ Before spawn:
 3. Release lock when: PR opened (move to review), task cancelled/failed-terminal, or explicitly freed by orch.  
 Soft only — no FS enforcer.
 
+## Adaptive Worker Model Selection
+
+### Principle
+
+- **Orchestrator ≠ model picker for product code.** The lead **classifies complexity**; a conceptual **Model Selector** maps class → env tier → host slug.
+- **Orchestrator stays on the best model** available to the lead session (CTO-level global reasoning).
+- **Impl/review workers** may use cheaper/faster tiers when the host supports multiple slugs.
+- **Never hard-code** vendor model names (`gpt-5-mini`, `grok-mini`, …) in this skill. Use **`OMG_MODEL_*` only**.
+
+### Before spawn — MUST classify
+
+```text
+Task created
+  → Complexity score (heuristic below)
+  → LOW | MEDIUM | HIGH | CRITICAL
+  → Model Selector → OMG_MODEL_{LEVEL}
+  → spawn_subagent(model=<resolved slug or omit if inherit>)
+```
+
+Store `complexity` + `modelTier` on Task JSON.
+
+### Complexity scoring (guidance, not law)
+
+| Signal | Points (guide) |
+|--------|----------------|
+| Touch few files / docs-only / typo | +0–1 |
+| Test-only change | +1 |
+| UI text / copy | +0–1 |
+| Multi-file feature | +2 |
+| Public API change | +2 |
+| New feature surface | +2 |
+| Many files / wide ownership | +1–3 |
+| DB migration | +3 |
+| Security / auth / secrets | +3 |
+| Architecture / cross-module redesign | +4 |
+
+**Bands (guide):** `0–3 LOW` · `4–7 MEDIUM` · `8–12 HIGH` · `13+ CRITICAL`  
+Orchestrator may override with written reason on Task JSON / board.
+
+### Model Selector (abstract tiers)
+
+| Complexity | Env key | Default today (Grok Build) |
+|------------|---------|----------------------------|
+| LOW | `OMG_MODEL_LOW` | `grok-4.5` (or `inherit`) |
+| MEDIUM | `OMG_MODEL_MEDIUM` | `grok-4.5` |
+| HIGH | `OMG_MODEL_HIGH` | `grok-4.5` |
+| CRITICAL | `OMG_MODEL_CRITICAL` (fallback HIGH) | `grok-4.5` |
+
+Also accept `OMC_MODEL_*` aliases. Resolve via `mapModel` / env at spawn time.
+
+**Honesty:** If the host only exposes one coding model, classification still drives **review depth, retry budget, and parallelism** even when model slugs collapse to the same value.
+
+### Review depth by complexity
+
+| Complexity | Review pack (minimum) |
+|------------|------------------------|
+| LOW | Code review |
+| MEDIUM | Code review + regression focus |
+| HIGH | Architecture + regression + security as relevant |
+| CRITICAL | Architecture + security + performance + regression (multiple review WTs OK) |
+
+### Retry budget by complexity (soft)
+
+| Complexity | Impl fix loops (guide) before escalate |
+|------------|----------------------------------------|
+| LOW | 1 |
+| MEDIUM | 2 |
+| HIGH | 2–3 |
+| CRITICAL | 2 then human gate earlier |
+
+### Escalation (worker must not self-upgrade model)
+
+If work reveals higher complexity (e.g. started LOW, discovered migration/security):
+
+1. **STOP** implementation expansion  
+2. Report `complexity_escalation_request` in exit/status (from → to, why)  
+3. **Orchestrator** reclassifies, updates Task JSON, **respawns** (or continues) on the new `OMG_MODEL_*` tier  
+4. Worker **MUST NOT** change its own model mid-flight  
+
+Same signature failure 3× still escalates independently of complexity.
+
+### CRITICAL extras
+
+- Prefer **Architect** (or equivalent HIGH review) in the review pack  
+- Prefer lower `--max-parallel` for CRITICAL streams  
+- Prefer human AC / merge attention  
+
 ## Phase 0 — Mission intake
 
 1. Write `mission.md`.  
@@ -223,14 +319,16 @@ Soft only — no FS enforcer.
 For each task:
 
 1. Write Task JSON (runtime).  
-2. Soft-lock ownership.  
-3. **Create/locate Canonical Issue** (1 task ↔ 1 issue); set `canonicalIssue`.  
-4. Update board view.  
-5. Do **not** invent full Acceptance — leave AC empty/seed only.
+2. **Classify complexity** (LOW–CRITICAL); set `complexity` + `modelTier` (`OMG_MODEL_*`).  
+3. Soft-lock ownership.  
+4. **Create/locate Canonical Issue** (1 task ↔ 1 issue); set `canonicalIssue`.  
+5. Update board view.  
+6. Do **not** invent full Acceptance — leave AC empty/seed only.
 
 ## Phase 2 — Implementation worktree
 
-Spawn only after issue exists and lock succeeds.
+Spawn only after issue exists, lock succeeds, and complexity is classified.  
+Pass worker `model` from Model Selector (`mapModel` / `OMG_MODEL_*`); omit if host is single-model.
 
 ### Impl sequence (mandatory)
 
@@ -277,16 +375,18 @@ escalate: false
 ### Impl preamble (include in spawn)
 
 ```text
-You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration v1.1.
+You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration v1.2.
 Task: {taskId}  CanonicalIssue: {issue}  Ownership: {globs}
+Complexity: {LOW|MEDIUM|HIGH|CRITICAL}  (do NOT self-upgrade model)
 
 1) Capture Issue Snapshot at start; implement against snapshot.
 2) Fill Acceptance on the issue (allowed fields only). Do NOT change Scope/Priority/Ownership/Dependencies.
 3) /ralplan + quality gate → submit AC → wait for orchestrator approve.
-4) Implement, soft retries, exit report, PR with Fixes #{n}.
-5) Do not write .omg/orchestration/** on this worktree; report to lead.
-6) Do not merge. Do not create new tracking issues (escalate).
-7) /goal: handoff text only.
+4) Implement, soft retries for your complexity band, exit report, PR with Fixes #{n}.
+5) If complexity is clearly higher mid-flight: STOP and request complexity_escalation (do not change model yourself).
+6) Do not write .omg/orchestration/** on this worktree; report to lead.
+7) Do not merge. Do not create new tracking issues (escalate).
+8) /goal: handoff text only.
 ```
 
 ## Phase 3 — Review worktree(s)
@@ -301,7 +401,7 @@ Issue (scope/priority/ownership)
   → Test / verification results
 ```
 
-Also: correctness, architecture, regression, security/performance as risk warrants (optional extra reviewers for large/security PRs).
+Also: correctness, architecture, regression, security/performance per **Review depth by complexity** (spawn additional review WTs for HIGH/CRITICAL as needed).
 
 Verdict: **APPROVE** | **CHANGES_REQUESTED** | **REJECT**.  
 No implementation. Lead stores review under `reviews/`.  
@@ -339,7 +439,7 @@ Coverage non-decrease is **not** a universal hard rule (only if repo already gat
 
 ```markdown
 ### Orchestration status
-- Mission / focus task / worktree
+- Mission / focus task / worktree / complexity
 - Progress % / blockers
 - Canonical issues / PRs / acStatus / reviewStatus
 - Next action
@@ -359,7 +459,7 @@ Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; s
 ## Grok extensions
 
 - `spawn_subagent` + `isolation: "worktree"`; verify isolation.  
-- Model: omit or `grok-4.5`.  
+- Lead: strongest host model. Workers: `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` → often `grok-4.5` until multi-slug hosts exist (`mapModel`).  
 - `/goal` handoff only.  
 - `.omg/` only; lead-owned board.  
-- `ask_user_question` for merge and scope splits.  
+- `ask_user_question` for merge, scope splits, complexity upgrades when risky.  

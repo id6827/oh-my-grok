@@ -15,6 +15,7 @@ assert.ok(typeof mod.writeMode === "function", "writeMode export");
 assert.ok(typeof mod.mapModel === "function", "Grok model adapter");
 // Complexity aliases map to Grok Build slug (default grok-4.5; override via OMG_MODEL_*)
 assert.equal(mod.mapModel("opus"), "grok-4.5");
+assert.equal(mod.mapModel("critical"), "grok-4.5");
 assert.equal(mod.mapModel("inherit"), "inherit");
 assert.equal(mod.mapToolName("WebSearch"), "web_search");
 
