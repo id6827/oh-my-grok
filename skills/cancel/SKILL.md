@@ -1,7 +1,7 @@
 ---
 name: cancel
 aliases: [cancel-ralph]
-description: Cancel any active OMG mode (autopilot, ralph, ultrawork, ultraqa, swarm, ultrapilot, pipeline, team)
+description: Cancel any active OMG mode (autopilot, ralph, ultrawork, ultraqa, swarm, ultrapilot, pipeline, team, orchestration)
 argument-hint: "[--force|--all]"
 ---
 
@@ -27,6 +27,7 @@ Automatically detects which mode is active and cancels it:
 - **Pipeline**: Stops sequential agent pipeline
 - **Team**: Requests shutdown from all teammates through the active team/conversation surface, waits for responses/timeouts, clears OMG team state, clears linked ralph if present. Grok Build 2.1.178+ has no TeamDelete.
 - **Team+Ralph (linked)**: Cancels team first (graceful shutdown), then clears ralph state. Cancelling ralph when linked also cancels team first.
+- **Orchestration**: Clears Layer-B **`.omg/state/orchestration-state.json`** (`active: false` via clear-active-modes or file write). Does **not** use MCP `state_clear(mode="orchestration")` (mode not registered). Leaves impl/review worktrees and open PRs unless the user asks to clean them up.
 
 ## Usage
 
@@ -129,8 +130,9 @@ Active modes are still cancelled in dependency order:
 7. Pipeline (standalone)
 8. Team (Grok Build native)
 9. OMG Teams (tmux CLI workers)
-10. Plan Consensus (standalone)
-11. Self-Improve (standalone — clear state, clean orphaned worktrees, preserve iteration_state for resume, set status: "user_stopped" in the resolved `<self-improve-root>/state/agent-settings.json`; new runs use `.omg/self-improve/topics/<topic-slug>/`, with flat `.omg/self-improve/` retained only for legacy single-track resumes)
+10. Orchestration (Layer-B `.omg/state/orchestration-state.json`; board under `.omg/orchestration/` is preserved)
+11. Plan Consensus (standalone)
+12. Self-Improve (standalone — clear state, clean orphaned worktrees, preserve iteration_state for resume, set status: "user_stopped" in the resolved `<self-improve-root>/state/agent-settings.json`; new runs use `.omg/self-improve/topics/<topic-slug>/`, with flat `.omg/self-improve/` retained only for legacy single-track resumes)
 
 ## Force Clear All
 
@@ -171,6 +173,7 @@ Legacy compatibility list (removed only under `--force`/`--all`):
 - `.omg/state/omg-teams-state.json`
 - `.omg/state/plan-consensus.json`
 - `.omg/state/ralplan-state.json`
+- `.omg/state/orchestration-state.json`
 - `.omg/state/boulder.json`
 - `.omg/state/hud-state.json`
 - `.omg/state/subagent-tracking.json`
@@ -350,6 +353,7 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 | Ultrapilot | "Ultrapilot cancelled. Parallel autopilot workers stopped." |
 | Pipeline | "Pipeline cancelled. Sequential agent chain stopped." |
 | Team | "Team cancelled. Teammates shut down and cleaned up." |
+| Orchestration | "Orchestration cancelled. Mode file cleared; worktrees/PRs left for inspection." |
 | Plan Consensus | "Plan Consensus cancelled. Planning session ended." |
 | Force | "All OMG modes cleared. You are free to start fresh." |
 | None | "No active OMG modes detected." |

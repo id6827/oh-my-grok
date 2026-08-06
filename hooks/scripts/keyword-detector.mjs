@@ -62,6 +62,13 @@ const RULES = [
     activate: "ralplan",
   },
   {
+    name: "orchestration",
+    skill: "orchestration",
+    // /orchestration, orchestrate, main orchestrator (EN) + 오케스트레이션
+    re: /\b(\/?orchestration|orchestrate|main\s+orchestrator)\b|(오케스트레이션)/i,
+    activate: "orchestration",
+  },
+  {
     name: "security-review",
     skill: "security-review",
     // OMC parity: security review / review security / 보안 리뷰

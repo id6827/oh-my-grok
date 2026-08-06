@@ -213,7 +213,7 @@ Repo: [github.com/id6827/oh-my-grok](https://github.com/id6827/oh-my-grok)
 
 Cancel anytime with `/cancel`. Runtime state lives under **`.omg/`**.
 
-Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan` for consensus, then explicit approval before execution. UI without design → `/ui-mockup`. Ecosystem unknowns → `/web-research`.
+Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan` for consensus, then explicit approval before execution. Multi-stream delivery with isolated worktrees and review gates → `/orchestration`. UI without design → `/ui-mockup`. Ecosystem unknowns → `/web-research`.
 
 ---
 
@@ -306,7 +306,7 @@ omg team shutdown
 
 ### Core skills (highlights)
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### Hooks (Layer B)
 

@@ -81,6 +81,7 @@ Invoke built-in workflows via `/<name>`.
 - `ultrawork` — high-throughput parallel execution
 - `visual-verdict` — structured visual QA verdicts
 - `team` — coordinated team orchestration
+- `orchestration` — main orchestrator: worktree-per-task, ralplan→impl→review→PR; lead never implements
 - `ccg` — Codex + Gemini + Claude synthesis lane
 - `ultraqa` — QA cycle: test, verify, fix, repeat
 - `omg-plan` — planning workflow and `/plan`-safe alias
@@ -101,6 +102,7 @@ Invoke built-in workflows via `/<name>`.
 - `"ulw"→ultrawork`
 - `"ccg"→ccg`
 - `"ralplan"→ralplan`
+- `"orchestration" / "orchestrate"→orchestration`
 - `"deep interview"→deep-interview`
 - `"deslop" / "anti-slop"→ai-slop-cleaner`
 - `"deep-analyze"→analysis mode`

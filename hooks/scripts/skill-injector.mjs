@@ -42,6 +42,14 @@ const MODE_HINTS = {
     "Active mode: ralplan.",
     "Continue Planner → Architect → Critic consensus; write plans under `.omg/plans/`.",
   ].join(" "),
+  orchestration: [
+    "Active mode: orchestration (main orchestrator).",
+    "Lead session NEVER implements product code — only decompose, spawn worktrees, track board, gate merge.",
+    "Board: only the lead writes `.omg/orchestration/**` on the main checkout; workers report back.",
+    "Impl workers: ralplan → impl → test → /goal handoff text only → PR; Review workers never implement.",
+    "Merge only after Review APPROVE + human confirm (ask_user_question).",
+    "Mode file: `.omg/state/orchestration-state.json` — set active=false / completed|cancelled when done. Do NOT call MCP state_write(mode=orchestration).",
+  ].join(" "),
 };
 
 function hintForMode(modeName) {

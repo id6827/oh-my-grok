@@ -535,7 +535,7 @@ function sanitizePromptForState(prompt) {
     : base;
 }
 const MODE_REFERENCE_PATTERN =
-  /\b(?:ralph|autopilot|auto[\s-]?pilot|ultragoal|ultrawork|ulw|ralplan|ultrathink|deepsearch|deep[\s-]?analyze|deepanalyze|deep[\s-]interview|ouroboros|ccg|claude-codex-gemini|deerflow)\b/gi;
+  /\b(?:ralph|autopilot|auto[\s-]?pilot|ultragoal|ultrawork|ulw|orchestration|orchestrate|ralplan|ultrathink|deepsearch|deep[\s-]?analyze|deepanalyze|deep[\s-]interview|ouroboros|ccg|claude-codex-gemini|deerflow)\b/gi;
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1471,7 +1471,7 @@ function resolveConflicts(matches) {
 
   // Sort by priority order
   const priorityOrder = ['cancel','ralph','ultragoal','autopilot','ultrawork',
-    'ccg','ralplan','deep-interview','ai-slop-cleaner','tdd','code-review','security-review','ultrathink','deepsearch','analyze'];
+    'ccg','orchestration','ralplan','deep-interview','ai-slop-cleaner','tdd','code-review','security-review','ultrathink','deepsearch','analyze'];
   resolved.sort((a, b) => priorityOrder.indexOf(a.name) - priorityOrder.indexOf(b.name));
 
   return resolved;
@@ -1644,6 +1644,11 @@ async function main() {
       matches.push({ name: 'ralplan', args: '' });
     }
 
+    // Orchestration (main orchestrator / worktree-per-task pipeline)
+    if (hasActionableKeyword(cleanPrompt, /\b(\/?orchestration|orchestrate|main\s+orchestrator)\b|(오케스트레이션)/i)) {
+      matches.push({ name: 'orchestration', args: '' });
+    }
+
     // Deep interview keywords
     if (hasActionableKeyword(cleanPrompt, /\b(deep[\s-]interview|ouroboros)\b|(딥인터뷰)|(ディープインタビュー)/i)) {
       matches.push({ name: 'deep-interview', args: '' });
@@ -1804,7 +1809,7 @@ async function main() {
     }
 
     // Activate states for modes that need them (team removed — explicit-only via /team skill)
-    const stateModes = resolved.filter(m => ['ralph', 'ultragoal', 'autopilot', 'ultrawork', 'ralplan'].includes(m.name));
+    const stateModes = resolved.filter(m => ['ralph', 'ultragoal', 'autopilot', 'ultrawork', 'ralplan', 'orchestration'].includes(m.name));
     for (const mode of stateModes) {
       const activationError = await activateState(directory, prompt, mode.name, sessionId);
       if (activationError === 'workflow_descriptor_integrity_failed') {

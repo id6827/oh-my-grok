@@ -213,7 +213,7 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
 
 언제든 `/cancel`. 런타임 상태는 **`.omg/`** 아래.
 
-모호한 제품 아이디어 → 코드 전에 `/deep-interview`. 스펙 준비됨 → `/ralplan` 합의 후 **명시 승인** 뒤 실행. 디자인 없는 UI → `/ui-mockup`. 생태계 불확실 → `/web-research`.
+모호한 제품 아이디어 → 코드 전에 `/deep-interview`. 스펙 준비됨 → `/ralplan` 합의 후 **명시 승인** 뒤 실행. 멀티 스트림·워크트리 분리·리뷰 게이트 전달 → `/orchestration`. 디자인 없는 UI → `/ui-mockup`. 생태계 불확실 → `/web-research`.
 
 ---
 
@@ -306,7 +306,7 @@ omg team shutdown
 
 ### 핵심 스킬 (하이라이트)
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### 훅 (Layer B)
 
