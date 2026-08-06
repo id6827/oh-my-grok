@@ -47,10 +47,11 @@ const MODE_HINTS = {
     "Lead NEVER implements product code. Conflict menu only: reassign/split/deps/issues/restart — no source edits.",
     "Lead stays on strongest model; classify each task LOW|MEDIUM|HIGH|CRITICAL then Model Selector → OMG_MODEL_* (no hard-coded vendor IDs).",
     "SoT: Task JSON=runtime; Issue=human contract; board.md=view only.",
-    "Before spawn: complexity + soft ownership lock + Canonical Issue (1 task ↔ 1 issue).",
+    "Before spawn: strategy (default conservative) + effective_parallel = min(strategy_cap, max-parallel, safety); complexity + soft ownership lock + Canonical Issue.",
     "Impl: Snapshot → Requirements → /ralplan → executionGoal → /goal if host allows → AC vs Goal → orch AC gate → impl → exit goalHandoff → PR Fixes #N.",
     "Workers MUST NOT change Scope/Priority/Ownership/Dependencies; MUST NOT self-upgrade model — request complexity_escalation.",
     "Review depth by complexity; chain Issue→AC→Impl→PR→Tests; no implement.",
+    "Aggressive keeps Plan→Goal→AC→Execute per worker; never skips gates. Isolation fail ⇒ concurrency 1.",
     "Merge only after Review APPROVE + human confirm. Mode file `.omg/state/orchestration-state.json`; no MCP orchestration mode.",
   ].join(" "),
 };

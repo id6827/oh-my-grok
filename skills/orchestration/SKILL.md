@@ -4,7 +4,7 @@ description: >
   Main orchestrator mode — decompose work into non-overlapping worktrees,
   canonical GitHub/board issues, impl-authored acceptance contracts, review
   consistency checks, PR + merge gates; lead never implements.
-argument-hint: "[--interactive] [--max-parallel N] <mission or epic description>"
+argument-hint: "[--interactive] [--strategy conservative|balanced|aggressive] [--max-parallel N] <mission or epic description>"
 aliases: [orchestrate, orch]
 ---
 
@@ -16,9 +16,12 @@ You are **not** an implementer. You are the **main orchestrator** for a multi-wo
 
 ```text
 /orchestration "ship auth refresh + dashboard polish with PRs"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
 /orchestration --interactive "migrate billing to v2"
 ```
 
+Default strategy is **conservative** (see Execution Strategy).
 ## Purpose
 
 Drive multi-stream work **without product-code edits in the lead session**. Each impl/review stream runs in its **own worktree**. Planning uses **`/ralplan`**. Tracking uses a **Canonical Issue** (orchestrator-created). Completion needs **review APPROVE**, **human merge confirm**, and **DoD**.
@@ -145,6 +148,7 @@ Terminal: `active: false` + `completed` | `cancelled`.
   "priority": "P0|P1|P2",
   "complexity": "LOW|MEDIUM|HIGH|CRITICAL",
   "modelTier": "OMG_MODEL_LOW|OMG_MODEL_MEDIUM|OMG_MODEL_HIGH|OMG_MODEL_CRITICAL",
+  "executionStrategy": "conservative|balanced|aggressive",
   "canonicalIssue": "#145|board:T001",
   "progress": 0,
   "blockers": [],
@@ -311,12 +315,166 @@ Same signature failure 3× still escalates independently of complexity.
 - Prefer lower `--max-parallel` for CRITICAL streams  
 - Prefer human AC / merge attention  
 
+## Execution Strategy
+
+Execution Strategy controls **scheduling only**:
+
+- concurrent **active implementation** worker cap (not total task count)
+- task dispatch timing
+- pipeline overlap (e.g. review while other impl streams run)
+- how eagerly ready tasks are filled
+
+### Strategy MUST NOT override
+
+- lead never implements product code  
+- worktree isolation requirements  
+- ownership locking  
+- dependency ordering  
+- canonical issue requirements  
+- Plan → Goal → AC → Execute lifecycle  
+- review requirements  
+- human merge confirmation  
+
+### Strategy priority
+
+When resolving concurrency / dispatch:
+
+```text
+1. Safety Overrides
+2. User --strategy
+3. Strategy defaults (caps below)
+4. Host capability
+```
+
+**Safety always wins** over strategy.
+
+### Default strategy
+
+If the user omits `--strategy`, the orchestrator **MUST** use:
+
+```text
+--strategy conservative
+```
+
+So `/orchestration "mission"` ≡ `/orchestration --strategy conservative "mission"`.
+
+Record `executionStrategy` on **mission.md**, **board.md**, and Task JSON (mission-wide).
+
+---
+
+### Strategy: `conservative` (DEFAULT)
+
+**Purpose:** Maximum correctness and predictable execution.
+
+**Recommended for:** uncertain architecture; security/auth; DB migration; HIGH/CRITICAL-heavy missions; high supervision.
+
+**Behavior:**
+
+- Prefer sequential execution when uncertainty exists.  
+- Complete required gates before expanding concurrent work.  
+- Stability over throughput.  
+- Full Plan → Goal → AC → Execute on each stream.  
+
+**Per-worker gates (still required):**
+
+```text
+Issue → ownership lock → isolation OK → Snapshot → /ralplan
+  → executionGoal → Acceptance → AC approve → Implementation
+```
+
+**Target concurrent impl workers:** `1–3`  
+**Strategy cap:** `3` (use with `--max-parallel` formula below)
+
+---
+
+### Strategy: `balanced`
+
+**Purpose:** Balance throughput and orchestration quality.
+
+**Recommended for:** normal feature work; multiple independent tasks; MEDIUM/LOW-heavy missions.
+
+**Behavior:**
+
+- Spawn every **ready** task that has: deps satisfied, ownership lock, isolation available.  
+- Do not wait on unrelated workers.  
+- Keep full Plan → Goal → AC → Execute per worker.  
+- Reviews may run while other impl streams continue.  
+- If uncertainty appears, serialize **only the affected stream**.  
+
+**Target concurrent impl workers:** `2–4`  
+**Strategy cap:** `4`
+
+---
+
+### Strategy: `aggressive`
+
+**Purpose:** Maximize throughput for large decomposed missions.
+
+**Recommended for:** large epics; many independent modules; high worker availability.
+
+**Behavior:**
+
+- Fill the ready queue aggressively; refill free slots continuously.  
+- Spawn every runnable task within caps.  
+- Do not block unrelated tasks on another worker’s AC/PR.  
+- Start review WTs as soon as PRs appear.  
+
+**Aggressive is NOT a quality fast-track.** Same gates still apply **inside each worker pipeline**.
+
+AC behavior under aggressive:
+
+- AC generation/approval stays **per-worker pipeline**.  
+- AC completion on task A **MUST NOT** globally block spawning unrelated ready tasks B/C.  
+
+**Target concurrent impl workers:** `3–6`  
+**Strategy cap:** `6`
+
+**Not recommended when:** many CRITICAL tasks; unclear ownership; isolation unavailable.
+
+---
+
+### Safety overrides (all strategies)
+
+| Condition | Effect |
+|-----------|--------|
+| Isolation **not** proven | `effective concurrency = 1` (serialize) |
+| Ownership overlap | do not spawn conflicting task; resolve via reassign/split/deps/serialize/cancel only |
+| CRITICAL task streams | recommend `effective concurrency ≤ 2` for those streams |
+| Many CRITICAL domains | orch **may degrade** strategy (e.g. aggressive → balanced) and record reason |
+
+```yaml
+strategy_degradation:
+  requested: aggressive
+  actual: balanced
+  reason: multiple CRITICAL ownership domains
+```
+
+---
+
+### Interaction with `--max-parallel`
+
+`--max-parallel N` is a **final upper bound**, not a way to exceed strategy caps.
+
+```text
+effective_parallel = min(strategy_cap, --max-parallel, safety_limit)
+```
+
+| Case | Result |
+|------|--------|
+| default `/orchestration "…"` | strategy=conservative, strategy_cap=3 → effective ≤ 3 |
+| `--strategy balanced --max-parallel 8` | min(4, 8)=**4** |
+| `--strategy aggressive --max-parallel 20` | min(6, 20)=**6** |
+| isolation fail, any strategy | safety_limit=1 → **1** |
+
+If user omits `--max-parallel`, use the strategy’s default cap as the user-side bound in the min().
+
 ## Phase 0 — Mission intake
 
-1. Write `mission.md`.  
-2. Vague → one question or read-only explore.  
-3. Activate mode file if needed.  
-4. Build DAG; parallel only after isolation probe.
+1. Write `mission.md` (include `executionStrategy`).  
+2. Parse `--strategy` / `--max-parallel`; compute `effective_parallel`.  
+3. Vague → one question or read-only explore.  
+4. Activate mode file if needed.  
+5. Build DAG; expand concurrency only within `effective_parallel` and isolation proof.  
 
 ## Phase 1 — Task + Canonical Issue
 
@@ -467,7 +625,7 @@ Coverage non-decrease is **not** a universal hard rule (only if repo already gat
 
 ```markdown
 ### Orchestration status
-- Mission / focus task / worktree / complexity
+- Mission / strategy / effective_parallel / focus task / complexity
 - executionGoal (active) / progress % / blockers
 - Canonical issues / PRs / acStatus / reviewStatus
 - Next action
@@ -481,8 +639,15 @@ Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; s
 
 | Flag | Meaning |
 |------|---------|
+| `--strategy conservative` | **Default.** Safety-first scheduling (cap 3 concurrent impl). |
+| `--strategy balanced` | Moderate parallel dispatch (cap 4). |
+| `--strategy aggressive` | Max practical dispatch (cap 6); same quality gates per stream. |
+| `--max-parallel N` | Final concurrency **upper bound** (cannot raise strategy_cap). |
 | `--interactive` | Confirm parallel batches and merges |
-| `--max-parallel N` | Default 3; force 1 if isolation unproven |
+
+```text
+effective_parallel = min(strategy_cap, --max-parallel, safety_limit)
+```
 
 ## Grok extensions
 
