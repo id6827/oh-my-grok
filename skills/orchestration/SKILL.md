@@ -50,7 +50,10 @@ Board is derived; do not treat dashboard text as authority.
 | MCP `state_write(mode="orchestration")` | **Absent** — do not call |
 | Stop continue-loop (ralph-class) | **Absent** |
 | Merge after review + human confirm | **Protocol-hard** |
-| `/goal` set by agent | **Absent** — handoff text only |
+| **executionGoal** synthesized after plan | **Protocol-hard** (must exist before AC finalization / implement) |
+| Host `/goal` slash set by tools | **Absent** — agent cannot force host state; worker **acts as if** goal is set |
+| User-facing `/goal` prompt when host supports it | **Soft** — print exact `/goal …` for user/session when needed |
+| **goalHandoff** at exit | **Protocol-hard** on exit report |
 | Canonical Issue before spawn | **Protocol-hard** (gh or board mirror) |
 | Issue Snapshot at impl start | **Soft** |
 | Task complexity classification | **Protocol-hard** (must classify before spawn) |
@@ -88,20 +91,20 @@ Mission
        ├── Canonical Issue create/locate (contract shell)
        └── Spawn Impl WT (after isolation probe; model from selector)
               │
-              ├── Capture Issue Snapshot
+              ├── Issue Snapshot
               ├── Requirements
-              ├── Acceptance Contract (worker fills Issue AC section)
-              ├── Update Issue (allowed fields only)
               ├── /ralplan + planning quality gate
-              ├── Plan self-review → submit AC
+              ├── Goal Synthesis → executionGoal
+              ├── /goal activate (host if possible; else goal-as-north-star)
+              ├── Acceptance Contract (validates Goal)
+              ├── Submit AC → Orch AC gate
               ▼
-       Orchestrator: AC gate (approve/reject) + ownership check
+       Implementation (guided by executionGoal) → Test → Exit report
+              ├── goalHandoff (exit / next agent)
+              └── PR (Fixes #N)
               │
               ▼
-       Implementation (soft retries) → Test → Exit report → PR (Fixes #N)
-              │
-              ▼
-       Review WT(s): Issue → AC → Impl → PR → Tests consistency
+       Review WT(s): Issue → executionGoal → AC → Impl → PR → Tests
               │
               ▼
        APPROVE → human confirm → merge → ready-set refresh → next
@@ -149,6 +152,7 @@ Terminal: `active: false` + `completed` | `cancelled`.
   "prUrl": null,
   "reviewStatus": "none|pending|changes_requested|approved",
   "acStatus": "missing|draft|approved|rejected",
+  "executionGoal": null,
   "goalHandoff": null,
   "dod": {
     "requirements": false,
@@ -330,22 +334,41 @@ For each task:
 Spawn only after issue exists, lock succeeds, and complexity is classified.  
 Pass worker `model` from Model Selector (`mapModel` / `OMG_MODEL_*`); omit if host is single-model.
 
-### Impl sequence (mandatory)
+### Impl sequence (mandatory) — Plan → Goal → Accept → Execute
 
 1. **Capture Issue Snapshot**  
-2. Requirements analysis (against snapshot)  
-3. **Write Acceptance Contract** (Inputs, Outputs, Acceptance Criteria, Non-goals, Test Strategy, Rollback Strategy) into allowed Issue fields  
-4. Update Issue (allowed fields only)  
-5. **`/ralplan`** for this task  
-6. **Planning quality gate** — plan must include: Ownership, Risks, Acceptance, Rollback, Test Strategy; else re-ralplan (max 3) then escalate  
-7. Plan self-review → submit AC to orchestrator  
-8. **Wait for orchestrator AC approval** (`acStatus: approved`)  
-9. Implement within ownership  
-10. Test / lint / build as applicable (**soft retries:** compile/typeclass ≈1 focused loop; test-class ≈2; then escalate)  
-11. **Same failure signature 3× consecutive** → stop, escalate (do not loop)  
-12. Exit report (schema below)  
-13. `/goal` **handoff text only** (never claim tools set `/goal`)  
+2. **Requirements analysis** (against snapshot)  
+3. **`/ralplan`** (or `/plan --consensus`) for this task only  
+4. **Planning quality gate** — plan must include: Ownership, Risks, (draft) Acceptance angles, Rollback, Test Strategy; else re-ralplan (max 3) then escalate  
+5. **Goal Synthesis** — compress the plan into one **executionGoal** (single north-star outcome + preserved behaviors). Report it to the orchestrator for Task JSON.  
+6. **`/goal` activation**  
+   - **Preferred:** set host `/goal` to the executionGoal (with proof criteria) when the **session can** (user types it or host supports agent set).  
+   - **Always:** treat `executionGoal` as binding for the rest of the task even if host `/goal` state is unavailable.  
+   - **Never** claim “goal was set by shell/API” if it was not. If user action is required, print:  
+     `Please run: /goal <executionGoal with proof>`  
+7. **Write Acceptance Contract** against the **executionGoal** (Inputs, Outputs, Acceptance Criteria, Non-goals, Test Strategy, Rollback) into allowed Issue fields  
+8. Update Issue (allowed fields only); submit AC to orchestrator  
+9. **Wait for orchestrator AC approval** (`acStatus: approved`) — AC is the **verification contract for the Goal**, not a substitute for Goal  
+10. **Implement** within ownership, continuously checking decisions against `executionGoal`  
+11. Test / lint / build as applicable (soft retries by complexity band)  
+12. **Same failure signature 3×** → stop, escalate  
+13. Exit report including **goalHandoff** (what remaining/next agents should optimize for)  
 14. Open PR with six sections + **`Fixes #<canonicalIssue>`** when gh issue exists  
+
+#### Why Goal before Acceptance
+
+```text
+Requirements → Plan (/ralplan) → executionGoal → Acceptance Contract → Implement
+```
+
+Acceptance **tests** the Goal; it does not invent the Goal. Writing full AC before plan/goal freezes the wrong artifact order.
+
+#### executionGoal vs goalHandoff
+
+| Field | When | Role |
+|-------|------|------|
+| **executionGoal** | After ralplan, before AC finalize / implement | Living execution north-star for this WT; orch tracks on Task JSON |
+| **goalHandoff** | Exit report / review handoff | Next-agent or residual-work goal text; not a replacement for executionGoal during impl |
 
 ### Scope discipline
 
@@ -358,6 +381,8 @@ task: T003
 canonicalIssue: "#145"
 status: IMPLEMENTED|BLOCKED|FAILED
 ownership: ["src/auth/**"]
+executionGoal: "…"
+goalHandoff: "…"
 changed_files: []
 tests: PASS|FAIL
 build: PASS|FAIL|N/A
@@ -367,8 +392,8 @@ assumptions: []
 risks: []
 remaining_work: []
 pr: URL|null
-goal_handoff: "…"
 issue_snapshot_ref: "…"
+complexity_escalation: false
 escalate: false
 ```
 
@@ -379,14 +404,16 @@ You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration v1.2.
 Task: {taskId}  CanonicalIssue: {issue}  Ownership: {globs}
 Complexity: {LOW|MEDIUM|HIGH|CRITICAL}  (do NOT self-upgrade model)
 
-1) Capture Issue Snapshot at start; implement against snapshot.
-2) Fill Acceptance on the issue (allowed fields only). Do NOT change Scope/Priority/Ownership/Dependencies.
-3) /ralplan + quality gate → submit AC → wait for orchestrator approve.
-4) Implement, soft retries for your complexity band, exit report, PR with Fixes #{n}.
-5) If complexity is clearly higher mid-flight: STOP and request complexity_escalation (do not change model yourself).
-6) Do not write .omg/orchestration/** on this worktree; report to lead.
-7) Do not merge. Do not create new tracking issues (escalate).
-8) /goal: handoff text only.
+Sequence (Plan → Goal → Accept → Execute):
+1) Issue Snapshot
+2) Requirements
+3) /ralplan + quality gate
+4) Goal Synthesis → report executionGoal to orchestrator
+5) Activate /goal when host allows; else keep executionGoal as binding north-star (never fake host state)
+6) Write Acceptance Contract that verifies the Goal; submit for orch AC approval
+7) Implement against executionGoal; soft retries; exit report with goalHandoff; PR Fixes #{n}
+8) Complexity escalation request if needed (no self model change)
+9) Do not write .omg/orchestration/**; do not merge; do not create tracking issues
 ```
 
 ## Phase 3 — Review worktree(s)
@@ -395,6 +422,7 @@ Review workers **MUST** validate mutual consistency of:
 
 ```text
 Issue (scope/priority/ownership)
+  → executionGoal
   → Acceptance Contract
   → Implementation (diff)
   → PR body
@@ -440,7 +468,7 @@ Coverage non-decrease is **not** a universal hard rule (only if repo already gat
 ```markdown
 ### Orchestration status
 - Mission / focus task / worktree / complexity
-- Progress % / blockers
+- executionGoal (active) / progress % / blockers
 - Canonical issues / PRs / acStatus / reviewStatus
 - Next action
 ```
@@ -460,6 +488,6 @@ Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; s
 
 - `spawn_subagent` + `isolation: "worktree"`; verify isolation.  
 - Lead: strongest host model. Workers: `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` → often `grok-4.5` until multi-slug hosts exist (`mapModel`).  
-- `/goal` handoff only.  
+- **Plan → Goal → Execute:** synthesize `executionGoal` after ralplan; use host `/goal` when possible; always keep executionGoal binding; `goalHandoff` only at exit.  
 - `.omg/` only; lead-owned board.  
 - `ask_user_question` for merge, scope splits, complexity upgrades when risky.  
