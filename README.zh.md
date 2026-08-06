@@ -81,6 +81,7 @@ grok inspect
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ grok inspect
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-随时 `/cancel`。运行时状态在 **`.omg/`**。模糊想法 → `/deep-interview`。规格就绪 → `/ralplan` 共识后显式批准再执行。无设计 UI → `/ui-mockup`。生态未知 → `/web-research`。
+随时 `/cancel`。运行时状态在 **`.omg/`**。模糊想法 → `/deep-interview`。规格就绪 → `/ralplan` 共识后显式批准再执行。多流交付、隔离 worktree、规范 issue、评审门 → `/orchestration`。无设计 UI → `/ui-mockup`。生态未知 → `/web-research`。
+
+---
+
+## `/orchestration`（多 worktree 交付）
+
+**主会话从不实现产品代码。** 仅负责任务拆解、跟踪产物、生成**实现 worktree**、**评审 worktree** 与合并门禁。关键词：`orchestration` / `orchestrate` / `오케스트레이션`。
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| 标志 | 含义 |
+|------|---------|
+| *(默认)* | `--strategy conservative`（安全优先，并发实现 worker 1–3） |
+| `--strategy balanced` | 中等并行（上限 4） |
+| `--strategy aggressive` | 实用最大并行（上限 6）；**每条流的质量门相同**，不是跳过 AC 的快路径 |
+| `--max-parallel N` | 仅作并发**最终上限**：`min(strategy_cap, N, safety)` |
+| `--interactive` | 确认大批量并行与合并 |
+
+**安全始终优先于 strategy**（例如 worktree 隔离未验证 → 并发为 1）。
+
+### Worker 流水线（Plan → Goal → Execute）
+
+每个实现 worktree：
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+随后 **评审 worktree** 校验 **Issue → executionGoal → AC → Impl → PR → Tests**。仅在评审 **APPROVE** + 人工确认后合并。
+
+### 角色与事实来源
+
+| 产物 | 角色 |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | 运行时状态（status、lock、progress） |
+| **Canonical Issue**（GitHub 或 board 镜像） | 人类契约（scope、priority、ownership）；**spawn 前由编排器创建** |
+| **Board** (`board.md`) | 仅仪表盘视图 |
+
+Worker 仅可更新 issue 的 **Acceptance / notes / risks / verification** — 不可改 scope、priority、ownership、dependencies。实现 worker 启动时抓取 **Issue Snapshot**，飞行中改 scope 需编排器批准。
+
+### 自适应 worker 模型
+
+- **主会话：** 最强主机模型（全局判断）。
+- **Worker：** 将任务分为 **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL`（主机暂无更多 slug 时多映射到 `grok-4.5`）。
+- Worker **不得**自行升级模型；应请求 **complexity escalation**，由编排器 respawn。
+- 复杂度也驱动 **评审深度** 与软 **重试预算**。
+
+状态：`.omg/orchestration/`（主 checkout，主会话拥有）+ Layer-B `.omg/state/orchestration-state.json`。完整协议：[`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md)。
 
 ---
 
@@ -171,12 +228,13 @@ omg team shutdown
 | 表面 | 数量 | 说明 |
 |---------|------:|-------|
 | Agents | 20 | OMC 集合 + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | 经 `.mcp.json` 的 `omg-tools` |
 | State | `.omg/` | specs、plans、artifacts、模式状态 |
 
 ### Grok 专属
 
+- **`/orchestration`** — 多 worktree 交付：Plan→Goal→AC→Execute、评审门、strategy、自适应模型
 - **`/web-research`** — 实时文档/发布/议题/X → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 批准 → Vision 简报 → 代码 → Vision QA
 - **Search-on-fail** — 失败时优先 `web_search` 再盲重试
@@ -188,7 +246,7 @@ omg team shutdown
 
 ### 核心技能
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### 钩子 (Layer B)
 

@@ -81,6 +81,7 @@ Trong phiên Grok:
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ Trong phiên Grok:
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-Hủy bằng `/cancel`. State trong **`.omg/`**. Ý tưởng mơ hồ → `/deep-interview`. Spec sẵn → `/ralplan` rồi phê duyệt rõ ràng.
+Hủy bằng `/cancel`. State trong **`.omg/`**. Ý tưởng mơ hồ → `/deep-interview`. Spec sẵn → `/ralplan` rồi phê duyệt rõ ràng. Giao hàng multi-stream với worktree cô lập, issue chuẩn và cổng review → `/orchestration`. UI chưa có design → `/ui-mockup`. Ẩn số hệ sinh thái → `/web-research`.
+
+---
+
+## `/orchestration` (giao hàng multi-worktree)
+
+**Lead không bao giờ viết mã sản phẩm.** Chỉ phân rã nhiệm vụ, tạo artifact theo dõi, spawn **worktree implement**, **worktree review** và kiểm soát merge. Từ khóa: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| Flag | Ý nghĩa |
+|------|---------|
+| *(mặc định)* | `--strategy conservative` (ưu tiên an toàn, 1–3 impl worker đồng thời) |
+| `--strategy balanced` | Dispatch song song vừa phải (cap 4) |
+| `--strategy aggressive` | Dispatch thực dụng tối đa (cap 6); **cùng cổng chất lượng** mỗi stream, không phải fast path bỏ AC |
+| `--max-parallel N` | Chỉ **trần cuối** concurrency: `min(strategy_cap, N, safety)` |
+| `--interactive` | Xác nhận batch song song lớn và merge |
+
+**An toàn luôn thắng** strategy (vd. worktree isolation chưa chứng minh → concurrency 1).
+
+### Pipeline worker (Plan → Goal → Execute)
+
+Mỗi worktree implement:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+Sau đó **worktree review** xác thực **Issue → executionGoal → AC → Impl → PR → Tests**. Chỉ merge sau review **APPROVE** + xác nhận người.
+
+### Vai trò & nguồn sự thật
+
+| Artifact | Vai trò |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | Trạng thái runtime (status, lock, progress) |
+| **Canonical Issue** (GitHub hoặc board mirror) | Hợp đồng con người (scope, priority, ownership); **orchestrator tạo** trước spawn |
+| **Board** (`board.md`) | Chỉ dashboard |
+
+Worker chỉ được cập nhật **Acceptance / notes / risks / verification** của issue — không scope, priority, ownership, dependencies. Impl worker chụp **Issue Snapshot** lúc bắt đầu; đổi scope giữa chừng cần orchestrator duyệt.
+
+### Mô hình worker thích ứng
+
+- **Phiên lead:** mô hình host mạnh nhất (phán đoán toàn cục).
+- **Worker:** phân loại task **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (hiện thường map hết sang `grok-4.5` cho đến khi host có thêm slug).
+- Worker **không** tự nâng model; yêu cầu **complexity escalation**, orchestrator respawn.
+- Độ phức tạp cũng điều khiển **độ sâu review** và ngân sách soft **retry**.
+
+State: `.omg/orchestration/` (checkout chính, lead sở hữu) + Layer-B `.omg/state/orchestration-state.json`. Protocol đầy đủ: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 
 ---
 
@@ -166,12 +223,13 @@ omg team shutdown
 | Bề mặt | SL | Ghi chú |
 |---------|------:|-------|
 | Agents | 20 | OMC + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | `omg-tools` |
 | State | `.omg/` | specs, plans, artifacts, modes |
 
 ### Độc quyền Grok
 
+- **`/orchestration`** — giao hàng multi-worktree: Plan→Goal→AC→Execute, cổng review, strategies, mô hình thích ứng
 - **`/web-research`** — docs live → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → duyệt → Vision → code → Vision QA
 - **Search-on-fail** — ưu tiên `web_search` trước retry mù
@@ -183,7 +241,7 @@ omg team shutdown
 
 ### Skills chính
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### Hooks (Layer B)
 

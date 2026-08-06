@@ -81,6 +81,7 @@ Grok oturumunda dene:
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ Grok oturumunda dene:
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-`/cancel` ile iptal. Durum **`.omg/`** altında. Belirsiz fikir → `/deep-interview`. Spec hazır → `/ralplan` ve açık onay.
+`/cancel` ile iptal. Durum **`.omg/`** altında. Belirsiz fikir → `/deep-interview`. Spec hazır → `/ralplan` ve açık onay. İzole worktree’ler, kanonik issue’lar ve review gate’leriyle multi-stream teslimat → `/orchestration`. Tasarımsız UI → `/ui-mockup`. Ekosistem bilinmeyenleri → `/web-research`.
+
+---
+
+## `/orchestration` (çoklu worktree teslimatı)
+
+**Lead asla ürün kodu yazmaz.** Misyonu böler, izleme artefaktları oluşturur, **implementasyon worktree**’leri, **review worktree**’leri spawn eder ve merge’i yönetir. Anahtar kelime: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| Flag | Anlam |
+|------|---------|
+| *(varsayılan)* | `--strategy conservative` (önce güvenlik, 1–3 eşzamanlı impl worker) |
+| `--strategy balanced` | Orta düzey paralel dispatch (cap 4) |
+| `--strategy aggressive` | Pratik maksimum dispatch (cap 6); stream başına **aynı kalite gate’leri**, AC atlayan fast path değil |
+| `--max-parallel N` | Yalnızca son concurrency **üst sınırı**: `min(strategy_cap, N, safety)` |
+| `--interactive` | Büyük paralel batch ve merge’leri onayla |
+
+**Güvenlik her zaman strategy’den üstündür** (ör. kanıtlanmamış worktree izolasyonu → concurrency 1).
+
+### Worker pipeline (Plan → Goal → Execute)
+
+Her implementasyon worktree için:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+Sonra **review worktree**’ler **Issue → executionGoal → AC → Impl → PR → Tests** doğrular. Merge yalnızca review **APPROVE** + insan onayı sonrası.
+
+### Roller ve source of truth
+
+| Artefakt | Rol |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | Runtime durum (status, lock, progress) |
+| **Canonical Issue** (GitHub veya board ayna) | İnsan sözleşmesi (scope, priority, ownership); spawn öncesi **orkestratör oluşturur** |
+| **Board** (`board.md`) | Yalnızca dashboard görünümü |
+
+Worker’lar issue’da yalnızca **Acceptance / notes / risks / verification** güncelleyebilir — scope, priority, ownership, dependencies değil. Impl worker’lar başlangıçta **Issue Snapshot** alır; uçuş sırasında scope değişikliği orkestratör onayı ister.
+
+### Uyarlanabilir worker modelleri
+
+- **Lead oturumu:** en güçlü host modeli (küresel yargı).
+- **Worker’lar:** görevi **LOW | MEDIUM | HIGH | CRITICAL** sınıflandırır → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (host daha fazla slug sunana kadar çoğu zaman hepsi `grok-4.5`).
+- Worker’lar modeli **kendileri yükseltmez**; **complexity escalation** ister, orkestratör respawn eder.
+- Karmaşıklık **review derinliğini** ve soft **retry bütçelerini** de yönlendirir.
+
+Durum: `.omg/orchestration/` (ana checkout, lead sahipliği) + Layer-B `.omg/state/orchestration-state.json`. Tam protokol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 
 ---
 
@@ -166,12 +223,13 @@ omg team shutdown
 | Yüzey | Adet | Notlar |
 |---------|------:|-------|
 | Agents | 20 | OMC + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | `omg-tools` |
 | State | `.omg/` | specs, plans, artifacts, modes |
 
 ### Grok özel
 
+- **`/orchestration`** — çoklu worktree teslimatı: Plan→Goal→AC→Execute, review gate’leri, strategies, uyarlanabilir modeller
 - **`/web-research`** — canlı docs → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → onay → Vision → kod → Vision QA
 - **Search-on-fail** — kör retry’dan önce `web_search`
@@ -183,7 +241,7 @@ omg team shutdown
 
 ### Ana skills
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### Hooks (Layer B)
 

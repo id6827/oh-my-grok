@@ -81,6 +81,7 @@ Grok セッションで:
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ Grok セッションで:
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-いつでも `/cancel`。ランタイム状態は **`.omg/`**。曖昧なアイデア → `/deep-interview`。スペック準備 → `/ralplan` 合意のあと明示承認。UI なし → `/ui-mockup`。調査 → `/web-research`。
+いつでも `/cancel`。ランタイム状態は **`.omg/`**。曖昧なアイデア → `/deep-interview`。スペック準備 → `/ralplan` 合意のあと明示承認。マルチストリーム・worktree・カノニカル issue・レビューゲート → `/orchestration`。UI なし → `/ui-mockup`。調査 → `/web-research`。
+
+---
+
+## `/orchestration`（マルチ worktree 配信）
+
+**リードは製品コードを実装しない。** ミッション分解、追跡アーティファクト、**実装 worktree** のスポーン、**レビュー worktree**、マージゲートのみ担当。キーワード: `orchestration` / `orchestrate` / `오케스트레이션`。
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| フラグ | 意味 |
+|------|---------|
+| *(既定)* | `--strategy conservative`（安全優先、同時 impl ワーカー 1–3） |
+| `--strategy balanced` | 中程度の並列（上限 4） |
+| `--strategy aggressive` | 実用最大並列（上限 6）；**品質ゲートは各ストリーム同じ**（AC スキップではない） |
+| `--max-parallel N` | 同時実行の**最終上限のみ**: `min(strategy_cap, N, safety)` |
+| `--interactive` | 大きな並列バッチとマージを確認 |
+
+**安全性は常に strategy より優先**（例: worktree 分離が未検証 → 同時実行 1）。
+
+### ワーカーパイプライン（Plan → Goal → Execute）
+
+実装 worktree ごと:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+その後 **レビュー worktree** が **Issue → executionGoal → AC → Impl → PR → Tests** を検証。レビュー **APPROVE** + 人間確認後のみマージ。
+
+### 役割と Source of Truth
+
+| アーティファクト | 役割 |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | ランタイム状態（status、lock、progress） |
+| **Canonical Issue**（GitHub または board ミラー） | 人間向け契約（scope、priority、ownership）；**スポーン前にオーケストレータが作成** |
+| **Board** (`board.md`) | ダッシュボード表示のみ |
+
+ワーカーは issue の **Acceptance / notes / risks / verification** のみ更新可 — scope・priority・ownership・dependencies は不可。impl ワーカーは開始時に **Issue Snapshot** を取り、途中の scope 変更はオーケストレータ承認が必要。
+
+### 適応型ワーカーモデル
+
+- **リードセッション:** 最強ホストモデル（全体判断）。
+- **ワーカー:** タスクを **LOW | MEDIUM | HIGH | CRITICAL** に分類 → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL`（現状ホストに複数 slug が無い限り多くは `grok-4.5`）。
+- ワーカーはモデルを**自己アップグレード不可**；**complexity escalation** を要求しオーケストレータが respawn。
+- 複雑度は **レビュー深度** とソフト **リトライ予算** も駆動。
+
+状態: `.omg/orchestration/`（メイン checkout、リード所有）+ Layer-B `.omg/state/orchestration-state.json`。詳細: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md)。
 
 ---
 
@@ -171,12 +228,13 @@ omg team shutdown
 | 面 | 数 | メモ |
 |---------|------:|-------|
 | Agents | 20 | OMC セット + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | `.mcp.json` 経由 `omg-tools` |
 | State | `.omg/` | specs / plans / artifacts / modes |
 
 ### Grok 専用
 
+- **`/orchestration`** — マルチ worktree 配信: Plan→Goal→AC→Execute、レビューゲート、strategy、適応モデル
 - **`/web-research`** — ライブ docs / releases / issues / X → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 承認 → Vision brief → コード → Vision QA
 - **Search-on-fail** — 失敗時は盲再試行の前に `web_search` を優先
@@ -188,7 +246,7 @@ omg team shutdown
 
 ### 主要スキル
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### フック (Layer B)
 

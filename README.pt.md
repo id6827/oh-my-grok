@@ -81,6 +81,7 @@ Em uma sessão Grok:
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ Em uma sessão Grok:
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-Cancele com `/cancel`. Estado em **`.omg/`**. Ideias vagas → `/deep-interview`. Spec pronta → `/ralplan` e aprovação explícita.
+Cancele com `/cancel`. Estado em **`.omg/`**. Ideias vagas → `/deep-interview`. Spec pronta → `/ralplan` e aprovação explícita. Entrega multi-stream com worktrees isolados, issues canônicas e gates de review → `/orchestration`. UI sem design → `/ui-mockup`. Incógnitas do ecossistema → `/web-research`.
+
+---
+
+## `/orchestration` (entrega multi-worktree)
+
+**O lead nunca implementa código de produto.** Só decompõe a missão, cria artefatos de rastreio, lança **worktrees de implementação**, **worktrees de review** e governa o merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| Flag | Significado |
+|------|---------|
+| *(padrão)* | `--strategy conservative` (segurança primeiro, 1–3 impl workers concorrentes) |
+| `--strategy balanced` | Despacho paralelo moderado (teto 4) |
+| `--strategy aggressive` | Máximo despacho prático (teto 6); **mesmos gates de qualidade** por stream, não atalho sem AC |
+| `--max-parallel N` | Apenas **limite superior** final de concorrência: `min(strategy_cap, N, safety)` |
+| `--interactive` | Confirmar lotes paralelos grandes e merges |
+
+**A segurança sempre vence** a strategy (ex.: isolamento de worktree não provado → concorrência 1).
+
+### Pipeline do worker (Plan → Goal → Execute)
+
+Por worktree de implementação:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+Depois **worktrees de review** validam **Issue → executionGoal → AC → Impl → PR → Tests**. Merge só após review **APPROVE** + confirmação humana.
+
+### Papéis e fonte da verdade
+
+| Artefato | Papel |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | Estado runtime (status, locks, progress) |
+| **Canonical Issue** (GitHub ou espelho board) | Contrato humano (scope, priority, ownership); **o orquestrador cria** antes do spawn |
+| **Board** (`board.md`) | Apenas visão de dashboard |
+
+Workers só podem atualizar **Acceptance / notes / risks / verification** da issue — não scope, priority, ownership ou dependencies. Impl workers capturam um **Issue Snapshot** no início; mudanças de scope em voo exigem aprovação do orquestrador.
+
+### Modelos adaptativos do worker
+
+- **Sessão lead:** modelo host mais forte (julgamento global).
+- **Workers:** classificam a tarefa **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (hoje muitos mapeiam para `grok-4.5` até o host oferecer mais slugs).
+- Workers **não** fazem auto-upgrade de modelo; pedem **complexity escalation** e o orquestrador respawna.
+- A complexidade também dirige a **profundidade de review** e orçamentos soft de **retry**.
+
+Estado: `.omg/orchestration/` (checkout principal, propriedade do lead) + Layer-B `.omg/state/orchestration-state.json`. Protocolo completo: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 
 ---
 
@@ -166,12 +223,13 @@ omg team shutdown
 | Superfície | Qtd | Notas |
 |---------|------:|-------|
 | Agents | 20 | OMC + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | `omg-tools` |
 | State | `.omg/` | specs, plans, artifacts, modes |
 
 ### Exclusivos Grok
 
+- **`/orchestration`** — entrega multi-worktree: Plan→Goal→AC→Execute, gates de review, strategies, modelos adaptativos
 - **`/web-research`** — docs ao vivo → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → aprovação → Vision → código → Vision QA
 - **Search-on-fail** — preferir `web_search` antes de retries cegos
@@ -183,7 +241,7 @@ omg team shutdown
 
 ### Skills principais
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### Hooks (Layer B)
 

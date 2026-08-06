@@ -195,6 +195,7 @@ Repo: [github.com/id6827/oh-my-grok](https://github.com/id6827/oh-my-grok)
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -208,13 +209,68 @@ Repo: [github.com/id6827/oh-my-grok](https://github.com/id6827/oh-my-grok)
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
 Cancel anytime with `/cancel`. Runtime state lives under **`.omg/`**.
 
-Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan` for consensus, then explicit approval before execution. Multi-stream delivery with isolated worktrees and review gates → `/orchestration`. UI without design → `/ui-mockup`. Ecosystem unknowns → `/web-research`.
+Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan` for consensus, then explicit approval before execution. Multi-stream delivery with isolated worktrees, canonical issues, and review gates → `/orchestration`. UI without design → `/ui-mockup`. Ecosystem unknowns → `/web-research`.
 
+---
+
+## `/orchestration` (multi-worktree delivery)
+
+**Lead never implements product code.** The orchestrator decomposes the mission, creates tracking artifacts, spawns **implementation worktrees**, runs **review worktrees**, and gates merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| Flag | Meaning |
+|------|---------|
+| *(default)* | `--strategy conservative` (safety-first, 1–3 concurrent impl workers) |
+| `--strategy balanced` | Moderate parallel dispatch (cap 4) |
+| `--strategy aggressive` | Max practical dispatch (cap 6); **same quality gates** per stream, not a skip-AC fast path |
+| `--max-parallel N` | Final concurrency **upper bound** only: `min(strategy_cap, N, safety)` |
+| `--interactive` | Confirm large parallel batches and merges |
+
+**Safety always wins** over strategy (e.g. unproven worktree isolation → concurrency 1).
+
+### Worker pipeline (Plan → Goal → Execute)
+
+Per implementation worktree:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+Then **review worktrees** validate **Issue → executionGoal → AC → Impl → PR → Tests**. Merge only after review **APPROVE** + human confirm.
+
+### Roles & source of truth
+
+| Artifact | Role |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | Runtime state (status, locks, progress) |
+| **Canonical Issue** (GitHub or board mirror) | Human contract (scope, priority, ownership); **orchestrator creates** before spawn |
+| **Board** (`board.md`) | Dashboard view only |
+
+Workers may update issue **Acceptance / notes / risks / verification** only — not scope, priority, ownership, or dependencies. Impl workers capture an **Issue Snapshot** at start so mid-flight scope edits need orchestrator approval.
+
+### Adaptive worker models
+
+- **Lead session:** strongest host model (global judgment).  
+- **Workers:** classify task **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (today often all map to `grok-4.5` until the host offers more slugs).  
+- Workers **must not** self-upgrade model; they request **complexity escalation** and the orchestrator respawns.  
+- Complexity also drives **review depth** and soft **retry budgets**.
+
+State: `.omg/orchestration/` (lead-owned on main checkout) + Layer-B `.omg/state/orchestration-state.json`. Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 ---
 
 ## Autopilot execution: `solo` vs `team`
@@ -289,12 +345,13 @@ omg team shutdown
 | Surface | Count | Notes |
 |---------|------:|-------|
 | Agents | 20 | OMC set + `visual-designer` |
-| Skills | 45 | omc→omg renames + `ui-mockup` + `web-research` + extras |
+| Skills | 46+ | omc→omg renames + `ui-mockup` + `web-research` + `orchestration` + extras |
 | MCP tools | ~54 | `omg-tools` via plugin `.mcp.json` |
 | State | `.omg/` | specs, plans, artifacts, mode state |
 
 ### Grok exclusives
 
+- **`/orchestration`** — multi-worktree delivery: Plan→Goal→AC→Execute, review gates, strategies, adaptive models
 - **`/web-research`** — live docs, releases, issues, X signal → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
 - **Search-on-fail** — core skills prefer `web_search` before blind retries

@@ -195,6 +195,7 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
 /deep-interview "스트릭 있는 습관 트래커 CLI를 만들고 싶어요"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "auth + 대시보드 polish PR 여러 개"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "프로필 카드가 있는 다크모드 설정 페이지"
 ```
@@ -208,13 +209,68 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
        ↓
 /ralplan         →  Planner / Architect / Critic 합의 (.omg/plans/)
        ↓
-/autopilot       →  구현 → QA → 멀티 에이전트 검증
+/autopilot       →  단일 미션 구현 → QA → 검증
+   또는
+/orchestration   →  멀티 스트림 worktree → 리뷰 게이트 → 머지
 ```
 
 언제든 `/cancel`. 런타임 상태는 **`.omg/`** 아래.
 
-모호한 제품 아이디어 → 코드 전에 `/deep-interview`. 스펙 준비됨 → `/ralplan` 합의 후 **명시 승인** 뒤 실행. 멀티 스트림·워크트리 분리·리뷰 게이트 전달 → `/orchestration`. 디자인 없는 UI → `/ui-mockup`. 생태계 불확실 → `/web-research`.
+모호한 제품 아이디어 → 코드 전에 `/deep-interview`. 스펙 준비됨 → `/ralplan` 합의 후 **명시 승인** 뒤 실행. 멀티 스트림·워크트리·캐노니컬 이슈·리뷰 게이트 전달 → `/orchestration`. 디자인 없는 UI → `/ui-mockup`. 생태계 불확실 → `/web-research`.
 
+---
+
+## `/orchestration` (멀티 worktree 전달)
+
+**리드는 제품 코드를 구현하지 않습니다.** 미션 분해, 추적 아티팩트, **구현 worktree** 스폰, **리뷰 worktree**, 머지 게이트만 담당합니다. 키워드: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "고위험 마이그레이션"
+```
+
+| 플래그 | 의미 |
+|------|---------|
+| *(기본)* | `--strategy conservative` (안정 우선, 동시 impl 1–3) |
+| `--strategy balanced` | 중간 병렬 (상한 4) |
+| `--strategy aggressive` | 최대 실무 디스패치 (상한 6); **스트림마다 동일 품질 게이트** (AC 스킵 아님) |
+| `--max-parallel N` | 최종 동시성 **상한만**: `min(strategy_cap, N, safety)` |
+| `--interactive` | 큰 병렬 배치·머지 확인 |
+
+**Safety Override가 strategy보다 항상 우선** (예: worktree isolation 미증명 → 동시성 1).
+
+### 워커 파이프라인 (Plan → Goal → Execute)
+
+구현 worktree마다:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (가능하면 /goal) → Acceptance Contract → Orch AC 승인
+  → 구현 → 테스트 → exit report → PR (Fixes #N)
+```
+
+**리뷰 worktree**는 **Issue → executionGoal → AC → Impl → PR → Tests** 일관성을 검증합니다. 머지는 리뷰 **APPROVE** + 사람 확인 후.
+
+### 역할과 진실 원천 (SoT)
+
+| 아티팩트 | 역할 |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | 런타임 상태 (status, lock, progress) |
+| **Canonical Issue** (GitHub 또는 보드 미러) | 사람 계약 (scope, priority, ownership); **스폰 전 오케스트레이터가 생성** |
+| **Board** (`board.md`) | 대시보드 뷰 전용 |
+
+워커는 이슈의 **Acceptance / notes / risks / verification** 만 수정 가능 — scope·priority·ownership·deps 는 불가. 구현 시작 시 **Issue Snapshot** 을 남겨 중도 스코프 변경은 오케 승인 필요.
+
+### Adaptive worker 모델
+
+- **리드 세션:** 호스트 최강 모델 (전역 판단).  
+- **워커:** 태스크 **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (현재 호스트는 종종 전부 `grok-4.5`).  
+- 워커는 모델을 **스스로 올리지 않음** — **complexity escalation** 요청 후 오케가 respawn.  
+- 복잡도는 **리뷰 깊이**·soft **재시도 예산**에도 반영.
+
+상태: `.omg/orchestration/` (메인 체크아웃, 리드 소유) + Layer-B `.omg/state/orchestration-state.json`. 전문: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 ---
 
 ## Autopilot 실행: `solo` vs `team`
@@ -289,12 +345,13 @@ omg team shutdown
 | 표면 | 개수 | 메모 |
 |---------|------:|-------|
 | Agents | 20 | OMC 세트 + `visual-designer` |
-| Skills | 45 | omc→omg 이름 + `ui-mockup` + `web-research` 등 |
+| Skills | 46+ | omc→omg 이름 + `ui-mockup` + `web-research` + `orchestration` 등 |
 | MCP tools | ~54 | 플러그인 `.mcp.json` → `omg-tools` |
 | State | `.omg/` | specs, plans, artifacts, 모드 상태 |
 
 ### Grok 전용
 
+- **`/orchestration`** — 멀티 worktree 전달: Plan→Goal→AC→Execute, 리뷰 게이트, strategy, adaptive models
 - **`/web-research`** — 라이브 문서, 릴리스, 이슈, X 신호 → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 승인 → Vision 브리프 → 코드 → Vision QA
 - **Search-on-fail** — 핵심 스킬이 맹목 재시도 전에 `web_search` 우선

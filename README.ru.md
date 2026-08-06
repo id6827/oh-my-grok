@@ -81,6 +81,7 @@ grok inspect
 /deep-interview "I want a habit tracker CLI with streaks"
 /ralplan
 /autopilot
+/orchestration --strategy balanced "ship auth + dashboard polish with PRs"
 /web-research "Tailwind CSS v4 breaking changes"
 /ui-mockup "dark mode settings page with profile card"
 ```
@@ -94,10 +95,66 @@ grok inspect
        ↓
 /ralplan         →  Planner / Architect / Critic consensus (.omg/plans/)
        ↓
-/autopilot       →  implement → QA → multi-agent validation
+/autopilot       →  single-mission implement → QA → validate
+   or
+/orchestration   →  multi-stream worktrees → review gates → merge
 ```
 
-Отмена: `/cancel`. Состояние в **`.omg/`**. Смутные идеи → `/deep-interview`. Спека готова → `/ralplan` и явное одобрение.
+Отмена: `/cancel`. Состояние в **`.omg/`**. Смутные идеи → `/deep-interview`. Спека готова → `/ralplan` и явное одобрение. Multi-stream доставка с изолированными worktree, каноническими issue и review-гейтами → `/orchestration`. UI без дизайна → `/ui-mockup`. Неизвестности экосистемы → `/web-research`.
+
+---
+
+## `/orchestration` (multi-worktree доставка)
+
+**Lead никогда не пишет продуктовый код.** Он декомпозирует миссию, создаёт артефакты трекинга, спавнит **implementation worktree**, **review worktree** и контролирует merge. Ключевые слова: `orchestration` / `orchestrate` / `오케스트레이션`.
+
+```text
+/orchestration "mission"
+/orchestration --strategy balanced "feature set"
+/orchestration --strategy aggressive --max-parallel 6 "large epic"
+/orchestration --interactive "high-risk migration"
+```
+
+| Флаг | Смысл |
+|------|---------|
+| *(по умолчанию)* | `--strategy conservative` (безопасность, 1–3 concurrent impl worker) |
+| `--strategy balanced` | Умеренный параллельный dispatch (cap 4) |
+| `--strategy aggressive` | Максимальный практичный dispatch (cap 6); **те же quality gates** на поток, не skip-AC fast path |
+| `--max-parallel N` | Только финальный **верхний предел** concurrency: `min(strategy_cap, N, safety)` |
+| `--interactive` | Подтверждать крупные параллельные batch и merge |
+
+**Безопасность всегда важнее** strategy (напр. неподтверждённая isolation worktree → concurrency 1).
+
+### Pipeline worker (Plan → Goal → Execute)
+
+На каждый implementation worktree:
+
+```text
+Issue Snapshot → Requirements → /ralplan → executionGoal
+  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → Implement → tests → exit report → PR (Fixes #N)
+```
+
+Затем **review worktree** проверяют **Issue → executionGoal → AC → Impl → PR → Tests**. Merge только после review **APPROVE** + human confirm.
+
+### Роли и source of truth
+
+| Артефакт | Роль |
+|----------|------|
+| **Task JSON** (`.omg/orchestration/tasks/`) | Runtime-состояние (status, locks, progress) |
+| **Canonical Issue** (GitHub или board mirror) | Человеческий контракт (scope, priority, ownership); **оркестратор создаёт** до spawn |
+| **Board** (`board.md`) | Только dashboard |
+
+Worker’ы могут обновлять только **Acceptance / notes / risks / verification** issue — не scope, priority, ownership, dependencies. Impl worker’ы берут **Issue Snapshot** при старте; смена scope в полёте требует одобрения оркестратора.
+
+### Адаптивные модели worker
+
+- **Lead-сессия:** сильнейшая host-модель (глобальное суждение).
+- **Worker’ы:** классифицируют задачу **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (сейчас часто всё на `grok-4.5`, пока host не даст больше slug).
+- Worker’ы **не** повышают модель сами; запрашивают **complexity escalation**, оркестратор respawn’ит.
+- Сложность также задаёт **глубину review** и soft **retry budgets**.
+
+Состояние: `.omg/orchestration/` (main checkout, lead) + Layer-B `.omg/state/orchestration-state.json`. Полный протокол: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
 
 ---
 
@@ -166,12 +223,13 @@ omg team shutdown
 | Поверхность | Кол-во | Заметки |
 |---------|------:|-------|
 | Agents | 20 | OMC + `visual-designer` |
-| Skills | 45 | omc→omg + `ui-mockup` + `web-research` |
+| Skills | 46+ | omc→omg + `ui-mockup` + `web-research` + `orchestration` |
 | MCP tools | ~54 | `omg-tools` |
 | State | `.omg/` | specs, plans, artifacts, modes |
 
 ### Эксклюзивы Grok
 
+- **`/orchestration`** — multi-worktree доставка: Plan→Goal→AC→Execute, review-гейты, strategies, адаптивные модели
 - **`/web-research`** — live docs → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → approval → Vision → code → Vision QA
 - **Search-on-fail** — предпочитать `web_search` до слепых retry
@@ -183,7 +241,7 @@ omg team shutdown
 
 ### Основные skills
 
-`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
+`deep-interview`, `ralplan`, `plan`, `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `ultragoal`, `team`, `orchestration`, `cancel`, `verify`, `setup`, `omg-setup`, `omg-doctor`, `omg-teams`, …
 
 ### Hooks (Layer B)
 
