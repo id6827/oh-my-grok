@@ -2,17 +2,15 @@
 name: orchestration
 description: >
   Main orchestrator mode — decompose work into non-overlapping worktrees,
-  force /ralplan before implement, parallel execute, separate review worktree,
-  goal handoff, PR + issue lifecycle, never implement in the lead session.
+  canonical GitHub/board issues, impl-authored acceptance contracts, review
+  consistency checks, PR + merge gates; lead never implements.
 argument-hint: "[--interactive] [--max-parallel N] <mission or epic description>"
 aliases: [orchestrate, orch]
 ---
 
-# Orchestration (Main Orchestrator)
+# Orchestration (Main Orchestrator) — v1.1
 
 You are **not** an implementer. You are the **main orchestrator** for a multi-worktree delivery pipeline.
-
-Invoke:
 
 ```text
 /orchestration "ship auth refresh + dashboard polish with PRs"
@@ -21,135 +19,127 @@ Invoke:
 
 ## Purpose
 
-Drive large or multi-stream work **without editing product code in the lead session**. Every implementation and review stream runs in its **own git worktree** (via `spawn_subagent` + `isolation: "worktree"` or explicit `git worktree`). Planning uses **`/ralplan`** (consensus). Completion requires **review approval**, **PR**, and **Definition of Done**.
+Drive multi-stream work **without product-code edits in the lead session**. Each impl/review stream runs in its **own worktree**. Planning uses **`/ralplan`**. Tracking uses a **Canonical Issue** (orchestrator-created). Completion needs **review APPROVE**, **human merge confirm**, and **DoD**.
 
-## v1 capability tier (honest guarantees)
+## Canonical source ownership (must not confuse)
 
-| Guarantee | v1 strength |
-|-----------|-------------|
-| Lead never implements product code | **Soft** (prompt + skill-injector) |
-| Ralplan before impl per task | **Soft** (worker sequence) |
-| Review worktree does not implement | **Soft** |
-| Disjoint file ownership | **Soft** (no linter) |
-| Worktree isolation | **Soft** unless host honors `isolation:"worktree"` **or** you created explicit `git worktree add` paths |
-| Layer-B mode file active | **Hard** (keyword writes `.omg/state/orchestration-state.json`) |
-| Injector reminder while active | **Hard** (skill-injector) |
-| MCP `state_write(mode="orchestration")` | **Absent** — do not call it |
-| Stop continue-loop (ralph-class) | **Absent** in v1 (generic Stop may still see active file; clear on complete) |
-| Merge safety | **Hard via protocol**: human confirm before merge |
+| Artifact | Role | Who writes |
+|----------|------|------------|
+| **Task JSON** (`.omg/orchestration/tasks/*.json`) | **Runtime orchestration state** — status, locks, progress, prUrl, dependsOn machine fields | **Orchestrator only** |
+| **Canonical Issue** (GitHub issue and/or board mirror) | **Human-facing task contract** — scope, priority, ownership, AC body, notes | **Orch:** shell fields · **Impl:** AC / notes / risks / verification only |
+| **Board** (`board.md`) | **Aggregated dashboard / view only** — never the sole source of truth for priority/scope | **Orchestrator only** |
+
+If Task JSON and Issue disagree on **runtime** fields (status, lock, prUrl) → **Task JSON wins**.  
+If they disagree on **contract** fields (scope, priority, ownership, deps) → **Issue wins**, and orchestrator **must sync Task JSON** to match (never the reverse via worker).  
+Board is derived; do not treat dashboard text as authority.
+
+## v1.1 capability tier (honest guarantees)
+
+| Guarantee | Strength |
+|-----------|----------|
+| Lead never implements product code | **Soft** (prompt + injector) |
+| Conflict resolution without source edits | **Soft** (hard rule in protocol) |
+| Ralplan before impl | **Soft** |
+| Review does not implement | **Soft** |
+| Ownership soft-lock on board/task JSON | **Soft** |
+| Worktree isolation | **Soft** unless host isolation or `git worktree add` proven |
+| Layer-B `.omg/state/orchestration-state.json` | **Hard** (keyword) |
+| Injector reminder | **Hard** |
+| MCP `state_write(mode="orchestration")` | **Absent** — do not call |
+| Stop continue-loop (ralph-class) | **Absent** |
+| Merge after review + human confirm | **Protocol-hard** |
 | `/goal` set by agent | **Absent** — handoff text only |
+| Canonical Issue before spawn | **Protocol-hard** (gh or board mirror) |
+| Issue Snapshot at impl start | **Soft** |
 
-This skill is a **prompt protocol + Layer-B activation**, not PreToolUse-enforced isolation.
+## Use / Do not use
 
-## Use When
-
-- Multi-module / multi-PR delivery where ownership must not collide
-- User wants a program-manager style loop: decompose → plan → build in isolation → review → merge
-- Parallel streams with explicit blockers, issues, and progress reporting
-- User says “orchestrate”, “/orchestration”, “worktree per task”, or “main orchestrator only”
-
-## Do Not Use When
-
-- Single small fix in one file → `/ralph`, direct executor, or one `spawn_subagent`
-- Planning only, no delivery → `/ralplan` or `/plan`
-- User wants the lead session to write code themselves → `/team` or `/autopilot`
-- Pure research → `/web-research` / `/trace`
+**Use:** multi-module/multi-PR; program-manager loop; parallel streams with blockers; “orchestrate” / worktree-per-task.  
+**Do not use:** one-file fix (`/ralph`); planning only (`/ralplan`); lead wants to code (`/team`); pure research.
 
 ## Hard Rules (never break)
 
-1. **Do not implement** in the orchestrator session: no product source edits, no “quick fix” commits on the main checkout.
-2. **All implementation** happens in **separate worktrees** (one primary task per impl worktree).
-3. **Parallelize** only after isolation is **proven** (see Isolation probe). Otherwise serialize.
-4. **No overlapping ownership**: file/module ownership must be disjoint across active impl worktrees.
-5. **Never mutate another worktree’s tree** from a worker; orchestrator only coordinates.
-6. **Review worktrees do not implement** — review / approve / request-changes only.
-7. **Merge only after Review APPROVE + human confirmation** (`ask_user_question` unless user already approved merge this turn).
-8. Persist program board under **main-checkout** `.omg/orchestration/` (**lead-only** writes). Mode flag: **`.omg/state/orchestration-state.json`** (Layer-B). Never `.omc/`. **Do not** call MCP `state_write`/`state_clear` with `mode="orchestration"` (not registered).
+1. **Lead does not implement** product sources/tests on the main checkout (no “quick fix”, no merge-conflict resolution by editing app code).
+2. **All implementation** in separate worktrees (one primary task per impl WT).
+3. **Parallel only after isolation probe**; else serialize.
+4. **No overlapping ownership** among active locked tasks.
+5. **Conflict resolution menu only** (orchestrator): reassign ownership · split task · update dependsOn · create/update tracking issues · restart WT · cancel · serialize. **Never** resolve by editing product sources as lead.
+6. **Review WTs do not implement**.
+7. **Merge only after** Review APPROVE + DoD evidence + **human confirm** (`ask_user_question` unless user already approved merge this turn).
+8. **Board path:** only lead writes `.omg/orchestration/**` on **main checkout**. Workers report to lead; no worktree-local board as SoT.
+9. **Mode file:** `.omg/state/orchestration-state.json` only (Layer-B). No MCP orchestration mode.
+10. **Canonical Issue:** before spawn, orchestrator **creates or locates** exactly **one** tracking issue per task; workers **MUST** reference it; PRs **SHOULD** use `Fixes #<n>` (or `Refs: T00N` if offline mirror only).
 
-## Architecture
+## Architecture (v1.1 flow)
 
 ```text
-User → /orchestration
-         │
-         ▼
-   [ORCHESTRATOR SESSION]  ── plan, track, unblock, report, board ──┐
-         │  (main checkout only for .omg/orchestration/**)           │
-         │  spawn parallel (isolation: worktree OR git worktree)     │
-         ▼                                                           │
-   Impl WTs (ralplan → impl → test → goal handoff → PR)              │
-         │                                                           │
-         ▼                                                           │
-   Review WT(s) (no impl) → APPROVE / CHANGES_REQUESTED              │
-         │                                                           │
-         ▼                                                           │
-   Human confirm → Merge                                             │
+Mission
+  → Orchestrator
+       ├── Task decompose (Task JSON = runtime)
+       ├── Ownership soft-lock
+       ├── Dependency graph
+       ├── Canonical Issue create/locate (contract shell)
+       └── Spawn Impl WT (after isolation probe)
+              │
+              ├── Capture Issue Snapshot
+              ├── Requirements
+              ├── Acceptance Contract (worker fills Issue AC section)
+              ├── Update Issue (allowed fields only)
+              ├── /ralplan + planning quality gate
+              ├── Plan self-review → submit AC
+              ▼
+       Orchestrator: AC gate (approve/reject) + ownership check
+              │
+              ▼
+       Implementation (soft retries) → Test → Exit report → PR (Fixes #N)
+              │
+              ▼
+       Review WT(s): Issue → AC → Impl → PR → Tests consistency
+              │
+              ▼
+       APPROVE → human confirm → merge → ready-set refresh → next
 ```
 
-## Relationship to other modes
-
-| Mode | Role vs `/orchestration` |
-|------|---------------------------|
-| `/ralplan` | **Required** inside each impl worktree before code |
-| `/team` | Optional *inside* a single worktree; not a substitute for worktree isolation |
-| `/ralph` | Optional persistence *inside* an impl worktree after plan approval |
-| `/goal` | Host session condition — **handoff text only**; never claim the agent set `/goal` from shell |
-| `/ultragoal` | Optional durable multi-goal ledger for long epics |
-| `/cancel` | Clears Layer-B `orchestration-state.json` via clear-active-modes |
-
-**Loop authority:** Orchestration is the primary delivery authority for this run. Do not start competing ralph/autopilot loops in the **lead** session.
-
-## State layout (v1 file-only)
+## State layout
 
 ### Mode flag (Layer-B)
 
-```text
-.omg/state/orchestration-state.json
-```
+`.omg/state/orchestration-state.json` — `active`, `current_phase`, `updated_at`.  
+Terminal: `active: false` + `completed` | `cancelled`.
 
-Written when the keyword detector activates `orchestration`. Fields typically: `active`, `current_phase`, `updated_at`.
-
-**Lifecycle:**
-
-- Start: keyword/skill activation → `active: true`, `current_phase: "decompose"` (or leave detector defaults and update via file edit if needed).
-- Running: phases such as `decompose`, `impl`, `review`, `merge`.
-- End / cancel: set `active: false` and terminal phase `completed` or `cancelled` (or run `/cancel` / `clear-active-modes.mjs`).
-
-**Do not** invent session paths like `.omg/state/sessions/<id>/orchestration-state.json` unless a future MCP mode lands.
-
-### Program board (lead-owned, main checkout)
+### Program artifacts (main checkout, lead-owned board files)
 
 ```text
 .omg/orchestration/
   mission.md
-  board.md
-  tasks/<task-id>.json
-  issues/<issue-id>.md
+  board.md                 # view only
+  tasks/<task-id>.json     # runtime SoT
+  issues/<id>.md           # mirror if no gh / always optional mirror
   handoffs/<task-id>.md
-  reviews/<pr-number>.md
+  reviews/<pr>.md
+  snapshots/<task-id>.md   # optional lead-stored copy of worker Issue Snapshot
 ```
 
-**Board ownership rule (locked v1):**
-
-- **Only the orchestrator (lead session on main checkout)** creates/updates `.omg/orchestration/**`.
-- Impl/review workers **report** status, PR URLs, issue drafts, and review verdicts **back to the lead** (agent result message / PR comments).
-- Workers **must not** write relative `.omg/orchestration/` inside their worktree (that tree dies or is invisible to the lead).
-
-### Task record (JSON) — lead writes
+### Task JSON (runtime — orchestrator only)
 
 ```json
 {
   "id": "T001",
-  "title": "Auth refresh token rotation",
-  "status": "open|in_progress|review|blocked|done|failed",
+  "title": "…",
+  "status": "open|in_progress|review|blocked|done|failed|cancelled",
   "worktree": "impl-T001",
-  "branch": "orch/T001-auth-refresh",
+  "branch": "orch/T001-…",
   "ownership": ["src/auth/**"],
+  "ownershipLock": "locked|free",
   "dependsOn": [],
+  "priority": "P0|P1|P2",
+  "canonicalIssue": "#145|board:T001",
   "progress": 0,
   "blockers": [],
-  "issueIds": [],
+  "sameIssueCount": 0,
   "prUrl": null,
   "reviewStatus": "none|pending|changes_requested|approved",
+  "acStatus": "missing|draft|approved|rejected",
   "goalHandoff": null,
   "dod": {
     "requirements": false,
@@ -159,195 +149,217 @@ Written when the keyword detector activates `orchestration`. Fields typically: `
     "docs": false,
     "pr": false,
     "reviewApproved": false,
-    "merged": false
+    "merged": false,
+    "cleanliness": false
   }
 }
 ```
 
-### Issue record
+Never reassign `status=done` to another worker.
 
-Status machine: **Open → In Progress → Review → Closed**
+### Canonical Issue (contract)
 
-Fields: cause, impact, priority, owner worktree, resolution status. Prefer `gh issue create` when available; lead mirrors markdown under `.omg/orchestration/issues/`.
+**Orchestrator creates** (preferred: `gh issue create`) **before** spawn, or locates existing.  
+Fallback: `.omg/orchestration/issues/T00N.md` as canonical mirror when gh unavailable.
+
+**Template fields (orchestrator fills shell):**
+
+```text
+Title, Background, Scope, Non-goals, Acceptance (empty at create),
+Priority, Owner, Dependencies, Ownership, Related Tasks (e.g. T001)
+```
+
+**Workers MAY update only:**
+
+- Acceptance Contract  
+- Implementation Notes  
+- Risks  
+- Verification Results  
+
+**Workers MUST NOT modify:**
+
+- Scope · Priority · Ownership · Dependencies · Title (except typo escalate to orch)  
+
+Those belong to the **orchestrator**. Mid-task orchestrator changes to Scope/Priority/Ownership/Deps require **Issue Snapshot re-approval** before the worker adopts them.
+
+### Issue Snapshot (impl start)
+
+At task start, each impl worker **MUST** capture an **Issue Snapshot** (body/title/AC/scope as of start) into the agent context and report a short hash/summary to the lead.
+
+- Implementation is against the **snapshot**, not live issue drift.  
+- If the issue’s orchestrator-owned fields change mid-task: **stop and get orchestrator approval** before adopting; otherwise continue on snapshot.  
+- Lead may store snapshot under `.omg/orchestration/snapshots/T00N.md` from the worker report.
 
 ## Orchestrator-only responsibilities
 
-**May:** decompose, assign ownership, spawn worktree workers, track progress/blockers, file issues (lead), manage PR metadata, gate merge after review + human confirm, update board, resolve ownership conflicts.
+**May:** mission/board/task JSON; soft ownership lock; dependency graph; **canonical issue create/locate**; AC **gate** (not author full AC); spawn/restart WT; issue escalate; PR/merge gates; ready-set refresh; conflict menu only.
 
-**Must not:** edit application source/tests; run impl loops on main checkout; merge without review APPROVE + human confirm; allow overlapping ownership; call MCP `state_write(mode="orchestration")`.
+**Must not:** product source edits; author full Acceptance for the worker; worker-forbidden issue field edits “for speed”; MCP orchestration state_write; merge without review+human.
 
-## Isolation probe (before parallel)
+## Isolation probe
 
-1. Prefer `spawn_subagent(..., isolation: "worktree")`.
-2. If host does not isolate (worker edits appear on main checkout / shared dirty tree): **stop parallel claims**.
-3. Fallback: explicit `git worktree add <path> -b orch/<task-id>` and pass that path as worker `cwd` / working directory.
-4. If neither is available: **serialize** tasks (max-parallel 1). Never claim multi-worktree safety.
+1. Prefer `spawn_subagent(..., isolation: "worktree")`.  
+2. If isolation fails → `git worktree add` + cwd.  
+3. Else **max-parallel 1**. Never claim multi-WT safety without proof.
+
+## Ownership soft-lock
+
+Before spawn:
+
+1. Claim `ownership` globs on Task JSON with `ownershipLock: locked`.  
+2. Reject spawn if globs overlap any other `locked` + `in_progress|review` task.  
+3. Release lock when: PR opened (move to review), task cancelled/failed-terminal, or explicitly freed by orch.  
+Soft only — no FS enforcer.
 
 ## Phase 0 — Mission intake
 
-1. Restate mission; lead writes `.omg/orchestration/mission.md`.
-2. Vague scope → one `ask_user_question` or short read-only explore — no product impl.
-3. Optional `/deep-interview` only for extreme product ambiguity; return here after.
-4. Ensure mode file is active (keyword path) or create/update `.omg/state/orchestration-state.json` with `active: true` via careful file write if needed — **not** MCP mode API.
-5. Build task DAG; independent tasks parallel only after isolation probe.
+1. Write `mission.md`.  
+2. Vague → one question or read-only explore.  
+3. Activate mode file if needed.  
+4. Build DAG; parallel only after isolation probe.
 
-## Phase 1 — Task decomposition
+## Phase 1 — Task + Canonical Issue
 
-| Field | Rule |
-|-------|------|
-| `id` | `T001`, … |
-| `ownership` | Globs; **no overlap** with other active tasks |
-| `dependsOn` | Hard dependencies |
-| `acceptance` | Testable bullets |
+For each task:
 
-Lead writes `tasks/*.json` + `board.md`.
+1. Write Task JSON (runtime).  
+2. Soft-lock ownership.  
+3. **Create/locate Canonical Issue** (1 task ↔ 1 issue); set `canonicalIssue`.  
+4. Update board view.  
+5. Do **not** invent full Acceptance — leave AC empty/seed only.
 
-## Phase 2 — Implementation worktrees
+## Phase 2 — Implementation worktree
 
-```text
-spawn_subagent(
-  subagent_type="executor",
-  isolation="worktree",
-  description="Impl T00N short title",
-  prompt="<IMPL PREAMBLE + task fields + report-only board rule>"
-)
-```
-
-**Max parallel:** default 3; `--max-parallel N` (cap 8). After probe failure → 1.
+Spawn only after issue exists and lock succeeds.
 
 ### Impl sequence (mandatory)
 
-1. Requirements analysis  
-2. **`/ralplan`** (or `/plan --consensus`) for **this task only**  
-3. Self-review plan  
-4. Weak plan → re-ralplan (max 3) then escalate  
-5. Implement within ownership only  
-6. Test (fresh output)  
-7. Verify (lint/typecheck/build as applicable)  
-8. Author **`/goal` handoff text** (optimal condition + proof instructions)  
-9. **Do not claim `/goal` was set by tools** — print: `Please run in this session if desired: /goal <condition with proof>` and continue with evidence in-session  
-10. Open PR (`gh pr create`) with six sections  
+1. **Capture Issue Snapshot**  
+2. Requirements analysis (against snapshot)  
+3. **Write Acceptance Contract** (Inputs, Outputs, Acceptance Criteria, Non-goals, Test Strategy, Rollback Strategy) into allowed Issue fields  
+4. Update Issue (allowed fields only)  
+5. **`/ralplan`** for this task  
+6. **Planning quality gate** — plan must include: Ownership, Risks, Acceptance, Rollback, Test Strategy; else re-ralplan (max 3) then escalate  
+7. Plan self-review → submit AC to orchestrator  
+8. **Wait for orchestrator AC approval** (`acStatus: approved`)  
+9. Implement within ownership  
+10. Test / lint / build as applicable (**soft retries:** compile/typeclass ≈1 focused loop; test-class ≈2; then escalate)  
+11. **Same failure signature 3× consecutive** → stop, escalate (do not loop)  
+12. Exit report (schema below)  
+13. `/goal` **handoff text only** (never claim tools set `/goal`)  
+14. Open PR with six sections + **`Fixes #<canonicalIssue>`** when gh issue exists  
 
-### PR body (required)
+### Scope discipline
 
-```markdown
-## 변경 목적 (Purpose)
-## 변경 내용 (Changes)
-## 테스트 결과 (Test results)
-## 영향 범위 (Impact)
-## 남은 리스크 (Remaining risks)
-## 후속 작업 (Follow-ups)
+If implementation clearly exceeds task/issue scope (ownership or PR surface grows far beyond intent): **STOP**, propose split task/issue, return to orchestrator. Do not invent numeric “2× estimate” automation.
+
+### Exit report (required fields — markdown)
+
+```yaml
+task: T003
+canonicalIssue: "#145"
+status: IMPLEMENTED|BLOCKED|FAILED
+ownership: ["src/auth/**"]
+changed_files: []
+tests: PASS|FAIL
+build: PASS|FAIL|N/A
+lint: PASS|FAIL|N/A
+acceptance_results: []   # per-criterion pass/fail
+assumptions: []
+risks: []
+remaining_work: []
+pr: URL|null
+goal_handoff: "…"
+issue_snapshot_ref: "…"
+escalate: false
 ```
 
-### Impl worker preamble
+### Impl preamble (include in spawn)
 
 ```text
-You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration.
-Task id: {taskId}
-Ownership ONLY: {ownership}
-Depends on: {dependsOn}
+You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration v1.1.
+Task: {taskId}  CanonicalIssue: {issue}  Ownership: {globs}
 
-RULES:
-- Stay inside ownership paths.
-- Sequence: analyze → /ralplan → plan self-review → impl → test → verify → goal HANDOFF TEXT → PR.
-- Prefer omit model or model="grok-4.5".
-- Do NOT write .omg/orchestration/** in this worktree. Report prUrl, test summary, issue drafts, residual risks to the orchestrator.
-- Do NOT merge. Do NOT review other tasks.
-- /goal: print handoff text only; never claim shell set /goal.
+1) Capture Issue Snapshot at start; implement against snapshot.
+2) Fill Acceptance on the issue (allowed fields only). Do NOT change Scope/Priority/Ownership/Dependencies.
+3) /ralplan + quality gate → submit AC → wait for orchestrator approve.
+4) Implement, soft retries, exit report, PR with Fixes #{n}.
+5) Do not write .omg/orchestration/** on this worktree; report to lead.
+6) Do not merge. Do not create new tracking issues (escalate).
+7) /goal: handoff text only.
 ```
 
 ## Phase 3 — Review worktree(s)
 
-Separate worktree / agent:
+Review workers **MUST** validate mutual consistency of:
 
 ```text
-spawn_subagent(
-  subagent_type="code-reviewer",
-  isolation="worktree",
-  description="Review PR #N",
-  prompt="<REVIEW PREAMBLE — no implementation>"
-)
+Issue (scope/priority/ownership)
+  → Acceptance Contract
+  → Implementation (diff)
+  → PR body
+  → Test / verification results
 ```
 
-Checklist: correctness, architecture, tests, regression, security, performance.  
-Verdict: **APPROVE** | **CHANGES_REQUESTED** | **REJECT**.  
-Write verdict content for the lead; lead stores `.omg/orchestration/reviews/<pr>.md`.
+Also: correctness, architecture, regression, security/performance as risk warrants (optional extra reviewers for large/security PRs).
 
-**CHANGES_REQUESTED** → re-delegate **impl** worktree with feedback; review worker never implements.
+Verdict: **APPROVE** | **CHANGES_REQUESTED** | **REJECT**.  
+No implementation. Lead stores review under `reviews/`.  
+CHANGES_REQUESTED → re-impl WT with feedback (counts toward retry/escalate budgets).
 
 ## Phase 4 — Merge gate
 
-Merge only when all hold:
+1. Review APPROVE  
+2. DoD evidence on Task JSON / board  
+3. No open blockers (or waiver)  
+4. Pre-merge checklist: base reasonable / CI green if available  
+5. **Human confirm**  
+6. Merge  
 
-1. Review verdict **APPROVE**  
-2. CI/local DoD evidence recorded on board  
-3. No open blocker issues (or user waiver)  
-4. **Human confirmation** via `ask_user_question` (Approve merge / Hold / Request more review)
-
-Then `gh pr merge` (or human merges). Still no product edits on main beyond merge.
-
-## Issue management
-
-1. Analyze cause  
-2. Lead files issue (gh + board mirror)  
-3. Fields: cause, impact, priority, owner worktree, status  
-4. Same worktree vs new worktree  
-5. Re-delegate  
+Then **ready-set refresh:** recompute tasks whose `dependsOn` are all `done`; never reassign `done`.
 
 ## Failure handling
 
-Analyze → issue → new vs retry worktree → re-delegate → update board. Never silent expand scope.
+Analyze → orchestrator updates/creates issues as needed → retry WT or split → soft budgets → 3× same signature escalate to human if needed.
 
 ## Definition of Done
 
-- [ ] Requirements met  
-- [ ] Tests passed  
-- [ ] Lint passed (if applicable)  
-- [ ] Build succeeded (if applicable)  
-- [ ] Docs updated when contracts change  
-- [ ] PR with six sections  
-- [ ] Review **APPROVE**  
-- [ ] Merge completed after human confirm  
+- [ ] Requirements / AC met  
+- [ ] Tests passed (fresh evidence)  
+- [ ] Lint/build as applicable  
+- [ ] Docs if contracts changed  
+- [ ] PR with six sections + Fixes/Refs  
+- [ ] Review APPROVE (full consistency chain)  
+- [ ] Cleanliness: no secrets; no debug leftovers (`debugger`, ship-blocking temp logs, `.only`); no commented-out dead ship blocks; no new blocking TODO/FIXME without issue id  
+- [ ] Merge after human confirm  
 
-## Status report (every orchestrator turn)
+Coverage non-decrease is **not** a universal hard rule (only if repo already gates it).
+
+## Status report (each orch turn)
 
 ```markdown
 ### Orchestration status
-- **Mission**: …
-- **Current focus**: T00N — title
-- **Worktree**: impl-T00N | review-PR#…
-- **Progress**: NN%
-- **Blockers**: …
-- **Issues**: …
-- **PRs**: … (reviewStatus)
-- **Next**: …
+- Mission / focus task / worktree
+- Progress % / blockers
+- Canonical issues / PRs / acStatus / reviewStatus
+- Next action
 ```
-
-Update `board.md`. Repeat until all tasks `done` or `/cancel`.
 
 ## Cancellation
 
-1. Ask workers to stop  
-2. Set `.omg/state/orchestration-state.json` → `active: false`, phase `cancelled` **or** `/cancel` / `node hooks/scripts/clear-active-modes.mjs`  
-3. Leave worktrees/PRs unless user wants cleanup  
-4. Summarize open PRs/issues  
+Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; summarize open issues/PRs.
 
 ## Flags
 
 | Flag | Meaning |
 |------|---------|
-| `--interactive` | Confirm large parallel batches **and** merges (recommended for first use) |
-| `--max-parallel N` | Cap concurrent impl worktrees (default 3; forced 1 if isolation unproven) |
+| `--interactive` | Confirm parallel batches and merges |
+| `--max-parallel N` | Default 3; force 1 if isolation unproven |
 
-## Pre-execution note
+## Grok extensions
 
-Lead session does **not** replace ralplan with coding. If user demands “just implement here”, refuse or switch to `/ralph` / `/team`.
-
-## Grok Capability Extensions
-
-- Prefer `spawn_subagent` + `isolation: "worktree"`; verify isolation before parallel.
-- Model: omit or `grok-4.5`; `OMG_MODEL_*` for future multi-slug.
-- `/goal` handoff only.
-- State: `.omg/` only; program board lead-owned under `.omg/orchestration/`.
-- `ask_user_question` for merge and scope cuts.
-- Read-only `/web-research` from orchestrator OK.
+- `spawn_subagent` + `isolation: "worktree"`; verify isolation.  
+- Model: omit or `grok-4.5`.  
+- `/goal` handoff only.  
+- `.omg/` only; lead-owned board.  
+- `ask_user_question` for merge and scope splits.  

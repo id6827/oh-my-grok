@@ -43,12 +43,14 @@ const MODE_HINTS = {
     "Continue Planner → Architect → Critic consensus; write plans under `.omg/plans/`.",
   ].join(" "),
   orchestration: [
-    "Active mode: orchestration (main orchestrator).",
-    "Lead session NEVER implements product code — only decompose, spawn worktrees, track board, gate merge.",
-    "Board: only the lead writes `.omg/orchestration/**` on the main checkout; workers report back.",
-    "Impl workers: ralplan → impl → test → /goal handoff text only → PR; Review workers never implement.",
-    "Merge only after Review APPROVE + human confirm (ask_user_question).",
-    "Mode file: `.omg/state/orchestration-state.json` — set active=false / completed|cancelled when done. Do NOT call MCP state_write(mode=orchestration).",
+    "Active mode: orchestration v1.1 (main orchestrator).",
+    "Lead NEVER implements product code. Conflict menu only: reassign/split/deps/issues/restart — no source edits.",
+    "SoT: Task JSON=runtime; Issue=human contract; board.md=view only.",
+    "Before spawn: soft ownership lock + create/locate Canonical Issue (1 task ↔ 1 issue).",
+    "Impl: Issue Snapshot → AC on issue (allowed fields only) → /ralplan → orch AC gate → impl → exit report → PR Fixes #N.",
+    "Workers MUST NOT change Scope/Priority/Ownership/Dependencies on issues.",
+    "Review: Issue→AC→Impl→PR→Tests consistency; no implement.",
+    "Merge only after Review APPROVE + human confirm. Mode file `.omg/state/orchestration-state.json`; no MCP orchestration mode.",
   ].join(" "),
 };
 
