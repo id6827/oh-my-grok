@@ -1,16 +1,29 @@
 ---
 name: orchestration
 description: >
-  Main orchestrator mode — decompose work into non-overlapping worktrees,
-  canonical GitHub/board issues, impl-authored acceptance contracts, review
-  consistency checks, PR + merge gates; lead never implements.
-argument-hint: "[--interactive] [--strategy conservative|balanced|aggressive] [--max-parallel N] <mission or epic description>"
+  Main orchestrator mode — Hierarchical Execution Graph of Coordinator/Worker
+  nodes; multi-worktree delivery, recipes (Team=config), nested scopes under
+  Runtime Policy A′; lead/coordinators never implement product code.
+argument-hint: "[--interactive] [--strategy conservative|balanced|aggressive] [--max-parallel N] [--max-depth N] <mission or epic description>"
 aliases: [orchestrate, orch]
 ---
 
-# Orchestration (Main Orchestrator) — v1.2
+# Orchestration (Main Orchestrator) — Protocol v1.3
 
-You are **not** an implementer. You are the **main orchestrator** for a multi-worktree delivery pipeline.
+You are **not** an implementer. You are the **root Coordinator** for a multi-worktree delivery pipeline (Hierarchical Execution Graph).
+
+> **The protocol defines execution semantics, not implementation mechanics. Runtime policies bind those semantics to specific host capabilities.**
+
+**Default binding tuple (record on mission when non-default):**
+
+```text
+Protocol:         v1.3
+Runtime Policy:   A′          # root materializes; sole Worker spawner
+Persistence:      Filesystem  # .omg/orchestration/**
+Host:             Grok Build (Layer-A soft)
+```
+
+Protocol version and Runtime Policy are **independent** axes (Policy B may later bind under Protocol v1.3).
 
 **Lead session model:** use the **strongest available host model** (global judgment: decompose, deps, risk, gates). Do not downgrade the orchestrator to save tokens.
 
@@ -38,18 +51,20 @@ If Task JSON and Issue disagree on **runtime** fields (status, lock, prUrl) → 
 If they disagree on **contract** fields (scope, priority, ownership, deps) → **Issue wins**, and orchestrator **must sync Task JSON** to match (never the reverse via worker).  
 Board is derived; do not treat dashboard text as authority.
 
-## v1.2 capability tier (honest guarantees)
+## v1.3 capability tier (honest guarantees)
 
 | Guarantee | Strength |
 |-----------|----------|
-| Lead never implements product code | **Soft** (prompt + injector) |
+| Lead / Coordinator never implements product code | **Soft** (prompt + injector) |
 | Conflict resolution without source edits | **Soft** (hard rule in protocol) |
 | Ralplan before impl | **Soft** |
 | Review does not implement | **Soft** |
-| Ownership soft-lock on board/task JSON | **Soft** |
+| Ownership global; planning hierarchical | **Soft** |
 | Worktree isolation | **Soft** unless host isolation or `git worktree add` proven |
 | Layer-B `.omg/state/orchestration-state.json` | **Hard** (keyword) |
 | Injector reminder | **Hard** |
+| Nested Hierarchical Execution Graph protocol | **Soft** (skill protocol) |
+| Runtime Policy A′ (root materialize) | **Soft** (host binding) |
 | MCP `state_write(mode="orchestration")` | **Absent** — do not call |
 | Stop continue-loop (ralph-class) | **Absent** |
 | Merge after review + human confirm | **Protocol-hard** |
@@ -57,7 +72,7 @@ Board is derived; do not treat dashboard text as authority.
 | Host `/goal` slash set by tools | **Absent** — agent cannot force host state; worker **acts as if** goal is set |
 | User-facing `/goal` prompt when host supports it | **Soft** — print exact `/goal …` for user/session when needed |
 | **goalHandoff** at exit | **Protocol-hard** on exit report |
-| Canonical Issue before spawn | **Protocol-hard** (gh or board mirror) |
+| Canonical Issue before spawn (1 leaf ↔ 1 issue) | **Protocol-hard** (gh or board mirror) |
 | Issue Snapshot at impl start | **Soft** |
 | Task complexity classification | **Protocol-hard** (must classify before spawn) |
 | Worker model via `OMG_MODEL_*` tiers | **Soft** until host exposes multiple slugs (today often all → `grok-4.5`) |
@@ -65,8 +80,9 @@ Board is derived; do not treat dashboard text as authority.
 
 ## Use / Do not use
 
-**Use:** multi-module/multi-PR; program-manager loop; parallel streams with blockers; “orchestrate” / worktree-per-task.  
-**Do not use:** one-file fix (`/ralph`); planning only (`/ralplan`); lead wants to code (`/team`); pure research.
+**Use:** multi-module/multi-PR; multi-domain epics (nested Coordinator scopes); program-manager loop; parallel streams with blockers; “orchestrate” / worktree-per-task.  
+**Do not use:** one-file fix (`/ralph`); planning only (`/ralplan`); lead wants to code (`/team`); pure research.  
+**Nested when:** multi-domain ownership, independent merge streams, or reusable recipes. **Stay flat when:** few independent leaves / single ownership domain.
 
 ## Hard Rules (never break)
 
@@ -77,11 +93,210 @@ Board is derived; do not treat dashboard text as authority.
 5. **Conflict resolution menu only** (orchestrator): reassign ownership · split task · update dependsOn · create/update tracking issues · restart WT · cancel · serialize. **Never** resolve by editing product sources as lead.
 6. **Review WTs do not implement**.
 7. **Merge only after** Review APPROVE + DoD evidence + **human confirm** (`ask_user_question` unless user already approved merge this turn).
-8. **Board path:** only lead writes `.omg/orchestration/**` on **main checkout**. Workers report to lead; no worktree-local board as SoT.
+8. **Board path (Runtime Policy A′):** only the **root Coordinator** materializes/writes `.omg/orchestration/**` on **main checkout** (locks, tasks, scope dirs). Workers and optional child coordinators **propose**; they do not dual-write SoT. No worktree-local board as SoT.
 9. **Mode file:** `.omg/state/orchestration-state.json` only (Layer-B). No MCP orchestration mode.
-10. **Canonical Issue:** before spawn, orchestrator **creates or locates** exactly **one** tracking issue per task; workers **MUST** reference it; PRs **SHOULD** use `Fixes #<n>` (or `Refs: T00N` if offline mirror only).
+10. **Canonical Issue:** before spawn, orchestrator **creates or locates** exactly **one** tracking issue per **leaf Worker** task; workers **MUST** reference it; PRs **SHOULD** use `Fixes #<n>` (or `Refs: T00N` if offline mirror only). Orchestration nodes: no issue or optional epic (not a `Fixes` target).
 
-## Architecture (v1.2 flow)
+## Hierarchical Execution Graph (Protocol v1.3)
+
+### Layers (do not collapse)
+
+```text
+1. Logical Model     — Hierarchical Execution Graph (semantics)
+2. Runtime Policy    — e.g. A′ who materializes / spawns
+3. Host Constraints  — isolation, soft multi-writer limits
+4. Persistence       — FS today under .omg/orchestration/
+```
+
+**Team is not a runtime type.** `Team → Recipe (config) → Coordinator subgraph.`
+
+### Execution Nodes
+
+```text
+Execution Node (capability-bearing)
+  role: coordinator | worker     # protocol path
+  kind: orchestration | agent    # wire/storage (omit kind ⇒ agent)
+  capabilities: explicit only    # never inherited implicitly
+```
+
+| Role | Does | Does not |
+|------|------|----------|
+| **Coordinator** | plan → resolve → request locks → stamp/gate (per policy) → summarize → exit | product implementation; product worktree ownership |
+| **Worker** | Plan→Goal→AC→Execute (impl) or review | write mission SoT under Policy A′ |
+
+**Coordinator invariants (hard):**
+
+1. Never performs product implementation.  
+2. Never owns a product worktree for implementation.  
+3. Never bypasses ownership protocol.  
+4. Always exits with structured scope summary when coordinating a Scope.  
+5. May fail independently of descendants (rollup still applies for parents).
+
+**Cardinality:**
+
+```text
+Coordinator owns exactly one Scope.
+Worker executes inside exactly one Scope.
+Scope owns many Nodes.
+Every Execution Node belongs to exactly one Scope.
+dependsOn may cross Scopes; node ownership never does.
+```
+
+A **Scope** is a logical execution boundary (may later run on another host without protocol change). **Filesystem** dirs are only the v1.3 persistence binding of a Scope.
+
+### Containment + dependsOn
+
+```text
+              Root Coordinator
+             /        \
+      Backend C      Frontend C
+       /  |  \         /  |
+     API DB Cache    UI  UX
+                      |
+                      └── dependsOn ──► API   (cross-edge)
+```
+
+Not a pure tree once `dependsOn` exists.
+
+### Ownership is global; planning is hierarchical
+
+Product-path locks and ready-set deps are **mission-global**. Planning, AC drafts, and rollup follow **containment hierarchy**.
+
+### Runtime Policy A′ (single definition)
+
+```text
+Primary:
+  root materializes all SoT (Task JSON, scope dirs, locks.json, issues)
+  root is sole spawner of Worker impl/review worktrees
+  children (if any) propose only
+
+Fallback (only):
+  child returns proposal / plan
+  root materializes
+  never deadlock waiting on child materialize
+
+No other fallback exists under Policy A′.
+```
+
+Child-materialize / nested-spawn is a **different Runtime Policy** (future B), not an informal A′ variant.  
+**Default materialization:** root-inline expand of recipes/members; optional child planner only when multi-domain plan quality needs a dedicated summarizer (still non-implementing; root materializes).
+
+### Execution Target Resolver
+
+```text
+spawn <target> | delegate <target>
+  → Execution Target Resolver
+  → ResolverResult (composable graph fragment)
+```
+
+**Resolve order (v1.3):** recipe → workflow (reserved) → agent → skill → inline → future mcp/plugin/tool-graph.
+
+**ResolverResult (normative shape):**
+
+```yaml
+executionGraphId: string | null
+nodes:
+  - id: string
+    role: coordinator | worker
+    kind: orchestration | agent
+    capabilities: [implement|review|summarize|search|analyze|plan|…]
+    delegateRef: string | null
+    ownership: [glob…]
+    scopeId: string
+containmentEdges:
+  - parent: nodeId|scopeId
+    child: nodeId
+dependencyEdges:
+  - from: nodeId
+    to: nodeId
+capabilities: [string]
+runtimePolicyRequirements: [A′]
+minimumHostCapabilities:          # optional
+  supportsNestedSpawn: false
+  supportsIsolation: true
+  supportsSharedState: false
+notes: string | null
+```
+
+**Capabilities are never inherited implicitly** — resolver assigns them explicitly per node.  
+Skills (e.g. `skill:web-research`) resolve to a **Worker** with capabilities such as `search`/`analyze`, not a third runtime kind.
+
+**Recipe paths (recipe branch only):**
+
+```text
+1. .omg/orchestration/recipes/<name>.yaml   # mission-local wins
+2. .grok/orch-recipes/<name>.yaml
+```
+
+Recipes include `version: 1` (see `skills/orchestration/examples/backend.recipe.yaml`). Never invoke `omg team` by default for nested orch.
+
+### Scope lifecycle
+
+```text
+allocated → planning → active → completed
+                              ↘ failed
+                              ↘ cancelled
+# reserved (not required): paused
+```
+
+### Coordinator status rollup
+
+Priority: `CANCELLED` > `FAILED` > `BLOCKED` > `IN_PROGRESS` > `DONE`.
+
+```text
+DONE         ← all required descendants DONE (or waived)
+FAILED       ← any required descendant FAILED
+CANCELLED    ← scope cancelled
+BLOCKED      ← unresolved dependsOn (self or required child)
+IN_PROGRESS  ← otherwise
+```
+
+**Progress %** (optional HUD):  
+`(required descendants DONE) / (required descendants) × 100`.
+
+### AC / review / merge (Policy A′)
+
+| Gate | Owner |
+|------|--------|
+| Leaf AC `acStatus` stamp | **Root only** (leaf may draft) |
+| Scope acceptance | Parent coordinator (root for depth-1) |
+| Leaf review WT | **Root** |
+| Scope-level review | Optional rollup only — **must not** replace leaf review |
+| Merge confirm | **Root only** |
+
+### Nested state layout (FS binding)
+
+```text
+.omg/orchestration/
+  mission.md                 # include binding tuple + executionStrategy + optional executionGraphId
+  board.md
+  locks.json                 # required when nested scopes; optional empty on flat
+  tasks/                     # flat root Worker/Coordinator tasks
+  scopes/<scopeId>/          # non-root scopes only
+    mission.md
+    board.md                 # view only
+    tasks/
+  recipes/                   # optional mission-local recipes
+  issues/                    # root mirrors preferred
+  handoffs/ reviews/ snapshots/
+```
+
+Nested leaf Task JSON: `.omg/orchestration/scopes/<S>/tasks/<id>.json` (root writes under A′).  
+Extended Task JSON fields: `kind`, `parentScopeId`, `scopeId`, `childScopeId`, `depth`, `delegateRef`, `capabilities` (omit `kind` ⇒ `agent`).
+
+### Depth
+
+Default `maxDepth: 2` (root=0). `--max-depth N` clamps (recommend ceiling 3). Recipe cycle detection: refuse recursive recipe name stack.
+
+### Cancel (Soft)
+
+Mode file cleared. Mark descendant scopes/tasks `cancelled` in SoT narrative when possible. **No** claim of hard process/WT kill. cancel skill does not hard-walk scopes.
+
+### `/team` boundary
+
+`/team` and `omg team` remain **orthogonal** (in-session / tmux multi-CLI). Nested orchestration uses **recipes + this protocol**, not Team as a runtime peer.
+
+## Architecture (Worker delivery flow)
 
 ```text
 Mission
@@ -138,8 +353,15 @@ Terminal: `active: false` + `completed` | `cancelled`.
 ```json
 {
   "id": "T001",
+  "kind": "agent",
   "title": "…",
   "status": "open|in_progress|review|blocked|done|failed|cancelled",
+  "parentScopeId": "root",
+  "scopeId": "root",
+  "childScopeId": null,
+  "depth": 0,
+  "delegateRef": null,
+  "capabilities": ["implement"],
   "worktree": "impl-T001",
   "branch": "orch/T001-…",
   "ownership": ["src/auth/**"],
@@ -171,6 +393,8 @@ Terminal: `active: false` + `completed` | `cancelled`.
   }
 }
 ```
+
+Omit `kind` ⇒ treat as **`agent`** (Worker). `kind=orchestration` ⇒ Coordinator (optional epic issue only).
 
 Never reassign `status=done` to another worker.
 
@@ -558,7 +782,7 @@ escalate: false
 ### Impl preamble (include in spawn)
 
 ```text
-You are an IMPLEMENTATION WORKTREE worker for OMG /orchestration v1.2.
+You are an IMPLEMENTATION WORKTREE Worker for OMG /orchestration Protocol v1.3 (Runtime Policy A′).
 Task: {taskId}  CanonicalIssue: {issue}  Ownership: {globs}
 Complexity: {LOW|MEDIUM|HIGH|CRITICAL}  (do NOT self-upgrade model)
 
@@ -625,15 +849,17 @@ Coverage non-decrease is **not** a universal hard rule (only if repo already gat
 
 ```markdown
 ### Orchestration status
-- Mission / strategy / effective_parallel / focus task / complexity
-- executionGoal (active) / progress % / blockers
-- Canonical issues / PRs / acStatus / reviewStatus
-- Next action
+- Protocol v1.3 / Runtime Policy A′ / strategy / effective_parallel / maxDepth
+- Hierarchical graph (containment + key dependsOn):
+  - [root Coordinator] …
+    - [scope-backend] progress% lifecycle=active
+      - T-api Worker in_progress
+- Focus / blockers / next action
 ```
 
 ## Cancellation
 
-Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; summarize open issues/PRs.
+Stop workers (best-effort); set mode file inactive; mark nested scopes/tasks cancelled in SoT when possible (**Soft** — no hard process kill claim); leave WTs/PRs unless user wants cleanup; summarize open issues/PRs.
 
 ## Flags
 
@@ -642,7 +868,8 @@ Stop workers; set mode file inactive; leave WTs/PRs unless user wants cleanup; s
 | `--strategy conservative` | **Default.** Safety-first scheduling (cap 3 concurrent impl). |
 | `--strategy balanced` | Moderate parallel dispatch (cap 4). |
 | `--strategy aggressive` | Max practical dispatch (cap 6); same quality gates per stream. |
-| `--max-parallel N` | Final concurrency **upper bound** (cannot raise strategy_cap). |
+| `--max-parallel N` | Final concurrency **upper bound** (cannot raise strategy_cap). Counts **leaf Workers**, not Coordinator nodes. |
+| `--max-depth N` | Nesting depth ceiling (default 2; recommend ≤ 3). |
 | `--interactive` | Confirm parallel batches and merges |
 
 ```text
@@ -651,8 +878,10 @@ effective_parallel = min(strategy_cap, --max-parallel, safety_limit)
 
 ## Grok extensions
 
-- `spawn_subagent` + `isolation: "worktree"`; verify isolation.  
-- Lead: strongest host model. Workers: `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` → often `grok-4.5` until multi-slug hosts exist (`mapModel`).  
-- **Plan → Goal → Execute:** synthesize `executionGoal` after ralplan; use host `/goal` when possible; always keep executionGoal binding; `goalHandoff` only at exit.  
-- `.omg/` only; lead-owned board.  
+- `spawn_subagent` + `isolation: "worktree"` for **Workers**; verify isolation. Coordinators stay on main checkout under Policy A′.  
+- Lead/Coordinator: strongest host model. Workers: `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` → often `grok-4.5` until multi-slug hosts exist (`mapModel`).  
+- **Plan → Goal → Execute** on Workers; root stamps AC under Policy A′.  
+- Hierarchical Execution Graph + recipes under Protocol v1.3; Team is config only.  
+- `.omg/` only; root materializes board under Policy A′.  
 - `ask_user_question` for merge, scope splits, complexity upgrades when risky.  
+

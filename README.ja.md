@@ -106,6 +106,20 @@ Grok セッションで:
 
 ## `/orchestration`（マルチ worktree 配信）
 
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
+
 **リードは製品コードを実装しない。** ミッション分解、追跡アーティファクト、**実装 worktree** のスポーン、**レビュー worktree**、マージゲートのみ担当。キーワード: `orchestration` / `orchestrate` / `오케스트레이션`。
 
 ```text
@@ -120,6 +134,7 @@ Grok セッションで:
 | *(既定)* | `--strategy conservative`（安全優先、同時 impl ワーカー 1–3） |
 | `--strategy balanced` | 中程度の並列（上限 4） |
 | `--strategy aggressive` | 実用最大並列（上限 6）；**品質ゲートは各ストリーム同じ**（AC スキップではない） |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | 同時実行の**最終上限のみ**: `min(strategy_cap, N, safety)` |
 | `--interactive` | 大きな並列バッチとマージを確認 |
 
@@ -234,7 +249,7 @@ omg team shutdown
 
 ### Grok 専用
 
-- **`/orchestration`** — マルチ worktree 配信: Plan→Goal→AC→Execute、レビューゲート、strategy、適応モデル
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — ライブ docs / releases / issues / X → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 承認 → Vision brief → コード → Vision QA
 - **Search-on-fail** — 失敗時は盲再試行の前に `web_search` を優先

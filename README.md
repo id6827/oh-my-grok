@@ -220,9 +220,13 @@ Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan`
 
 ---
 
-## `/orchestration` (multi-worktree delivery)
+## `/orchestration` (Protocol v1.3 — Hierarchical Execution Graph)
 
-**Lead never implements product code.** The orchestrator decomposes the mission, creates tracking artifacts, spawns **implementation worktrees**, runs **review worktrees**, and gates merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
+> **The protocol defines execution semantics, not implementation mechanics. Runtime policies bind those semantics to specific host capabilities.**
+
+**Default binding:** `Protocol v1.3` · **Runtime Policy A′** (root materializes) · **Persistence:** filesystem · **Host:** Grok Build.
+
+**Root Coordinator never implements product code.** Decompose the mission into a **Hierarchical Execution Graph** (containment + `dependsOn`), materialize tracking artifacts, spawn **Worker** worktrees, run **review** worktrees, gate merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션` / nested orchestration.
 
 ```text
 /orchestration "mission"
@@ -233,13 +237,40 @@ Vague product ideas → `/deep-interview` before code. Spec ready → `/ralplan`
 
 | Flag | Meaning |
 |------|---------|
-| *(default)* | `--strategy conservative` (safety-first, 1–3 concurrent impl workers) |
+| *(default)* | `--strategy conservative` (safety-first, 1–3 concurrent **Worker** impls) |
 | `--strategy balanced` | Moderate parallel dispatch (cap 4) |
-| `--strategy aggressive` | Max practical dispatch (cap 6); **same quality gates** per stream, not a skip-AC fast path |
-| `--max-parallel N` | Final concurrency **upper bound** only: `min(strategy_cap, N, safety)` |
+| `--strategy aggressive` | Max practical dispatch (cap 6); **same quality gates** per stream |
+| `--max-parallel N` | Final concurrency **upper bound** on leaf Workers: `min(strategy_cap, N, safety)` |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--interactive` | Confirm large parallel batches and merges |
 
 **Safety always wins** over strategy (e.g. unproven worktree isolation → concurrency 1).
+
+### Execution model
+
+```text
+Execution Node
+  ├─ Coordinator  — plan → delegate → summarize (never product impl)
+  └─ Worker       — implement / review in a worktree
+
+Team is not a runtime type:
+  Team → Recipe (config) → Coordinator subgraph
+```
+
+**Runtime Policy A′ (current host):** root materializes SoT and is the sole Worker spawner; nested coordinators **propose** only. Fallback is always root materialize.
+
+**Nested example:**
+
+```text
+Root Coordinator
+  ├── Worker (docs)
+  ├── Coordinator: Backend   ← recipe "backend"
+  │     ├── Worker: API
+  │     ├── Worker: DB
+  │     └── Worker: Cache
+  └── Coordinator: Frontend
+        └── Worker: UI  ──dependsOn──► API
+```
 
 ### Worker pipeline (Plan → Goal → Execute)
 
@@ -247,7 +278,7 @@ Per implementation worktree:
 
 ```text
 Issue Snapshot → Requirements → /ralplan → executionGoal
-  → (/goal if host allows) → Acceptance Contract → orch AC gate
+  → (/goal if host allows) → Acceptance Contract → root AC stamp
   → Implement → tests → exit report → PR (Fixes #N)
 ```
 
@@ -257,20 +288,21 @@ Then **review worktrees** validate **Issue → executionGoal → AC → Impl →
 
 | Artifact | Role |
 |----------|------|
-| **Task JSON** (`.omg/orchestration/tasks/`) | Runtime state (status, locks, progress) |
-| **Canonical Issue** (GitHub or board mirror) | Human contract (scope, priority, ownership); **orchestrator creates** before spawn |
+| **Task JSON** (`.omg/orchestration/tasks/` or `scopes/<id>/tasks/`) | Runtime state (root materializes under Policy A′) |
+| **Canonical Issue** | Human contract; **1 leaf Worker ↔ 1 issue** |
 | **Board** (`board.md`) | Dashboard view only |
+| **locks.json** | Global ownership registry (nested missions) |
 
-Workers may update issue **Acceptance / notes / risks / verification** only — not scope, priority, ownership, or dependencies. Impl workers capture an **Issue Snapshot** at start so mid-flight scope edits need orchestrator approval.
+**Ownership is global; planning is hierarchical.** Workers may update issue **Acceptance / notes / risks / verification** only.
 
 ### Adaptive worker models
 
-- **Lead session:** strongest host model (global judgment).  
-- **Workers:** classify task **LOW | MEDIUM | HIGH | CRITICAL** → `OMG_MODEL_LOW|MEDIUM|HIGH|CRITICAL` (today often all map to `grok-4.5` until the host offers more slugs).  
-- Workers **must not** self-upgrade model; they request **complexity escalation** and the orchestrator respawns.  
-- Complexity also drives **review depth** and soft **retry budgets**.
+- **Root Coordinator:** strongest host model.  
+- **Workers:** `LOW|MEDIUM|HIGH|CRITICAL` → `OMG_MODEL_*` (often `grok-4.5` today).  
+- Workers **must not** self-upgrade model; request **complexity escalation**.  
 
-State: `.omg/orchestration/` (lead-owned on main checkout) + Layer-B `.omg/state/orchestration-state.json`. Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+State: `.omg/orchestration/` + Layer-B `.omg/state/orchestration-state.json`. Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md). Recipe example: [`skills/orchestration/examples/backend.recipe.yaml`](skills/orchestration/examples/backend.recipe.yaml).
+
 ---
 
 ## Autopilot execution: `solo` vs `team`
@@ -351,7 +383,7 @@ omg team shutdown
 
 ### Grok exclusives
 
-- **`/orchestration`** — multi-worktree delivery: Plan→Goal→AC→Execute, review gates, strategies, adaptive models
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes (Team=config), Runtime Policy A′, Plan→Goal→AC→Execute, nested scopes
 - **`/web-research`** — live docs, releases, issues, X signal → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → approval → Vision brief → code → Vision QA
 - **Search-on-fail** — core skills prefer `web_search` before blind retries

@@ -104,7 +104,21 @@ Cancela con `/cancel`. Estado en **`.omg/`**. Ideas vagas → `/deep-interview`.
 
 ---
 
-## `/orchestration` (entrega multi-worktree)
+## `/orchestration` (Protocol v1.3 — entrega multi-worktree)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **El lead nunca implementa código de producto.** Solo descompone la misión, crea artefactos de seguimiento, lanza **worktrees de implementación**, **worktrees de review** y gobierna el merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ Cancela con `/cancel`. Estado en **`.omg/`**. Ideas vagas → `/deep-interview`.
 | *(por defecto)* | `--strategy conservative` (seguridad primero, 1–3 impl workers concurrentes) |
 | `--strategy balanced` | Despacho paralelo moderado (tope 4) |
 | `--strategy aggressive` | Máximo despacho práctico (tope 6); **mismas puertas de calidad** por stream, no un atajo sin AC |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Solo **límite superior** final de concurrencia: `min(strategy_cap, N, safety)` |
 | `--interactive` | Confirmar lotes paralelos grandes y merges |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Exclusivos Grok
 
-- **`/orchestration`** — entrega multi-worktree: Plan→Goal→AC→Execute, puertas de review, strategies, modelos adaptativos
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — docs en vivo, releases, issues, X → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → aprobación → Vision → código → Vision QA
 - **Search-on-fail** — preferir `web_search` antes de reintentos ciegos

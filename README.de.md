@@ -104,7 +104,21 @@ Jederzeit `/cancel`. State unter **`.omg/`**. Vage Ideen → `/deep-interview`. 
 
 ---
 
-## `/orchestration` (Multi-Worktree-Delivery)
+## `/orchestration` (Protocol v1.3 — Multi-Worktree-Delivery)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **Der Lead implementiert nie Produktcode.** Er zerlegt die Mission, erzeugt Tracking-Artefakte, spawnt **Implementierungs-Worktrees**, **Review-Worktrees** und steuert den Merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ Jederzeit `/cancel`. State unter **`.omg/`**. Vage Ideen → `/deep-interview`. 
 | *(Standard)* | `--strategy conservative` (Sicherheit zuerst, 1–3 parallele Impl-Worker) |
 | `--strategy balanced` | Moderater Parallel-Dispatch (Cap 4) |
 | `--strategy aggressive` | Max. praktischer Dispatch (Cap 6); **gleiche Qualitätsgates** pro Stream, kein AC-Skip-Fast-Path |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Nur finale **Obergrenze** der Concurrency: `min(strategy_cap, N, safety)` |
 | `--interactive` | Große Parallel-Batches und Merges bestätigen |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Grok-Exklusiv
 
-- **`/orchestration`** — Multi-Worktree-Delivery: Plan→Goal→AC→Execute, Review-Gates, Strategies, adaptive Modelle
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — Live-Docs → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → Freigabe → Vision → Code → Vision QA
 - **Search-on-fail** — `web_search` vor blinden Retries

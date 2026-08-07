@@ -104,7 +104,21 @@ grok inspect
 
 ---
 
-## `/orchestration` (multi-worktree доставка)
+## `/orchestration` (Protocol v1.3 — multi-worktree доставка)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **Lead никогда не пишет продуктовый код.** Он декомпозирует миссию, создаёт артефакты трекинга, спавнит **implementation worktree**, **review worktree** и контролирует merge. Ключевые слова: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ grok inspect
 | *(по умолчанию)* | `--strategy conservative` (безопасность, 1–3 concurrent impl worker) |
 | `--strategy balanced` | Умеренный параллельный dispatch (cap 4) |
 | `--strategy aggressive` | Максимальный практичный dispatch (cap 6); **те же quality gates** на поток, не skip-AC fast path |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Только финальный **верхний предел** concurrency: `min(strategy_cap, N, safety)` |
 | `--interactive` | Подтверждать крупные параллельные batch и merge |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Эксклюзивы Grok
 
-- **`/orchestration`** — multi-worktree доставка: Plan→Goal→AC→Execute, review-гейты, strategies, адаптивные модели
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — live docs → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → approval → Vision → code → Vision QA
 - **Search-on-fail** — предпочитать `web_search` до слепых retry

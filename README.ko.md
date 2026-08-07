@@ -220,9 +220,13 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
 
 ---
 
-## `/orchestration` (멀티 worktree 전달)
+## `/orchestration` (Protocol v1.3 — Hierarchical Execution Graph)
 
-**리드는 제품 코드를 구현하지 않습니다.** 미션 분해, 추적 아티팩트, **구현 worktree** 스폰, **리뷰 worktree**, 머지 게이트만 담당합니다. 키워드: `orchestration` / `orchestrate` / `오케스트레이션`.
+> **프로토콜은 실행 의미를 정의하고, Runtime Policy가 그 의미를 호스트 능력에 바인딩합니다.**
+
+**기본 바인딩:** Protocol v1.3 · Runtime Policy **A′** (root materialize) · Persistence: filesystem · Host: Grok Build.
+
+**루트 Coordinator는 제품 코드를 구현하지 않습니다.** 미션을 **Hierarchical Execution Graph**(containment + `dependsOn`)로 분해하고, 추적 아티팩트 생성, **Worker** worktree 스폰, 리뷰·머지 게이트를 담당합니다. 키워드: `orchestration` / `orchestrate` / `오케스트레이션`.
 
 ```text
 /orchestration "mission"
@@ -231,15 +235,24 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
 /orchestration --interactive "고위험 마이그레이션"
 ```
 
-| 플래그 | 의미 |
+| Flag | 의미 |
 |------|---------|
-| *(기본)* | `--strategy conservative` (안정 우선, 동시 impl 1–3) |
-| `--strategy balanced` | 중간 병렬 (상한 4) |
-| `--strategy aggressive` | 최대 실무 디스패치 (상한 6); **스트림마다 동일 품질 게이트** (AC 스킵 아님) |
-| `--max-parallel N` | 최종 동시성 **상한만**: `min(strategy_cap, N, safety)` |
+| *(default)* | `--strategy conservative` (안전 우선, 동시 Worker 1–3) |
+| `--strategy balanced` | 중간 병렬 (cap 4) |
+| `--strategy aggressive` | 실용 최대 병렬 (cap 6); 스트림당 동일 품질 게이트 |
+| `--max-parallel N` | leaf Worker 동시성 **상한**: `min(strategy_cap, N, safety)` |
+| `--max-depth N` | 중첩 깊이 상한 (기본 2) |
 | `--interactive` | 큰 병렬 배치·머지 확인 |
 
 **Safety Override가 strategy보다 항상 우선** (예: worktree isolation 미증명 → 동시성 1).
+
+### 실행 모델
+
+```text
+Execution Node = Coordinator | Worker
+Team = Recipe(config) → Coordinator subgraph  (런타임 타입 아님)
+Policy A′: root가 SoT materialize + Worker 단독 스폰; child는 propose only
+```
 
 ### 워커 파이프라인 (Plan → Goal → Execute)
 
@@ -270,7 +283,7 @@ Issue Snapshot → Requirements → /ralplan → executionGoal
 - 워커는 모델을 **스스로 올리지 않음** — **complexity escalation** 요청 후 오케가 respawn.  
 - 복잡도는 **리뷰 깊이**·soft **재시도 예산**에도 반영.
 
-상태: `.omg/orchestration/` (메인 체크아웃, 리드 소유) + Layer-B `.omg/state/orchestration-state.json`. 전문: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+상태: `.omg/orchestration/` (Policy A′: root materialize) + Layer-B `.omg/state/orchestration-state.json`. 전문: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md). 레시피 예: [`skills/orchestration/examples/backend.recipe.yaml`](skills/orchestration/examples/backend.recipe.yaml).
 ---
 
 ## Autopilot 실행: `solo` vs `team`
@@ -351,7 +364,7 @@ omg team shutdown
 
 ### Grok 전용
 
-- **`/orchestration`** — 멀티 worktree 전달: Plan→Goal→AC→Execute, 리뷰 게이트, strategy, adaptive models
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipe(Team=config), Policy A′, nested scopes
 - **`/web-research`** — 라이브 문서, 릴리스, 이슈, X 신호 → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 승인 → Vision 브리프 → 코드 → Vision QA
 - **Search-on-fail** — 핵심 스킬이 맹목 재시도 전에 `web_search` 우선

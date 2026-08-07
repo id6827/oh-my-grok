@@ -64,8 +64,8 @@ const RULES = [
   {
     name: "orchestration",
     skill: "orchestration",
-    // /orchestration, orchestrate, main orchestrator (EN) + 오케스트레이션
-    re: /\b(\/?orchestration|orchestrate|main\s+orchestrator)\b|(오케스트레이션)/i,
+    // /orchestration, orchestrate, nested orchestration, main orchestrator (EN) + 오케스트레이션
+    re: /\b(\/?orchestration|orchestrate|nested\s+orchestration|sub-?orchestrat(?:e|or|ion)|main\s+orchestrator)\b|(오케스트레이션)/i,
     activate: "orchestration",
   },
   {

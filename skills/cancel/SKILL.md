@@ -27,7 +27,7 @@ Automatically detects which mode is active and cancels it:
 - **Pipeline**: Stops sequential agent pipeline
 - **Team**: Requests shutdown from all teammates through the active team/conversation surface, waits for responses/timeouts, clears OMG team state, clears linked ralph if present. Grok Build 2.1.178+ has no TeamDelete.
 - **Team+Ralph (linked)**: Cancels team first (graceful shutdown), then clears ralph state. Cancelling ralph when linked also cancels team first.
-- **Orchestration**: Clears Layer-B **`.omg/state/orchestration-state.json`** (`active: false` via clear-active-modes or file write). Does **not** use MCP `state_clear(mode="orchestration")` (mode not registered). Leaves impl/review worktrees and open PRs unless the user asks to clean them up.
+- **Orchestration**: Clears Layer-B **`.omg/state/orchestration-state.json`** (`active: false` via clear-active-modes or file write). Does **not** use MCP `state_clear(mode="orchestration")` (mode not registered). Leaves impl/review worktrees and open PRs unless the user asks to clean them up. **Nested scopes (Protocol v1.3):** Soft cascade only — when cancelling, mark descendant scopes/tasks `cancelled` in SoT narrative if practical; **no** hard process kill of nested agents and **no** guaranteed walk of `.omg/orchestration/scopes/`.
 
 ## Usage
 

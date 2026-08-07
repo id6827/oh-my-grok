@@ -1,0 +1,23 @@
+# OMG orchestration recipe — versioned config, not a runtime "team"
+version: 1
+name: backend
+kind: orchestration
+strategy: balanced
+dispatch: parallel
+members:
+  - id: api
+    kind: agent
+    role: implementer
+    capabilities: [implement]
+    ownership: ["src/api/**"]
+  - id: db
+    kind: agent
+    role: implementer
+    capabilities: [implement]
+    ownership: ["src/db/**"]
+  - id: cache
+    kind: agent
+    role: implementer
+    capabilities: [implement]
+    ownership: ["src/cache/**"]
+dependsOn: {}

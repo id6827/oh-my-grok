@@ -104,7 +104,21 @@ Cancele com `/cancel`. Estado em **`.omg/`**. Ideias vagas → `/deep-interview`
 
 ---
 
-## `/orchestration` (entrega multi-worktree)
+## `/orchestration` (Protocol v1.3 — entrega multi-worktree)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **O lead nunca implementa código de produto.** Só decompõe a missão, cria artefatos de rastreio, lança **worktrees de implementação**, **worktrees de review** e governa o merge. Keyword: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ Cancele com `/cancel`. Estado em **`.omg/`**. Ideias vagas → `/deep-interview`
 | *(padrão)* | `--strategy conservative` (segurança primeiro, 1–3 impl workers concorrentes) |
 | `--strategy balanced` | Despacho paralelo moderado (teto 4) |
 | `--strategy aggressive` | Máximo despacho prático (teto 6); **mesmos gates de qualidade** por stream, não atalho sem AC |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Apenas **limite superior** final de concorrência: `min(strategy_cap, N, safety)` |
 | `--interactive` | Confirmar lotes paralelos grandes e merges |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Exclusivos Grok
 
-- **`/orchestration`** — entrega multi-worktree: Plan→Goal→AC→Execute, gates de review, strategies, modelos adaptativos
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — docs ao vivo → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → aprovação → Vision → código → Vision QA
 - **Search-on-fail** — preferir `web_search` antes de retries cegos

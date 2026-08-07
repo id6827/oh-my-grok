@@ -104,7 +104,21 @@ Hủy bằng `/cancel`. State trong **`.omg/`**. Ý tưởng mơ hồ → `/deep
 
 ---
 
-## `/orchestration` (giao hàng multi-worktree)
+## `/orchestration` (Protocol v1.3 — giao hàng multi-worktree)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **Lead không bao giờ viết mã sản phẩm.** Chỉ phân rã nhiệm vụ, tạo artifact theo dõi, spawn **worktree implement**, **worktree review** và kiểm soát merge. Từ khóa: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ Hủy bằng `/cancel`. State trong **`.omg/`**. Ý tưởng mơ hồ → `/deep
 | *(mặc định)* | `--strategy conservative` (ưu tiên an toàn, 1–3 impl worker đồng thời) |
 | `--strategy balanced` | Dispatch song song vừa phải (cap 4) |
 | `--strategy aggressive` | Dispatch thực dụng tối đa (cap 6); **cùng cổng chất lượng** mỗi stream, không phải fast path bỏ AC |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Chỉ **trần cuối** concurrency: `min(strategy_cap, N, safety)` |
 | `--interactive` | Xác nhận batch song song lớn và merge |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Độc quyền Grok
 
-- **`/orchestration`** — giao hàng multi-worktree: Plan→Goal→AC→Execute, cổng review, strategies, mô hình thích ứng
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — docs live → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → duyệt → Vision → code → Vision QA
 - **Search-on-fail** — ưu tiên `web_search` trước retry mù

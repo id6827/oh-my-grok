@@ -104,7 +104,21 @@ Grok oturumunda dene:
 
 ---
 
-## `/orchestration` (çoklu worktree teslimatı)
+## `/orchestration` (Protocol v1.3 — çoklu worktree teslimatı)
+
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
 
 **Lead asla ürün kodu yazmaz.** Misyonu böler, izleme artefaktları oluşturur, **implementasyon worktree**’leri, **review worktree**’leri spawn eder ve merge’i yönetir. Anahtar kelime: `orchestration` / `orchestrate` / `오케스트레이션`.
 
@@ -120,6 +134,7 @@ Grok oturumunda dene:
 | *(varsayılan)* | `--strategy conservative` (önce güvenlik, 1–3 eşzamanlı impl worker) |
 | `--strategy balanced` | Orta düzey paralel dispatch (cap 4) |
 | `--strategy aggressive` | Pratik maksimum dispatch (cap 6); stream başına **aynı kalite gate’leri**, AC atlayan fast path değil |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | Yalnızca son concurrency **üst sınırı**: `min(strategy_cap, N, safety)` |
 | `--interactive` | Büyük paralel batch ve merge’leri onayla |
 
@@ -229,7 +244,7 @@ omg team shutdown
 
 ### Grok özel
 
-- **`/orchestration`** — çoklu worktree teslimatı: Plan→Goal→AC→Execute, review gate’leri, strategies, uyarlanabilir modeller
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — canlı docs → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → onay → Vision → kod → Vision QA
 - **Search-on-fail** — kör retry’dan önce `web_search`

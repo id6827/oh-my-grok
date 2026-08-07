@@ -106,6 +106,20 @@ grok inspect
 
 ## `/orchestration`（多 worktree 交付）
 
+### Nested model (Protocol v1.3)
+
+> Protocol defines execution semantics; Runtime Policy binds them to the host.
+
+**Binding:** Protocol v1.3 · Policy **A′** (root materializes / sole Worker spawner) · Team = **recipe** (not a runtime type) · Hierarchical Execution Graph (containment + `dependsOn`).
+
+```text
+Root Coordinator → Coordinator (e.g. backend recipe) → Workers
+omit kind ⇒ agent; ownership global; planning hierarchical
+```
+
+Full protocol: [`skills/orchestration/SKILL.md`](skills/orchestration/SKILL.md).
+
+
 **主会话从不实现产品代码。** 仅负责任务拆解、跟踪产物、生成**实现 worktree**、**评审 worktree** 与合并门禁。关键词：`orchestration` / `orchestrate` / `오케스트레이션`。
 
 ```text
@@ -120,6 +134,7 @@ grok inspect
 | *(默认)* | `--strategy conservative`（安全优先，并发实现 worker 1–3） |
 | `--strategy balanced` | 中等并行（上限 4） |
 | `--strategy aggressive` | 实用最大并行（上限 6）；**每条流的质量门相同**，不是跳过 AC 的快路径 |
+| `--max-depth N` | Nesting depth ceiling (default 2) |
 | `--max-parallel N` | 仅作并发**最终上限**：`min(strategy_cap, N, safety)` |
 | `--interactive` | 确认大批量并行与合并 |
 
@@ -234,7 +249,7 @@ omg team shutdown
 
 ### Grok 专属
 
-- **`/orchestration`** — 多 worktree 交付：Plan→Goal→AC→Execute、评审门、strategy、自适应模型
+- **`/orchestration`** — Protocol v1.3 Hierarchical Execution Graph: Coordinator|Worker, recipes, Runtime Policy A′, nested scopes
 - **`/web-research`** — 实时文档/发布/议题/X → `.omg/artifacts/research/`
 - **`/ui-mockup`** — Image Gen → 批准 → Vision 简报 → 代码 → Vision QA
 - **Search-on-fail** — 失败时优先 `web_search` 再盲重试
