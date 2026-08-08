@@ -1,4 +1,5 @@
 # OMG orchestration recipe — versioned config, not a runtime "team"
+# Protocol roles are coordinator|worker (via kind: orchestration|agent mapping); member role below is specialization only
 version: 1
 name: backend
 kind: orchestration
@@ -7,17 +8,17 @@ dispatch: parallel
 members:
   - id: api
     kind: agent
-    role: implementer
+    role: implementer  # recipe member specialization role, NOT Protocol role
     capabilities: [implement]
     ownership: ["src/api/**"]
   - id: db
     kind: agent
-    role: implementer
+    role: implementer  # recipe member specialization role, NOT Protocol role
     capabilities: [implement]
     ownership: ["src/db/**"]
   - id: cache
     kind: agent
-    role: implementer
+    role: implementer  # recipe member specialization role, NOT Protocol role
     capabilities: [implement]
     ownership: ["src/cache/**"]
 dependsOn: {}
