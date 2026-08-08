@@ -249,9 +249,36 @@ grok plugin install id6827/oh-my-grok --trust && grok plugin enable oh-my-grok
 ### 실행 모델
 
 ```text
-Execution Node = Coordinator | Worker
-Team = Recipe(config) → Coordinator subgraph  (런타임 타입 아님)
-Policy A′: root가 SoT materialize + Worker 단독 스폰; child는 propose only
+Execution Node
+  ├─ Coordinator  — plan → delegate → summarize (제품 구현 금지)
+  └─ Worker       — worktree에서 implement / review
+
+Team is not a runtime type:
+  Team → Recipe (config) → Coordinator subgraph
+```
+
+**Runtime Policy A′ (현재 호스트 바인딩):** root만 SoT materialize 및 Worker 단독 스폰; nested coordinator는 **propose only** (child = proposer, root = materializer, worker = implementer). Fallback은 항상 root materialize. Protocol 버전과 Runtime Policy는 **독립 축**.
+
+**Containment ≠ ownership ≠ `dependsOn`:**
+
+- 모든 Node는 정확히 하나의 **containing** Scope (`scopeId`)에 속함.
+- Coordinator는 nested subgraph용 child Scope를 **소유할 수 있음** (`childScopeId`) — 단, **부모** Scope의 Node로 남음 (owned child의 멤버가 아님).
+- Worker는 Scope **안에서** 실행하며 Scope를 소유하지 않음.
+- Cross-scope 간선은 **`dependsOn` only** (containment이 deps를 함의하지 않음).
+
+**중첩 예 (freeze wire):**
+
+```text
+root Scope S0
+├── Worker (docs)                          # ∈ S0
+├── Coordinator: Backend  ← recipe         # ∈ S0; childScopeId → S1
+│     └── child Scope S1
+│           ├── Worker: API
+│           ├── Worker: DB
+│           └── Worker: Cache
+└── Coordinator: Frontend                  # ∈ S0; childScopeId → S2
+      └── child Scope S2
+            └── Worker: UI  ──dependsOn──► API   # cross-scope edge OK
 ```
 
 ### 워커 파이프라인 (Plan → Goal → Execute)
@@ -270,11 +297,12 @@ Issue Snapshot → Requirements → /ralplan → executionGoal
 
 | 아티팩트 | 역할 |
 |----------|------|
-| **Task JSON** (`.omg/orchestration/tasks/`) | 런타임 상태 (status, lock, progress) |
-| **Canonical Issue** (GitHub 또는 보드 미러) | 사람 계약 (scope, priority, ownership); **스폰 전 오케스트레이터가 생성** |
+| **Task JSON** (`.omg/orchestration/tasks/` 또는 `scopes/<id>/tasks/`) | 런타임 상태 (Policy A′: root materialize) |
+| **Canonical Issue** (GitHub 또는 보드 미러) | 사람 계약; **leaf Worker 1 ↔ issue 1** (스폰 전 오케 생성) |
 | **Board** (`board.md`) | 대시보드 뷰 전용 |
+| **locks.json** | 전역 ownership registry (nested 미션) |
 
-워커는 이슈의 **Acceptance / notes / risks / verification** 만 수정 가능 — scope·priority·ownership·deps 는 불가. 구현 시작 시 **Issue Snapshot** 을 남겨 중도 스코프 변경은 오케 승인 필요.
+**Ownership은 전역, planning은 hierarchical.** 워커는 이슈의 **Acceptance / notes / risks / verification** 만 수정 가능 — scope·priority·ownership·deps 는 불가. 구현 시작 시 **Issue Snapshot** 을 남겨 중도 스코프 변경은 오케 승인 필요.
 
 ### Adaptive worker 모델
 
