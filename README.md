@@ -257,19 +257,28 @@ Team is not a runtime type:
   Team → Recipe (config) → Coordinator subgraph
 ```
 
-**Runtime Policy A′ (current host):** root materializes SoT and is the sole Worker spawner; nested coordinators **propose** only. Fallback is always root materialize.
+**Runtime Policy A′ (current host binding):** root materializes SoT and is the sole Worker spawner; nested coordinators **propose** only (child = proposer, root = materializer, worker = implementer). Fallback is always root materialize. Protocol version and Runtime Policy are independent axes.
 
-**Nested example:**
+**Containment ≠ ownership ≠ `dependsOn`:**
+
+- Every Node has exactly one **containing** Scope (`scopeId`).
+- A Coordinator **MAY own** one child Scope (`childScopeId`) for a nested subgraph, but remains a Node of its **parent** Scope — not a member of the owned child.
+- Workers execute **inside** a Scope; they never own one.
+- Cross-scope edges use **`dependsOn` only** (containment does not imply deps).
+
+**Nested example (freeze wire):**
 
 ```text
-Root Coordinator
-  ├── Worker (docs)
-  ├── Coordinator: Backend   ← recipe "backend"
-  │     ├── Worker: API
-  │     ├── Worker: DB
-  │     └── Worker: Cache
-  └── Coordinator: Frontend
-        └── Worker: UI  ──dependsOn──► API
+root Scope S0
+├── Worker (docs)                          # ∈ S0
+├── Coordinator: Backend  ← recipe         # ∈ S0; childScopeId → S1
+│     └── child Scope S1
+│           ├── Worker: API
+│           ├── Worker: DB
+│           └── Worker: Cache
+└── Coordinator: Frontend                  # ∈ S0; childScopeId → S2
+      └── child Scope S2
+            └── Worker: UI  ──dependsOn──► API   # cross-scope edge OK
 ```
 
 ### Worker pipeline (Plan → Goal → Execute)
