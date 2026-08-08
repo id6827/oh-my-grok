@@ -93,7 +93,7 @@ Board is derived; do not treat dashboard text as authority.
 5. **Conflict resolution menu only** (orchestrator): reassign ownership · split task · update dependsOn · create/update tracking issues · restart WT · cancel · serialize. **Never** resolve by editing product sources as lead.
 6. **Review WTs do not implement**.
 7. **Merge only after** Review APPROVE + DoD evidence + **human confirm** (`ask_user_question` unless user already approved merge this turn).
-8. **Board path (Runtime Policy A′):** only the **root Coordinator** materializes/writes `.omg/orchestration/**` on **main checkout** (locks, tasks, scope dirs). Workers and optional child coordinators **propose**; they do not dual-write SoT. No worktree-local board as SoT.
+8. **Board path (Runtime Policy A′):** only the **root Coordinator** materializes/writes `.omg/orchestration/**` on **main checkout** (locks, tasks, scope dirs). Workers and optional child coordinators **propose** only (three-tier: child=proposer, root=materializer, worker=implementer); they do not dual-write SoT. No worktree-local board as SoT.
 9. **Mode file:** `.omg/state/orchestration-state.json` only (Layer-B). No MCP orchestration mode.
 10. **Canonical Issue:** before spawn, orchestrator **creates or locates** exactly **one** tracking issue per **leaf Worker** task; workers **MUST** reference it; PRs **SHOULD** use `Fixes #<n>` (or `Refs: T00N` if offline mirror only). Orchestration nodes: no issue or optional epic (not a `Fixes` target).
 
@@ -114,14 +114,14 @@ Board is derived; do not treat dashboard text as authority.
 
 ```text
 Execution Node (capability-bearing)
-  role: coordinator | worker     # protocol path
-  kind: orchestration | agent    # wire/storage (omit kind ⇒ agent)
+  role: coordinator | worker     # Protocol path
+  kind: orchestration | agent    # wire/storage
   capabilities: explicit only    # never inherited implicitly
 ```
 
 | Role | Does | Does not |
 |------|------|----------|
-| **Coordinator** | plan → resolve → request locks → stamp/gate (per policy) → summarize → exit | product implementation; product worktree ownership |
+| **Coordinator** | plan → resolve → propose locks/expansion → stamp/gate (per policy) → summarize → exit | product implementation; product worktree ownership; write SoT under A′ (root only) |
 | **Worker** | Plan→Goal→AC→Execute (impl) or review | write mission SoT under Policy A′ |
 
 **Coordinator invariants (hard):**
@@ -132,31 +132,79 @@ Execution Node (capability-bearing)
 4. Always exits with structured scope summary when coordinating a Scope.  
 5. May fail independently of descendants (rollup still applies for parents).
 
-**Cardinality:**
+### kind / role (normalize → reject)
+
+Applies to **Task JSON** and **ResolverResult.nodes** only — not recipe member specialization labels.
+
+**Normalization order (MUST):**
+
+1. If `kind` absent → `agent`  
+2. If `role` absent → derive from kind (`orchestration`→`coordinator`, `agent`→`worker`)  
+3. If both present → validate consistency  
+
+| After normalize | Must | Reject |
+|-----------------|------|--------|
+| `kind=orchestration` | `role=coordinator` | `KIND_ROLE_CONFLICT` if role=worker |
+| `kind=agent` | `role=worker` | `KIND_ROLE_CONFLICT` if role=coordinator |
+| `{}` empty | `agent` / `worker` | — (flat v1.2 compat) |
+
+**Reject:** `{kind: agent, role: coordinator}` → `KIND_ROLE_CONFLICT` (Must-reject, before materialize).
+
+**Recipe member specialization ≠ Protocol role.** Recipe YAML `role: implementer|reviewer|…` is **recipe member specialization role** only. On materialize: `kind=agent` → Protocol `role=worker`. Do **not** reject recipes solely for `role: implementer`.
+
+```yaml
+# recipe member (config only)
+role: implementer   # recipe member specialization role, NOT Protocol role
+```
+
+### Containment vs ownership (wire)
+
+> Every Execution Node belongs to exactly one **containing** Scope. Containment ≠ ownership transfer ≠ `dependsOn`.
 
 ```text
-Coordinator owns exactly one Scope.
-Worker executes inside exactly one Scope.
-Scope owns many Nodes.
-Every Execution Node belongs to exactly one Scope.
-dependsOn may cross Scopes; node ownership never does.
+A Node has exactly one *containing* Scope (membership / home).
+A Coordinator MAY *own* exactly one *child* Scope for a nested subgraph.
+  - Coordinator remains a Node of its *containing* Scope (not of the owned child).
+  - Owned child Scope → childScopeId (when allocated).
+  - A′ root-inline: kind=orchestration Task Node is owner (no live child session required).
+Workers execute *inside* a Scope; they never *own* a Scope.
 ```
+
+| Field | Meaning |
+|-------|---------|
+| `scopeId` | Node’s containing/home Scope (exactly one) |
+| `parentScopeId` | **Legacy containing alias** — same identity as `scopeId` when both set; **MUST-equal**; **NOT** parent of `scopeId` |
+| `childScopeId` | Coordinator-only: owned child Scope when allocated |
+
+**INVALID:** `scopeId == childScopeId` on the same Coordinator task.  
+**Dual-owner** of one child Scope → materializer-stage reject before spawn.
+
+```text
+Freeze wire (C is a member of S0, owns S1):
+
+  root Scope S0
+  └── Coordinator Task C (kind=orchestration)   # C ∈ S0 — NOT a member of S1
+        scopeId: S0
+        parentScopeId: S0                       # legacy containing alias
+        childScopeId: S1                        # C owns nested Scope S1
+        └── child Scope S1
+              ├── Worker A  scopeId=S1 parentScopeId=S1  (no childScopeId)
+              └── Worker B  scopeId=S1 parentScopeId=S1
+                    └── dependsOn ──► Worker X in another Scope (cross-edge OK)
+```
+
+**Cardinality (strong):**
+
+1. Every Execution Node ∈ exactly one containing Scope.  
+2. Every persisted Task JSON ↔ exactly one Execution Node.  
+3. Coordinator MAY own ≤1 child Scope per logical invocation (`childScopeId`).  
+4. Worker MUST NOT own a child Scope / MUST NOT carry `childScopeId`.  
+5. Nested Scope parentage = owning Coordinator’s `childScopeId` (not `parentScopeId`).  
+6. `childScopeId` may be omitted until allocation; after allocation for that invocation it MUST be stable on resume.
 
 A **Scope** is a logical execution boundary (may later run on another host without protocol change). **Filesystem** dirs are only the v1.3 persistence binding of a Scope.
 
-### Containment + dependsOn
-
-```text
-              Root Coordinator
-             /        \
-      Backend C      Frontend C
-       /  |  \         /  |
-     API DB Cache    UI  UX
-                      |
-                      └── dependsOn ──► API   (cross-edge)
-```
-
-Not a pure tree once `dependsOn` exists.
+Not a pure tree once `dependsOn` exists. Cross-scope edges use **`dependsOn` only**.
 
 ### Ownership is global; planning is hierarchical
 
@@ -178,8 +226,46 @@ Fallback (only):
 No other fallback exists under Policy A′.
 ```
 
+**Propose vs write (three-tier):**
+
+```text
+Under Runtime Policy A′, child Coordinators MAY propose
+ownership claims, task expansion, dependencies, and AC text.
+
+Only the root Coordinator MAY validate and materialize those
+proposals into canonical SoT, locks, issues, or spawned Workers.
+
+  Child Coordinator = proposer
+  Root Coordinator  = authority / materializer
+  Worker            = implementer
+```
+
+Children never write `locks.json` under A′.  
 Child-materialize / nested-spawn is a **different Runtime Policy** (future B), not an informal A′ variant.  
 **Default materialization:** root-inline expand of recipes/members; optional child planner only when multi-domain plan quality needs a dedicated summarizer (still non-implementing; root materializes).
+
+### Spec freeze package — enforcement tiers
+
+| Tier | Meaning |
+|------|---------|
+| **Must-reject** | Fail closed **before** canonical scope/task/issue/lock materialization for the fragment: kind/role, dependency membership/cycles vs attempt snapshot∪fragment, ownership conflicts, Resolver `status=rejected` |
+| **Must-outcome** | Same logical-invocation identity → resume/repair/attach; **never** reject re-prompt solely because target already invoked; no duplicate scopes/issues/locks/active workers |
+| **Strong** | Partial materialization recovery, retry, Scope wire — required skill text; soft Layer-A OK |
+
+### Materializer validation order (normative)
+
+```text
+resolve
+→ normalize/validate fragment (kind/role)
+→ validate dependency membership/cycles (snapshot ∪ fragment)
+→ validate ownership conflicts (dual-owner, childScopeId rules)
+→ only then allocate/materialize canonical state (scope, tasks)
+→ issues + locks
+→ spawn workers
+```
+
+All Must-reject validation for the current fragment **MUST complete before** canonical scope/task/issue/lock materialization for that fragment begins.  
+(Does not replace lock protocol steps 2–7 once materialization is allowed.) Issue create before spawn; relative order of issue vs lock is non-normative as long as both complete before spawn.
 
 ### Execution Target Resolver
 
@@ -194,7 +280,9 @@ spawn <target> | delegate <target>
 **ResolverResult (normative shape):**
 
 ```yaml
+status: resolved | rejected        # omit ⇒ treat as resolved (back-compat)
 executionGraphId: string | null
+# on resolved (or omitted status):
 nodes:
   - id: string
     role: coordinator | worker
@@ -202,7 +290,7 @@ nodes:
     capabilities: [implement|review|summarize|search|analyze|plan|…]
     delegateRef: string | null
     ownership: [glob…]
-    scopeId: string
+    scopeId: string                # containing/home Scope (exactly one)
 containmentEdges:
   - parent: nodeId|scopeId
     child: nodeId
@@ -216,12 +304,67 @@ minimumHostCapabilities:          # optional
   supportsIsolation: true
   supportsSharedState: false
 notes: string | null
+# on rejected:
+#   errorCode: DEPTH_EXCEEDED | RECIPE_CYCLE | DEPENDS_ON_CYCLE | DEPENDS_ON_UNKNOWN
+#             | UNKNOWN_TARGET | KIND_ROLE_CONFLICT | INVALID_FRAGMENT | POLICY_REJECT
+#   errorMessage: string
+#   nodes MUST be absent or empty (no diagnostic-as-nodes)
 ```
+
+**`status=rejected` ⇒ `nodes` absent or empty.** Materializer **MUST NOT** consume a rejected result as a spawn graph.
+
+**Resolver ≠ snapshot boundary:** Resolver determinism applies to the **resolved fragment only** (same target, containing-scope context, recipe/config revision, protocol version, runtime policy). Dependency membership/cycle checks against the authoritative task-index snapshot are **materializer-stage** and are **not** Resolver determinism inputs. Shared envelopes may report materializer-stage codes (`DEPENDS_ON_*`, dual-owner, `LOCK_CONFLICT`) without folding snapshot into pure resolve.
 
 **Capabilities are never inherited implicitly** — resolver assigns them explicitly per node.  
 Skills (e.g. `skill:web-research`) resolve to a **Worker** with capabilities such as `search`/`analyze`, not a third runtime kind.
 
-**Recipe paths (recipe branch only):**
+### dependsOn invariants (materializer-stage)
+
+| Code | When | Scope of fail |
+|------|------|----------------|
+| `DEPENDS_ON_UNKNOWN` | dep id neither in attempt task-index snapshot **nor** current `ResolverResult.nodes` | Must-reject; future-resolver-only ids invalid |
+| `DEPENDS_ON_CYCLE` | cycle over index∪fragment | fail closed for whole *current materialization attempt* only (no rollback of unrelated healthy global nodes) |
+| `RECIPE_CYCLE` | recipe name already on expansion stack | **distinct** from `DEPENDS_ON_CYCLE` — do not collapse to bare `CYCLE` |
+
+- Cross-scope `dependsOn` allowed. Containment does not imply `dependsOn`. `dependsOn` does not transfer ownership or Scope membership.  
+- Example: A→B→C→A → `DEPENDS_ON_CYCLE` before spawn.
+
+### Materialization consistency (not ACID)
+
+Protocol recovery contract — **not** FS atomic rollback; no distributed/FS ACID guarantee (non-goal).
+
+| Phase | On failure |
+|-------|------------|
+| **Pre-spawn** (after validation passed; canonical writes began) | Release unspawned locks; **retain** canonical issues and **reuse** on resume; **MUST NOT** delete+recreate leaf issue merely to repair; mark planning \| failed(partial) soft annotation (not a new hard lifecycle enum) |
+| **Post-spawn** | Lifecycle/retry — **not** materialization rollback |
+
+```text
+issue create → lock grant → spawn fails
+  → release locks → retain issues → scope failed(partial)
+  → re-enter → reuse same issues + same identity (Must-outcome)
+```
+
+### Idempotent materialization (Must-outcome)
+
+Derive stable **logical-invocation identity** from: root mission, target, containing Scope, recipe/config revision, and for leaves the recipe-defined stable member identity when one exists — else deterministic member identity from recipe/materialization context (e.g. member `id` / order key already in context). **No** required `invocationKey` / member-id Task field; no mandated hash format. Same inputs → same identity **required**.
+
+| Re-entry | Outcome |
+|----------|---------|
+| Same identity, repairable (allocated \| planning \| failed(partial)) | **MUST** resume/repair — no new `scope-*-002` |
+| Same identity, live active | attach/report that identity (no second scope) |
+| Ordinary re-prompt | **never** reject solely because target already invoked |
+| Explicit **new-attempt / new-run** | **Out-of-band** instruction only; permits distinct identity; **not** implied by retry/re-prompt; not a required v1.3 Task field |
+
+**Example:** second `spawn backend` with same identity → reuse `scope-backend-001`, same issues/locks; no duplicate active workers.
+
+### Retry (Phase 0 default)
+
+- Terminal *worker* outcome **MAY** retry: **same `taskId` + same canonical issue + same containing Scope**; status transition only (e.g. failed → pending \| in_progress).  
+- **MUST NOT** create `T-*-2` clones or a second canonical issue for the same logical leaf.  
+- Terminal *Scope* (cancelled / completed / failed after workers ran) is **not** ordinary worker retry — use terminal / explicit new-run rules.  
+- `attemptId` reserved; not Phase 0 default.
+
+### Recipe paths (recipe branch only)
 
 ```text
 1. .omg/orchestration/recipes/<name>.yaml   # mission-local wins
@@ -237,6 +380,7 @@ allocated → planning → active → completed
                               ↘ failed
                               ↘ cancelled
 # reserved (not required): paused
+# failed(partial) = soft annotation on failed|planning for repair eligibility — not a hard enum
 ```
 
 ### Coordinator status rollup
@@ -282,15 +426,15 @@ IN_PROGRESS  ← otherwise
 ```
 
 Nested leaf Task JSON: `.omg/orchestration/scopes/<S>/tasks/<id>.json` (root writes under A′).  
-Extended Task JSON fields: `kind`, `parentScopeId`, `scopeId`, `childScopeId`, `depth`, `delegateRef`, `capabilities` (omit `kind` ⇒ `agent`).
+Extended Task JSON fields: `kind`, `scopeId` (containing), `parentScopeId` (legacy containing alias), `childScopeId` (Coordinator owned child), `depth`, `delegateRef`, `capabilities` (omit `kind` ⇒ `agent`).
 
 ### Depth
 
-Default `maxDepth: 2` (root=0). `--max-depth N` clamps (recommend ceiling 3). Recipe cycle detection: refuse recursive recipe name stack.
+Default `maxDepth: 2` (root=0). `--max-depth N` clamps (recommend ceiling 3). Recipe name-stack cycle → `RECIPE_CYCLE` (distinct from `DEPENDS_ON_CYCLE`).
 
 ### Cancel (Soft)
 
-Mode file cleared. Mark descendant scopes/tasks `cancelled` in SoT narrative when possible. **No** claim of hard process/WT kill. cancel skill does not hard-walk scopes.
+Mode file cleared. Mark descendant scopes/tasks `cancelled` in SoT narrative when possible. **No** claim of hard process/WT kill. cancel skill does not hard-walk scopes. Cancelled workers **MAY** reschedule under Phase 0 retry default (same taskId / issue / Scope).
 
 ### `/team` boundary
 
@@ -394,7 +538,9 @@ Terminal: `active: false` + `completed` | `cancelled`.
 }
 ```
 
-Omit `kind` ⇒ treat as **`agent`** (Worker). `kind=orchestration` ⇒ Coordinator (optional epic issue only).
+Wire gloss: `scopeId` = containing Scope; `parentScopeId` = legacy containing alias (**MUST-equal** `scopeId` when both set; **not** parent of `scopeId`); `childScopeId` = Coordinator-only owned child (null on Workers; **INVALID** if `scopeId == childScopeId`).
+
+Omit `kind` ⇒ treat as **`agent`** / Protocol `worker` (normalize order). `kind=orchestration` ⇒ Protocol `coordinator` (optional epic issue only). Conflicting Protocol kind/role → `KIND_ROLE_CONFLICT`.
 
 Never reassign `status=done` to another worker.
 
@@ -445,12 +591,18 @@ At task start, each impl worker **MUST** capture an **Issue Snapshot** (body/tit
 
 ## Ownership soft-lock
 
-Before spawn:
+Under Policy A′ (propose vs write; root materializes):
 
-1. Claim `ownership` globs on Task JSON with `ownershipLock: locked`.  
-2. Reject spawn if globs overlap any other `locked` + `in_progress|review` task.  
-3. Release lock when: PR opened (move to review), task cancelled/failed-terminal, or explicitly freed by orch.  
-Soft only — no FS enforcer.
+1. **Proposal arrives** (from root plan or child summary) — children never write `locks.json`.  
+2. Global lock check against other `locked` + `in_progress|review` tasks.  
+3. Grant: claim `ownership` globs on Task JSON with `ownershipLock: locked` (root only).  
+4. Reject spawn on overlap → conflict menu only (reassign / split / deps / serialize / cancel).  
+5. Spawn only after lock + issue exist.  
+6. Effective concurrency counts **leaf Workers**, not Coordinator nodes.  
+7. Never assume grant without writing Task lock fields.  
+8. Release lock when: PR opened (move to review), task cancelled/failed-terminal, pre-spawn failure (unspawned), or explicitly freed by orch.  
+
+Soft only — no FS enforcer. Pre-spawn failure after grant → **release** unspawned locks; **retain/reuse** issues (Must-outcome).
 
 ## Adaptive Worker Model Selection
 
@@ -830,7 +982,9 @@ Then **ready-set refresh:** recompute tasks whose `dependsOn` are all `done`; ne
 
 ## Failure handling
 
-Analyze → orchestrator updates/creates issues as needed → retry WT or split → soft budgets → 3× same signature escalate to human if needed.
+Analyze → orchestrator updates issues as needed → retry WT or split → soft budgets → 3× same signature escalate to human if needed.
+
+**Phase 0 retry default:** terminal *worker* outcome → same `taskId` + same canonical issue + same containing Scope; status transition only. Do **not** clone task/issue for ordinary retry. Terminal Scope → not ordinary worker retry (explicit new-run OOB if needed).
 
 ## Definition of Done
 
